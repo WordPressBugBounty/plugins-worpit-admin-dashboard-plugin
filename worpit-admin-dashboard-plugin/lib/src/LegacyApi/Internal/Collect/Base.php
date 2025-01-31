@@ -12,9 +12,9 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 		$url = '';
 		$url = wp_nonce_url( $url, '' );
 
-		ob_start();
+		\ob_start();
 		$creds = request_filesystem_credentials( $url, '', false, false );
-		ob_end_clean();
+		\ob_end_clean();
 
 		if ( $creds === false ) {
 			return false;
@@ -24,7 +24,7 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 	}
 
 	protected function checkCanWrite() :bool {
-		$FS = $this->loadFS();
+		$FS = FileSystem::Instance();
 
 		$testDir = \dirname( __FILE__ ).'/icwp_test/';
 		$testFile = $testDir.'test_write';
@@ -37,7 +37,7 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 			$outsMessage = sprintf( 'Failed to create directory: %s', $testDir );
 			$soFar = false;
 		}
-		if ( $soFar && !is_writable( $testDir ) ) {
+		if ( $soFar && !$this->loadFS()->getWpfs()->is_writable( $testDir ) ) {
 			$outsMessage = sprintf( 'The test directory is not writable: %s', $testDir );
 			$soFar = false;
 		}
@@ -53,7 +53,7 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 			$outsMessage = sprintf( 'Failed to find file "%s"', $testFile );
 			$soFar = false;
 		}
-		$content = $FS->getFileContent( $testFile );
+		$content = $FS->getContents( $testFile );
 		if ( $soFar && ( $content != $testContent ) ) {
 			$outsMessage = sprintf( 'The content "%s" does not match what we wrote "%s"', $content, $testContent );
 			$soFar = false;
@@ -65,7 +65,7 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 			return false;
 		}
 
-		FileSystem::Instance()->deleteDir( $testDir );
+		$FS->deleteDir( $testDir );
 
 		return true;
 	}

@@ -7,13 +7,13 @@ class Plugins {
 	/**
 	 * @var self
 	 */
-	protected static $instance = null;
+	protected static $i = null;
 
 	private function __construct() {
 	}
 
 	public static function Instance() :Plugins {
-		return self::$instance ?? self::$instance = new self();
+		return self::$i ?? self::$i = new self();
 	}
 
 	/**

@@ -2,19 +2,14 @@
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
 
-/**
- * Class ICWP_APP_Processor_Plugin_Api_Retrieve
- */
 class ICWP_APP_Processor_Plugin_Api_Retrieve extends ICWP_APP_Processor_Plugin_Api {
 
 	/**
 	 * @return LegacyApi\ApiResponse
 	 */
 	protected function processAction() {
-		/** @var ICWP_APP_FeatureHandler_Plugin $oFO */
-		$oFO = $this->getFeatureOptions();
-		$oReqParams = $this->getRequestParams();
-		$oFs = $this->loadFS();
+		$req = $this->getRequestParams();
+		$FS = $this->loadFS();
 
 		if ( !function_exists( 'download_url' ) ) {
 			return $this->setErrorResponse(
@@ -30,7 +25,7 @@ class ICWP_APP_Processor_Plugin_Api_Retrieve extends ICWP_APP_Processor_Plugin_A
 			);
 		}
 
-		$sPackageId = $oReqParams->getStringParam( 'package_id' );
+		$sPackageId = $req->getStringParam( 'package_id' );
 		if ( empty( $sPackageId ) ) {
 			return $this->setErrorResponse(
 				'Package ID to retrieve is empty.',
@@ -39,13 +34,13 @@ class ICWP_APP_Processor_Plugin_Api_Retrieve extends ICWP_APP_Processor_Plugin_A
 		}
 
 		// We can do this because we've assumed at this point we've validated the communication with iControlWP
-		$sRetrieveBaseUrl = $oReqParams->getStringParam( 'package_retrieve_url', $this->getOption( 'package_retrieve_url' ) );
+		$sRetrieveBaseUrl = $req->getStringParam( 'package_retrieve_url', $this->mod->getOpt( 'package_retrieve_url' ) );
 		$sPackageRetrieveUrl = sprintf(
 			'%s/%s/%s/%s',
 			rtrim( $sRetrieveBaseUrl, '/' ),
 			$sPackageId,
-			$oFO->getPluginAuthKey(),
-			$oFO->getPluginPin()
+			$this->mod->getPluginAuthKey(),
+			$this->mod->getPluginPin()
 		);
 		$sRetrievedTmpFile = download_url( $sPackageRetrieveUrl );
 
@@ -61,7 +56,7 @@ class ICWP_APP_Processor_Plugin_Api_Retrieve extends ICWP_APP_Processor_Plugin_A
 			);
 		}
 
-		$sNewFile = $this->getController()->getPath_Temp( basename( $sRetrievedTmpFile ) );
+		$sNewFile = self::con()->getPath_Temp( basename( $sRetrievedTmpFile ) );
 //			if ( is_null( $sNewFile ) ) {
 //				return $this->setErrorResponse(
 //					'Could not create temporary folder to store package',
@@ -69,12 +64,12 @@ class ICWP_APP_Processor_Plugin_Api_Retrieve extends ICWP_APP_Processor_Plugin_A
 //				);
 //			}
 		$sFileToInclude = $sRetrievedTmpFile;
-		if ( !is_null( $sNewFile ) && $oFs->move( $sRetrievedTmpFile, $sNewFile ) ) { //we try to move it to our plugin tmp folder.
+		if ( !is_null( $sNewFile ) && $FS->move( $sRetrievedTmpFile, $sNewFile ) ) { //we try to move it to our plugin tmp folder.
 			$sFileToInclude = $sNewFile;
 		}
 
 		$oExecutionResponse = $this->runInstaller( $sFileToInclude );
-		$oFs->deleteFile( $sFileToInclude );
+		$FS->deleteFile( $sFileToInclude );
 		return $oExecutionResponse;
 	}
 }

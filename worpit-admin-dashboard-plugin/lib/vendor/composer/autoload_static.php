@@ -6,6 +6,11 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
 {
+    public static $files = array (
+        'e25c14a5fe19c3bedb8e50dd39ae0d06' => __DIR__ . '/../..' . '/functions/functions.php',
+        '38cfe7167fc3c2737612f8fbe0b5819c' => __DIR__ . '/../..' . '/src/Functions/functions.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
         'F' => 
         array (
@@ -21,25 +26,7 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
     );
 
     public static $classMap = array (
-        'ApiResponse' => __DIR__ . '/../..' . '/../src/api/ApiResponse.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'ICWP_APP_Api_Internal_Base' => __DIR__ . '/../..' . '/../src/api/internal/base.php',
-        'ICWP_APP_Api_Internal_Collect_Base' => __DIR__ . '/../..' . '/../src/api/internal/collect/base.php',
-        'ICWP_APP_Api_Internal_Collect_Capabilities' => __DIR__ . '/../..' . '/../src/api/internal/collect/capabilities.php',
-        'ICWP_APP_Api_Internal_Collect_Environment' => __DIR__ . '/../..' . '/../src/api/internal/collect/environment.php',
-        'ICWP_APP_Api_Internal_Collect_Info' => __DIR__ . '/../..' . '/../src/api/internal/collect/info.php',
-        'ICWP_APP_Api_Internal_Collect_Paths' => __DIR__ . '/../..' . '/../src/api/internal/collect/paths.php',
-        'ICWP_APP_Api_Internal_Collect_Plugins' => __DIR__ . '/../..' . '/../src/api/internal/collect/plugins.php',
-        'ICWP_APP_Api_Internal_Collect_Sync' => __DIR__ . '/../..' . '/../src/api/internal/collect/sync.php',
-        'ICWP_APP_Api_Internal_Collect_Themes' => __DIR__ . '/../..' . '/../src/api/internal/collect/themes.php',
-        'ICWP_APP_Api_Internal_Collect_Wordpress' => __DIR__ . '/../..' . '/../src/api/internal/collect/wordpress-info.php',
-        'ICWP_APP_Api_Internal_Common_Plugins' => __DIR__ . '/../..' . '/../src/api/internal/common/plugins.php',
-        'ICWP_APP_Api_Internal_Plugin_Install' => __DIR__ . '/../..' . '/../src/api/internal/plugin/install.php',
-        'ICWP_APP_Api_Internal_Plugin_Rollback' => __DIR__ . '/../..' . '/../src/api/internal/plugin/rollback.php',
-        'ICWP_APP_Api_Internal_Plugin_Update' => __DIR__ . '/../..' . '/../src/api/internal/plugin/update.php',
-        'ICWP_APP_Api_Internal_Theme_Install' => __DIR__ . '/../..' . '/../src/api/internal/theme/install.php',
-        'ICWP_APP_Api_Internal_User_List' => __DIR__ . '/../..' . '/../src/api/internal/user/list.php',
-        'ICWP_APP_Api_Internal_Worpdrive_Prepdir' => __DIR__ . '/../..' . '/../src/api/internal/worpdrive/prepdir.php',
         'ICWP_APP_DataProcessor' => __DIR__ . '/../..' . '/../src/common/icwp-data.php',
         'ICWP_APP_Encrypt' => __DIR__ . '/../..' . '/../src/common/icwp-encrypt.php',
         'ICWP_APP_FeatureHandler_Autoupdates' => __DIR__ . '/../..' . '/../src/features/autoupdates.php',
@@ -51,9 +38,7 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
         'ICWP_APP_FeatureHandler_Security' => __DIR__ . '/../..' . '/../src/features/security.php',
         'ICWP_APP_FeatureHandler_Whitelabel' => __DIR__ . '/../..' . '/../src/features/whitelabel.php',
         'ICWP_APP_Foundation' => __DIR__ . '/../..' . '/../src/common/icwp-foundation.php',
-        'ICWP_APP_Ip' => __DIR__ . '/../..' . '/../src/common/icwp-ip.php',
         'ICWP_APP_OptionsVO' => __DIR__ . '/../..' . '/../src/features/options-vo.php',
-        'ICWP_APP_Plugin_Controller' => __DIR__ . '/../..' . '/../icwp-plugin-controller.php',
         'ICWP_APP_Processor_Autoupdates' => __DIR__ . '/../..' . '/../src/processors/autoupdates.php',
         'ICWP_APP_Processor_Base' => __DIR__ . '/../..' . '/../src/processors/base.php',
         'ICWP_APP_Processor_BaseApp' => __DIR__ . '/../..' . '/../src/processors/base_app.php',
@@ -63,7 +48,6 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
         'ICWP_APP_Processor_Plugin' => __DIR__ . '/../..' . '/../src/processors/plugin.php',
         'ICWP_APP_Processor_Plugin_Api' => __DIR__ . '/../..' . '/../src/processors/plugin_api.php',
         'ICWP_APP_Processor_Plugin_Api_Auth' => __DIR__ . '/../..' . '/../src/processors/plugin_api_auth.php',
-        'ICWP_APP_Processor_Plugin_Api_Execute' => __DIR__ . '/../..' . '/../src/processors/plugin_api_execute.php',
         'ICWP_APP_Processor_Plugin_Api_Index' => __DIR__ . '/../..' . '/../src/processors/plugin_api_index.php',
         'ICWP_APP_Processor_Plugin_Api_Internal' => __DIR__ . '/../..' . '/../src/processors/plugin_api_internal.php',
         'ICWP_APP_Processor_Plugin_Api_Login' => __DIR__ . '/../..' . '/../src/processors/plugin_api_login.php',
@@ -74,21 +58,15 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
         'ICWP_APP_Processor_Whitelabel' => __DIR__ . '/../..' . '/../src/processors/whitelabel.php',
         'ICWP_APP_Render' => __DIR__ . '/../..' . '/../src/common/icwp-render.php',
         'ICWP_APP_WpAdminNotices' => __DIR__ . '/../..' . '/../src/common/wp-admin-notices.php',
-        'ICWP_APP_WpCollectInfo' => __DIR__ . '/../..' . '/../src/common/icwp-wpcollectinfo.php',
         'ICWP_APP_WpComments' => __DIR__ . '/../..' . '/../src/common/wp-comments.php',
-        'ICWP_APP_WpCron' => __DIR__ . '/../..' . '/../src/common/icwp-wpcron.php',
         'ICWP_APP_WpDb' => __DIR__ . '/../..' . '/../src/common/icwp-wpdb.php',
         'ICWP_APP_WpFilesystem' => __DIR__ . '/../..' . '/../src/common/icwp-wpfilesystem.php',
         'ICWP_APP_WpFunctions' => __DIR__ . '/../..' . '/../src/common/icwp-wpfunctions.php',
         'ICWP_APP_WpFunctions_Plugins' => __DIR__ . '/../..' . '/../src/common/icwp-wpfunctions-plugins.php',
         'ICWP_APP_WpFunctions_Themes' => __DIR__ . '/../..' . '/../src/common/icwp-wpfunctions-themes.php',
-        'ICWP_APP_WpTrack' => __DIR__ . '/../..' . '/../src/common/wp-track.php',
-        'ICWP_APP_WpUpgrades' => __DIR__ . '/../..' . '/../src/common/icwp-wpupgrades.php',
         'ICWP_APP_WpUsers' => __DIR__ . '/../..' . '/../src/common/wp-users.php',
-        'ICWP_APP_WpWidget' => __DIR__ . '/../..' . '/../src/common/wp-widget.php',
         'ICWP_Upgrader_Skin' => __DIR__ . '/../..' . '/../src/common/Upgrades/Icwp_Upgrader_Skin.php',
         'ICWP_Upgrader_Skin_Legacy' => __DIR__ . '/../..' . '/../src/common/Upgrades/ICWP_Upgrader_Skin_Legacy.php',
-        'RequestParameters' => __DIR__ . '/../..' . '/../src/api/RequestParameters.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

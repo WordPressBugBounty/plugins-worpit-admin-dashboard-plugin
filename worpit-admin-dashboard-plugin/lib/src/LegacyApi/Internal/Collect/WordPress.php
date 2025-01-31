@@ -35,8 +35,8 @@ class WordPress extends Base {
 			'wordpress_wpurl'         => get_bloginfo( 'wpurl' ),
 			'debug'                   => [
 				'url_rewritten'   => $DP->isUrlRewritten() ? 1 : 0,
-				'database_server' => $_ENV[ 'DATABASE_SERVER' ] ?? '-1',
-				'ds'              => DIRECTORY_SEPARATOR,
+				'database_server' => $DP->FetchEnv( 'DATABASE_SERVER', -1 ),
+				'ds'              => \DIRECTORY_SEPARATOR,
 			]
 		];
 
@@ -76,27 +76,26 @@ class WordPress extends Base {
 	 * @return string
 	 */
 	protected function getServerAddress() :string {
+		$DP = $this->loadDP();
 		if ( $this->loadDP()->isWindows() ) {
-			if ( empty( $_SERVER[ 'SERVER_ADDR' ] ) ) {
-				if ( !empty( $_SERVER[ 'LOCAL_ADDR' ] ) ) {
-					$addr = $_SERVER[ 'LOCAL_ADDR' ];
+			if ( empty( $DP->FetchServer( 'SERVER_ADDR' ) ) ) {
+				if ( !empty( $DP->FetchServer( 'LOCAL_ADDR' ) ) ) {
+					$addr = $DP->FetchServer( 'LOCAL_ADDR' );
 				}
 				else {
 					$addr = '0.0.0.0';
 				}
 			}
 			else {
-				$addr = $_SERVER[ 'SERVER_ADDR' ];
+				$addr = $DP->FetchServer( 'SERVER_ADDR' );
 			}
 		}
 		else {
-			$addr = $_SERVER[ 'SERVER_ADDR' ];
+			$addr = $DP->FetchServer( 'SERVER_ADDR' );
 		}
 
-		if ( $this->isPrivateIp( $addr ) && \function_exists( 'gethostbyname' )
-			 && isset( $_SERVER[ 'SERVER_NAME' ] ) && !empty( $_SERVER[ 'SERVER_NAME' ] )
-		) {
-			$addr = \gethostbyname( $_SERVER[ 'SERVER_NAME' ] );
+		if ( $this->isPrivateIp( $addr ) && \function_exists( '\gethostbyname' ) && !empty( $DP->FetchServer( 'SERVER_NAME' ) ) ) {
+			$addr = \gethostbyname( $DP->FetchServer( 'SERVER_NAME' ) );
 		}
 
 		return $addr;
@@ -107,7 +106,7 @@ class WordPress extends Base {
 	 * @return bool
 	 */
 	private function isPrivateIp( $ip ) {
-		return !filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
+		return !\filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE );
 	}
 
 	/**

@@ -5,134 +5,83 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	/**
 	 * @var ICWP_APP_WpUsers
 	 */
-	protected static $oInstance = null;
+	protected static $I = null;
 
 	private function __construct() {
 	}
 
-	/**
-	 * @return ICWP_APP_WpUsers
-	 */
-	public static function GetInstance() {
-		if ( is_null( self::$oInstance ) ) {
-			self::$oInstance = new self();
-		}
-		return self::$oInstance;
+	public static function GetInstance() :self {
+		return self::$I ?? self::$I = new self();
 	}
 
 	/**
 	 * If setting password, do not send the hashed password as this will hash it for you
 	 *
-	 * @param array $aNewUserData
-	 * @param bool  $bSendUserNotification
-	 * @return int|WP_Error
+	 * @return int|\WP_Error
 	 */
-	public function createUser( $aNewUserData, $bSendUserNotification = false ) {
-
-		$aUserDefaults = [
+	public function createUser( array $newData, bool $sendUserNotification = false ) {
+		//set defaults for unset vars
+		$new = wp_parse_args( $newData, [
 			'user_registered' => strftime( '%F %T', time() ),
 			'display_name'    => false,
 			'user_url'        => '',
 			'description'     => ''
-		];
-
-		//set defaults for unset vars
-		$aNewUser = wp_parse_args( $aNewUserData, $aUserDefaults );
-		if ( !empty( $aNewUser[ 'user_pass' ] ) ) {
-			$aNewUser[ 'user_pass' ] = wp_hash_password( $aNewUser[ 'user_pass' ] );
+		] );
+		if ( !empty( $new[ 'user_pass' ] ) ) {
+			$new[ 'user_pass' ] = wp_hash_password( $new[ 'user_pass' ] );
 		}
-		$mNewUserId = wp_insert_user( $aNewUser );
 
-		if ( $bSendUserNotification && !is_wp_error( $mNewUserId ) && function_exists( 'wp_new_user_notification' ) ) {
-			wp_new_user_notification( $mNewUserId, null, $bSendUserNotification ? 'both' : 'admin' );
+		$newUserId = wp_insert_user( $new );
+		if (!is_wp_error( $newUserId ) && \function_exists( 'wp_new_user_notification' ) ) {
+			wp_new_user_notification( $newUserId, null, $sendUserNotification ? 'both' : 'admin' );
 		}
-		return $mNewUserId;
+		return $newUserId;
 	}
 
 	/**
-	 * @param int  $nUserId
-	 * @param bool $bPermitAdminDelete
-	 * @param int  $nReassignUserId
-	 * @return bool
-	 * @throws Exception
+	 * @throws \Exception
 	 */
-	public function deleteUser( $nUserId, $bPermitAdminDelete = false, $nReassignUserId = null ) {
-		if ( !function_exists( 'wp_delete_user' ) ) {
+	public function deleteUser( int $userID, bool $permitAdminDelete = false, int $reassignUserID = 0 ) :bool {
+		if ( !\function_exists( 'wp_delete_user' ) ) {
 			include( ABSPATH.'wp-admin/includes/user.php' );
 			if ( !function_exists( 'wp_delete_user' ) ) {
 				throw new Exception( 'Could not find the function wp_delete_user()' );
 			}
 		}
-		if ( empty( $nUserId ) ) {
+		if ( empty( $userID ) ) {
 			throw new Exception( 'User ID value was not set' );
 		}
-		if ( $nUserId <= 0 ) {
-			throw new Exception( sprintf( 'Supplied User ID "%s" to delete was less than or equal to zero', $nUserId ) );
+		if ( $userID <= 0 ) {
+			throw new Exception( sprintf( 'Supplied User ID "%s" to delete was less than or equal to zero', esc_html( $userID ) ) );
 		}
 
-		$oUserToDelete = $this->getUserById( $nUserId );
-		if ( empty( $oUserToDelete ) ) {
-			throw new Exception( sprintf( 'Could not load User with ID "%s" to delete', $nUserId ) );
+		$user = $this->getUserById( $userID );
+		if ( empty( $user ) ) {
+			throw new Exception( sprintf( 'Could not load User with ID "%s" to delete', esc_html( $userID ) ) );
 		}
-		if ( !$bPermitAdminDelete && $this->isUserAdmin( $oUserToDelete ) ) {
-			throw new Exception( sprintf( 'Attempting to delete Administrator User ID "%s"', $nUserId ) );
+		if ( !$permitAdminDelete && $this->isUserAdmin( $user ) ) {
+			throw new Exception( sprintf( 'Attempting to delete Administrator User ID "%s"', esc_html( $userID ) ) );
 		}
 
-		return wp_delete_user( $nUserId, $nReassignUserId );
+		return wp_delete_user( $userID, empty( $reassignUserID ) ? null : $reassignUserID );
 	}
 
-	/**
-	 * @param string  $sKey
-	 * @param integer $nUserId -user ID
-	 * @return boolean
-	 */
-	public function deleteUserMeta( $sKey, $nUserId = null ) {
-		if ( empty( $nUserId ) ) {
-			$nUserId = $this->getCurrentWpUserId();
-		}
-		$bSuccess = false;
-		if ( $nUserId > 0 ) {
-			$bSuccess = delete_user_meta( $nUserId, $sKey );
-		}
-		return $bSuccess;
+	public function getCurrentUserLevel() :int {
+		return $this->getCurrentWpUser() instanceof WP_User ? (int)$this->getCurrentWpUser()->get( 'user_level' ) : -1;
 	}
 
-	/**
-	 * @param array $aLoginUrlParams
-	 */
-	public function forceUserRelogin( $aLoginUrlParams = [] ) {
-		$this->logoutUser();
-		$this->loadWP()->redirectToLogin( $aLoginUrlParams );
-	}
-
-	/**
-	 * @return integer
-	 */
-	public function getCurrentUserLevel() {
-		$oUser = $this->getCurrentWpUser();
-		return ( is_object( $oUser ) && ( $oUser instanceof WP_User ) ) ? $oUser->get( 'user_level' ) : -1;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function getCanAddUpdateCurrentUserMeta() {
-		$bCanMeta = false;
+	public function getCanAddUpdateCurrentUserMeta() :bool {
+		$canMeta = false;
 		try {
 			if ( $this->isUserLoggedIn() ) {
-				$sKey = 'icwp-flag-can-store-user-meta';
-				$sMeta = $this->getUserMeta( $sKey );
-				if ( $sMeta == 'icwp' ) {
-					$bCanMeta = true;
-				}
-				else {
-					$bCanMeta = $this->updateUserMeta( $sKey, 'icwp' );
-				}
+				$key = 'icwp-flag-can-store-user-meta';
+				$theMeta = $this->getUserMeta( $key );
+				$canMeta = $theMeta == 'icwp' || $this->updateUserMeta( $key, 'icwp' );
 			}
 		}
-		catch ( Exception $oE ) {
+		catch ( Exception $e ) {
 		}
-		return $bCanMeta;
+		return $canMeta;
 	}
 
 	/**
@@ -140,9 +89,8 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	 */
 	public function getCurrentWpUser() {
 		if ( $this->isUserLoggedIn() ) {
-			$oUser = wp_get_current_user();
-			if ( is_object( $oUser ) && $oUser instanceof WP_User ) {
-				return $oUser;
+			if ( wp_get_current_user() instanceof WP_User ) {
+				return wp_get_current_user();
 			}
 		}
 		return null;
@@ -151,29 +99,17 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	/**
 	 * @return int - 0 if not logged in or can't get the current User
 	 */
-	public function getCurrentWpUserId() {
-		$oUser = $this->getCurrentWpUser();
-		$nId = is_null( $oUser ) ? 0 : $oUser->ID;
-		return $nId;
+	public function getCurrentWpUserId() :int {
+		$u = $this->getCurrentWpUser();
+		return \is_null( $u ) ? 0 : (int)$u->ID;
 	}
 
 	/**
-	 * @param $sUsername
-	 * @return false|WP_User
+	 * @param $username
+	 * @return ?\WP_User
 	 */
-	public function getUserByUsername( $sUsername ) {
-		if ( empty( $sUsername ) ) {
-			return false;
-		}
-
-		if ( version_compare( $this->loadWP()->getWordpressVersion(), '2.8.0', '<' ) ) {
-			$oUser = get_userdatabylogin( $sUsername );
-		}
-		else {
-			$oUser = get_user_by( 'login', $sUsername );
-		}
-
-		return $oUser;
+	public function getUserByUsername( $username ) {
+		return empty( $username ) ? null : get_user_by( 'login', $username );
 	}
 
 	/**
@@ -189,45 +125,31 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @param string   $sKey    should be already prefixed
-	 * @param int|null $nUserId - if omitted get for current user
+	 * @param string   $sKey   should be already prefixed
+	 * @param int|null $userID - if omitted get for current user
 	 * @return false|string
 	 */
-	public function getUserMeta( $sKey, $nUserId = null ) {
-		if ( empty( $nUserId ) ) {
-			$nUserId = $this->getCurrentWpUserId();
+	public function getUserMeta( $sKey, $userID = null ) {
+		if ( empty( $userID ) ) {
+			$userID = $this->getCurrentWpUserId();
 		}
 
 		$mResult = false;
-		if ( $nUserId > 0 ) {
-			$mResult = get_user_meta( $nUserId, $sKey, true );
+		if ( $userID > 0 ) {
+			$mResult = get_user_meta( $userID, $sKey, true );
 		}
 		return $mResult;
 	}
 
 	/**
-	 * @param WP_User|null $oUser
-	 * @return bool
+	 * @param \WP_User|null $user
 	 */
-	public function isUserAdmin( $oUser = null ) {
-		if ( empty( $oUser ) ) {
-			$bIsAdmin = $this->isUserLoggedIn() && current_user_can( 'manage_options' );
-		}
-		else {
-			$bIsAdmin = user_can( $oUser, 'manage_options' );
-		}
-		return $bIsAdmin;
+	public function isUserAdmin( $user = null ) :bool {
+		return $user instanceof \WP_User ? user_can( $user, 'manage_options' ) : $this->isUserLoggedIn() && current_user_can( 'manage_options' );
 	}
 
-	/**
-	 * @return bool
-	 * @throws Exception
-	 */
-	public function isUserLoggedIn() {
-		if ( !function_exists( 'is_user_logged_in' ) ) {
-			throw new Exception( sprintf( 'Function %s is not ready - you are calling it too early in the WP load.', 'is_user_logged_in()' ) );
-		}
-		return is_user_logged_in();
+	public function isUserLoggedIn() :bool {
+		return did_action( 'init' ) && is_user_logged_in();
 	}
 
 	/**
@@ -240,10 +162,10 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	/**
 	 * Updates the user meta data for the current (or supplied user ID)
 	 *
-	 * @param string  $sKey
-	 * @param mixed   $mValue
-	 * @param integer $nUserId -user ID
-	 * @return boolean
+	 * @param string $sKey
+	 * @param mixed  $mValue
+	 * @param int    $nUserId -user ID
+	 * @return bool
 	 */
 	public function updateUserMeta( $sKey, $mValue, $nUserId = null ) {
 		if ( empty( $nUserId ) ) {
@@ -258,26 +180,23 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @param string $sUsername
-	 * @param bool   $bSilentLogin
-	 * @return bool
+	 * @param string $username
 	 */
-	public function setUserLoggedIn( $sUsername, $bSilentLogin = false ) {
-		if ( !defined( 'COOKIEHASH' ) ) {
-			wp_cookie_constants();
+	public function setUserLoggedIn( $username, bool $silent = false ) :bool {
+		$success = false;
+		$user = $this->getUserByUsername( $username );
+		if ( \is_a( $user, 'WP_User' ) ) {
+			if ( !\defined( 'COOKIEHASH' ) ) {
+				wp_cookie_constants();
+			}
+			wp_clear_auth_cookie();
+			wp_set_current_user( $user->ID, $user->get( 'user_login' ) );
+			wp_set_auth_cookie( $user->ID, true );
+			if ( !$silent ) {
+				do_action( 'wp_login', $user->get( 'user_login' ), $user );
+			}
+			$success = true;
 		}
-
-		$oUser = $this->getUserByUsername( $sUsername );
-		if ( !is_a( $oUser, 'WP_User' ) ) {
-			return false;
-		}
-
-		wp_clear_auth_cookie();
-		wp_set_current_user( $oUser->ID, $oUser->get( 'user_login' ) );
-		wp_set_auth_cookie( $oUser->ID, true );
-		if ( !$bSilentLogin ) {
-			do_action( 'wp_login', $oUser->get( 'user_login' ), $oUser );
-		}
-		return true;
+		return $success;
 	}
 }

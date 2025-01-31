@@ -18,12 +18,12 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	protected $aRawOptionsConfigData;
 
 	/**
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $bNeedSave;
 
 	/**
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $bRebuildFromFile = false;
 
@@ -136,7 +136,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return array
+	 * @deprecated 4.5
 	 */
 	public function getAdminNotices() {
 		$aRawConfig = $this->getRawData_FullFeatureConfig();
@@ -153,7 +153,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	/**
 	 * Determines whether the given option key is a valid option
 	 * @param string
-	 * @return boolean
+	 * @return bool
 	 */
 	public function getIsValidOptionKey( $sOptionKey ) {
 		return in_array( $sOptionKey, $this->getOptionsKeys() );
@@ -287,7 +287,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	/**
 	 * @param         $sKey
 	 * @param mixed   $mValueToTest
-	 * @param boolean $bStrict
+	 * @param bool    $bStrict
 	 * @return bool
 	 */
 	public function getOptIs( $sKey, $mValueToTest, $bStrict = false ) {
@@ -329,7 +329,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 		try {
 			return $this->loadOptionsValuesFromStorage();
 		}
-		catch ( Exception $oE ) {
+		catch ( \Exception $e ) {
 			return [];
 		}
 	}
@@ -339,58 +339,53 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	 * @throws Exception
 	 */
 	public function getRawData_FullFeatureConfig() {
-		if ( empty( $this->aRawOptionsConfigData ) ) {
-			$this->aRawOptionsConfigData = $this->readConfiguration();
-		}
-		return $this->aRawOptionsConfigData;
+		return $this->aRawOptionsConfigData ?? $this->aRawOptionsConfigData = $this->readConfiguration();
 	}
 
 	/**
 	 * Return the section of the Raw config that is the "options" key only.
 	 * @return array
+	 * @throws \Exception
 	 */
 	protected function getRawData_AllOptions() {
-		$aAllRawOptions = $this->getRawData_FullFeatureConfig();
-		return isset( $aAllRawOptions[ 'options' ] ) ? $aAllRawOptions[ 'options' ] : [];
+		return $this->getRawData_FullFeatureConfig()[ 'options' ] ?? [];
 	}
 
 	/**
 	 * Return the section of the Raw config that is the "options" key only.
 	 * @return array
+	 * @throws \Exception
 	 */
 	protected function getRawData_Requirements() {
-		$aAllRawOptions = $this->getRawData_FullFeatureConfig();
-		return isset( $aAllRawOptions[ 'requirements' ] ) ? $aAllRawOptions[ 'requirements' ] : [];
+		return $this->getRawData_FullFeatureConfig()[ 'requirements' ] ?? [];
 	}
 
 	/**
 	 * Return the section of the Raw config that is the "options" key only.
 	 * @return array
+	 * @throws \Exception
 	 */
 	protected function getRawData_MenuItems() {
-		$aAllRawOptions = $this->getRawData_FullFeatureConfig();
-		return isset( $aAllRawOptions[ 'menu_items' ] ) ? $aAllRawOptions[ 'menu_items' ] : [];
+		return $this->getRawData_FullFeatureConfig()[ 'menu_items' ] ?? [];
 	}
 
 	/**
 	 * Return the section of the Raw config that is the "options" key only.
-	 * @param string $sOptionKey
-	 * @return array
+	 * @param string $key
+	 * @throws \Exception
 	 */
-	public function getRawData_SingleOption( $sOptionKey ) {
-		$aAllRawOptions = $this->getRawData_AllOptions();
-		if ( is_array( $aAllRawOptions ) ) {
-			foreach ( $aAllRawOptions as $aOption ) {
-				if ( isset( $aOption[ 'key' ] ) && ( $sOptionKey == $aOption[ 'key' ] ) ) {
-					return $aOption;
-				}
+	public function getRawData_SingleOption( $key ) {
+		$allRawOptions = $this->getRawData_AllOptions();
+		foreach ( \is_array( $allRawOptions ) ? $allRawOptions : [] as $opt ) {
+			if ( isset( $opt[ 'key' ] ) && ( $key == $opt[ 'key' ] ) ) {
+				return $opt;
 			}
 		}
 		return null;
 	}
 
 	/**
-	 * @return boolean
+	 * @return bool
 	 */
 	public function getRebuildFromFile() {
 		return $this->bRebuildFromFile;
@@ -398,7 +393,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 
 	/**
 	 * @param string $sOptionKey
-	 * @return boolean
+	 * @return bool
 	 */
 	public function resetOptToDefault( $sOptionKey ) {
 		return $this->setOpt( $sOptionKey, $this->getOptDefault( $sOptionKey ), true );
@@ -412,28 +407,28 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return boolean
+	 * @return bool
 	 */
 	public function getIfLoadOptionsFromStorage() {
 		return $this->bLoadFromSaved;
 	}
 
 	/**
-	 * @param boolean $bLoadFromSaved
+	 * @param bool $bLoadFromSaved
 	 */
 	public function setIfLoadOptionsFromStorage( $bLoadFromSaved ) {
 		$this->bLoadFromSaved = $bLoadFromSaved;
 	}
 
 	/**
-	 * @param boolean $bNeed
+	 * @param bool $bNeed
 	 */
 	public function setNeedSave( $bNeed ) {
 		$this->bNeedSave = $bNeed;
 	}
 
 	/**
-	 * @param boolean $bRebuild
+	 * @param bool $bRebuild
 	 */
 	public function setRebuildFromFile( $bRebuild ) {
 		$this->bRebuildFromFile = $bRebuild;
@@ -453,9 +448,9 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @param string  $sOptionKey
-	 * @param mixed   $mValue
-	 * @param boolean $bForce
+	 * @param string $sOptionKey
+	 * @param mixed  $mValue
+	 * @param bool   $bForce
 	 * @return mixed
 	 */
 	public function setOpt( $sOptionKey, $mValue, $bForce = false ) {
@@ -514,8 +509,6 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 
 	/** PRIVATE STUFF */
 
-	/**
-	 */
 	private function cleanOptions() {
 		if ( empty( $this->aOptionsValues ) || !is_array( $this->aOptionsValues ) ) {
 			return;
@@ -557,35 +550,32 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	 * @return array
 	 */
 	private function readConfiguration() {
-		$oWp = $this->loadWP();
+		$WP = $this->loadWP();
 
-		$aConfig = $oWp->getOption( $this->getConfigStorageKey() );
+		$cfg = $WP->getOption( $this->getConfigStorageKey() );
 
-		$bRebuild = $this->getRebuildFromFile() || empty( $aConfig );
-		if ( !$bRebuild && !empty( $aConfig ) && is_array( $aConfig ) ) {
+		$rebuild = true;//$this->getRebuildFromFile() || empty( $cfg );
+		if ( !$rebuild && !empty( $cfg ) && is_array( $cfg ) ) {
 
-			if ( !isset( $aConfig[ 'meta_modts' ] ) ) {
-				$aConfig[ 'meta_modts' ] = 0;
+			if ( !isset( $cfg[ 'meta_modts' ] ) ) {
+				$cfg[ 'meta_modts' ] = 0;
 			}
-			$bRebuild = $this->getConfigModTime() > $aConfig[ 'meta_modts' ];
+			$rebuild = $this->getConfigModTime() > $cfg[ 'meta_modts' ];
 		}
 
-		if ( $bRebuild ) {
+		if ( $rebuild ) {
 			try {
-				$aConfig = $this->readConfigurationJson();
+				$cfg = $this->readConfigurationJson();
 			}
-			catch ( Exception $oE ) {
-				if ( $oWp->isDebug() ) {
-					trigger_error( $oE->getMessage() );
-				}
-				$aConfig = [];
+			catch ( \Exception $e ) {
+				$cfg = [];
 			}
-			$aConfig[ 'meta_modts' ] = $this->getConfigModTime();
-			$oWp->updateOption( $this->getConfigStorageKey(), $aConfig );
+			$cfg[ 'meta_modts' ] = $this->getConfigModTime();
+			$WP->updateOption( $this->getConfigStorageKey(), $cfg );
 		}
 
-		$this->setRebuildFromFile( $bRebuild );
-		return $aConfig;
+		$this->setRebuildFromFile( $rebuild );
+		return $cfg;
 	}
 
 	/**
@@ -593,28 +583,24 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	 * @throws Exception
 	 */
 	private function readConfigurationJson() {
-		$sPath = $this->getPathToConfig();
-		if ( empty( $sPath ) || !$this->loadFS()->isFile( $sPath ) ) {
-			throw new Exception( sprintf( 'Configuration file "%s" does not exist.', $this->getPathToConfig() ) );
+		$path = $this->getPathToConfig();
+		if ( empty( $path ) || !$this->loadFS()->isFile( $path ) ) {
+			throw new Exception( sprintf( 'Configuration file "%s" does not exist.', esc_html( $path ) ) );
 		}
 
-		$aConfig = json_decode( $this->loadDP()->readFileContentsUsingInclude( $sPath ), true );
-
-		if ( empty( $aConfig ) ) {
-			throw new Exception( sprintf( 'Reading JSON configuration from file "%s" failed.', $this->getOptionsName() ) );
+		$cfg = \json_decode( $this->loadDP()->readFileContentsUsingInclude( $path ), true );
+		if ( empty( $cfg ) ) {
+			throw new Exception( sprintf( 'Reading JSON configuration from file "%s" failed.', esc_html( $path ) ) );
 		}
-		return $aConfig;
+		return $cfg;
+	}
+
+	private function getConfigStorageKey() :string {
+		return 'icwp_app_'.\md5( $this->getPathToConfig() );
 	}
 
 	/**
-	 * @return string
-	 */
-	private function getConfigStorageKey() {
-		return 'icwp_app_'.md5( $this->getPathToConfig() );
-	}
-
-	/**
-	 * @return string
+	 * @return int|null
 	 */
 	protected function getConfigModTime() {
 		return $this->loadFS()->getModifiedTime( $this->getPathToConfig() );

@@ -19,7 +19,7 @@ class ICWP_Upgrader_Skin extends \WP_Upgrader_Skin {
 	/**
 	 * @inheritDoc
 	 */
-	function feedback( $string, ...$args ) {
+	public function feedback( $string, ...$args ) {
 		// overriding this prevent automatic echo of feedback
 		if ( empty( $this->aFeedback ) ) {
 			$this->aFeedback = [];

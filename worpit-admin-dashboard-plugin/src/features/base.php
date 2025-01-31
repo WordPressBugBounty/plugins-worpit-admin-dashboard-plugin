@@ -3,19 +3,24 @@
 abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 
 	/**
-	 * @var \ICWP_APP_Plugin_Controller|\FernleafSystems\Wordpress\Plugin\iControlWP\Controller
+	 * @var \FernleafSystems\Wordpress\Plugin\iControlWP\Control\Controller
 	 */
 	protected $oPluginController;
 
 	/**
-	 * @var ICWP_APP_OptionsVO
+	 * @var \ICWP_APP_OptionsVO
+	 */
+	protected $opts;
+
+	/**
+	 * @var \ICWP_APP_OptionsVO
 	 */
 	protected $oOptions;
 
 	/**
-	 * @var boolean
+	 * @var bool
 	 */
-	protected $bModuleMeetsRequirements;
+	protected $requirementsMet;
 
 	/**
 	 * @var string
@@ -27,7 +32,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	const PluginVersionKey = 'current_plugin_version';
 
 	/**
-	 * @var boolean
+	 * @var bool
 	 */
 	protected $bPluginDeleting = false;
 
@@ -39,27 +44,17 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	/**
 	 * @var string
 	 */
-	protected $sFeatureName;
+	protected $name;
 
 	/**
 	 * @var string
 	 */
-	protected $sFeatureSlug;
+	protected $slug;
 
 	/**
-	 * @var boolean
+	 * @var \ICWP_APP_Processor_Base|mixed
 	 */
-	protected static $bForceOffFileExists;
-
-	/**
-	 * @var ICWP_APP_FeatureHandler_Email
-	 */
-	protected static $oEmailHandler;
-
-	/**
-	 * @var ICWP_APP_Processor_Base
-	 */
-	protected $oFeatureProcessor;
+	protected $processor;
 
 	/**
 	 * @var string
@@ -67,195 +62,113 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	protected static $sActivelyDisplayedModuleOptions = '';
 
 	/**
-	 * @param ICWP_APP_Plugin_Controller $oPluginController
-	 * @param array                      $aFeatureProperties
-	 * @throws Exception
+	 * @param array $properties
+	 * @throws \Exception
 	 */
-	public function __construct( $oPluginController, $aFeatureProperties = [] ) {
-		if ( empty( $oPluginController ) ) {
-			throw new Exception();
-		}
-		$this->oPluginController = $oPluginController;
-
-		if ( isset( $aFeatureProperties[ 'storage_key' ] ) ) {
-			$this->sOptionsStoreKey = $aFeatureProperties[ 'storage_key' ];
+	public function __construct( $properties = [] ) {
+		if ( isset( $properties[ 'storage_key' ] ) ) {
+			$this->sOptionsStoreKey = $properties[ 'storage_key' ];
 		}
 
-		if ( isset( $aFeatureProperties[ 'slug' ] ) ) {
-			$this->sFeatureSlug = $aFeatureProperties[ 'slug' ];
+		if ( isset( $properties[ 'slug' ] ) ) {
+			$this->slug = $properties[ 'slug' ];
 		}
 
 		// before proceeding, we must now test the system meets the minimum requirements.
 		if ( $this->getModuleMeetRequirements() ) {
 
-			$nRunPriority = $aFeatureProperties[ 'load_priority' ] ?? 100;
+			$nRunPriority = $properties[ 'load_priority' ] ?? 100;
 			// Handle any upgrades as necessary (only go near this if it's the admin area)
 			add_action( 'plugins_loaded', [ $this, 'onWpPluginsLoaded' ], $nRunPriority );
-			add_action( 'init', [ $this, 'onWpInit' ], 1 );
-			add_action( $this->doPluginPrefix( 'form_submit' ), [ $this, 'handleFormSubmit' ] );
-			add_filter( $this->doPluginPrefix( 'filter_plugin_submenu_items' ), [
+			add_action( self::con()->doPluginPrefix( 'form_submit' ), [ $this, 'handleFormSubmit' ] );
+			add_filter( self::con()->doPluginPrefix( 'filter_plugin_submenu_items' ), [
 				$this,
 				'filter_addPluginSubMenuItem'
 			] );
-			add_filter( $this->doPluginPrefix( 'get_feature_summary_data' ), [
+			add_filter( self::con()->doPluginPrefix( 'get_feature_summary_data' ), [
 				$this,
 				'filter_getFeatureSummaryData'
 			] );
-			add_action( $this->doPluginPrefix( 'plugin_shutdown' ), [ $this, 'action_doFeatureShutdown' ] );
-			add_action( $this->doPluginPrefix( 'delete_plugin' ), [ $this, 'deletePluginOptions' ] );
-			add_filter( $this->doPluginPrefix( 'aggregate_all_plugin_options' ), [
-				$this,
-				'aggregateOptionsValues'
-			] );
-
-			add_filter( $this->doPluginPrefix( 'register_admin_notices' ), [ $this, 'fRegisterAdminNotices' ] );
-			add_filter( $this->doPluginPrefix( 'gather_options_for_export' ), [
-				$this,
-				'exportTransferableOptions'
-			] );
-
-			add_action( $this->doPluginPrefix( 'set_options_'.$this->getFeatureSlug() ), [
-				$this,
-				'actionSetOptions'
-			] );
+			add_action( self::con()->doPluginPrefix( 'plugin_shutdown' ), [ $this, 'action_doFeatureShutdown' ] );
+			add_action( self::con()->doPluginPrefix( 'delete_plugin' ), [ $this, 'deletePluginOptions' ] );
 
 			$this->doPostConstruction();
 		}
 	}
 
-	/**
-	 * @param array $aAdminNotices
-	 * @return array
-	 */
-	public function fRegisterAdminNotices( $aAdminNotices ) {
-		if ( !is_array( $aAdminNotices ) ) {
-			$aAdminNotices = [];
-		}
-		return array_merge( $aAdminNotices, $this->getOptionsVo()->getAdminNotices() );
+	protected function getModuleMeetRequirements() :bool {
+		return $this->requirementsMet ?? $this->requirementsMet = $this->verifyModuleMeetRequirements();
 	}
 
-	/**
-	 * @return bool
-	 */
-	protected function getModuleMeetRequirements() {
-		if ( !isset( $this->bModuleMeetsRequirements ) ) {
-			$this->bModuleMeetsRequirements = $this->verifyModuleMeetRequirements();
-		}
-		return $this->bModuleMeetsRequirements;
-	}
+	protected function verifyModuleMeetRequirements() :bool {
+		$met = true;
 
-	/**
-	 * @return bool
-	 */
-	protected function verifyModuleMeetRequirements() {
-		$bMeetsReqs = true;
+		$php = $this->opts()->getFeatureRequirement( 'php' );
+		if ( !empty( $php ) ) {
 
-		$aPhpReqs = $this->getOptionsVo()->getFeatureRequirement( 'php' );
-		if ( !empty( $aPhpReqs ) ) {
-
-			if ( !empty( $aPhpReqs[ 'version' ] ) ) {
-				$bMeetsReqs = $bMeetsReqs && $this->loadDP()
-												  ->getPhpVersionIsAtLeast( $aPhpReqs[ 'version' ] );
+			if ( !empty( $php[ 'version' ] ) ) {
+				$met = $met && $this->loadDP()->getPhpVersionIsAtLeast( $php[ 'version' ] );
 			}
 
-			if ( !empty( $aPhpReqs[ 'functions' ] ) && is_array( $aPhpReqs[ 'functions' ] ) ) {
-				foreach ( $aPhpReqs[ 'functions' ] as $sFunction ) {
-					$bMeetsReqs = $bMeetsReqs && function_exists( $sFunction );
+			if ( !empty( $php[ 'functions' ] ) && \is_array( $php[ 'functions' ] ) ) {
+				foreach ( $php[ 'functions' ] as $sFunction ) {
+					$met = $met && function_exists( $sFunction );
 				}
 			}
-			if ( !empty( $aPhpReqs[ 'constants' ] ) && is_array( $aPhpReqs[ 'constants' ] ) ) {
-				foreach ( $aPhpReqs[ 'constants' ] as $sConstant ) {
-					$bMeetsReqs = $bMeetsReqs && defined( $sConstant );
+			if ( !empty( $php[ 'constants' ] ) && is_array( $php[ 'constants' ] ) ) {
+				foreach ( $php[ 'constants' ] as $sConstant ) {
+					$met = $met && defined( $sConstant );
 				}
 			}
 		}
 
-		return $bMeetsReqs;
+		return $met;
 	}
 
 	protected function doPostConstruction() {
 	}
 
 	public function onWpPluginsLoaded() {
-		if ( $this->getIsMainFeatureEnabled() ) {
-			if ( $this->doExecutePreProcessor() && !$this->getController()->getIfOverrideOff() ) {
-				$this->doExecuteProcessor();
-			}
+		if ( $this->getIsMainFeatureEnabled()
+			 && $this->getProcessor() instanceof \ICWP_APP_Processor_Base ) {
+			$this->getProcessor()->run();
 		}
 	}
 
-	/**
-	 * @param array $aOptions
-	 */
-	public function actionSetOptions( $aOptions ) {
-		$this->getOptionsVo()->setMultipleOptions( $aOptions )->doOptionsSave();
+	protected function getProcessorClassName() :string {
+		return \ucwords( self::con()->getOptionStoragePrefix() ).'Processor_'.
+			   \str_replace( ' ', '', \ucwords( \str_replace( '_', ' ', $this->getFeatureSlug() ) ) );
 	}
 
 	/**
-	 * Used to effect certain processing that is to do with options etc. but isn't related to processing
-	 * functionality of the plugin.
-	 */
-	protected function doExecutePreProcessor() {
-		$oProcessor = $this->getProcessor();
-		return ( is_object( $oProcessor ) && $oProcessor instanceof ICWP_APP_Processor_Base );
-	}
-
-	protected function doExecuteProcessor() {
-		$this->getProcessor()->run();
-	}
-
-	/**
-	 * A action added to WordPress 'init' hook
-	 */
-	public function onWpInit() {
-		$this->updateHandler();
-		$this->setupAjaxHandlers();
-	}
-
-	/**
-	 * Override this and adapt per feature
-	 * @return ICWP_APP_Processor_Base
-	 */
-	protected function loadFeatureProcessor() {
-		if ( !isset( $this->oFeatureProcessor ) ) {
-			include_once( $this->getController()
-							   ->getPath_SourceFile( sprintf( 'processors%s%s.php', DIRECTORY_SEPARATOR, $this->getFeatureSlug() ) ) );
-			$sClassName = $this->getProcessorClassName();
-			if ( !class_exists( $sClassName, false ) ) {
-				return null;
-			}
-			$this->oFeatureProcessor = new $sClassName( $this );
-		}
-		return $this->oFeatureProcessor;
-	}
-
-	/**
-	 * Override this and adapt per feature
-	 * @return string
-	 */
-	protected function getProcessorClassName() {
-		return ucwords( $this->getController()->getOptionStoragePrefix() ).'Processor_'.
-			   str_replace( ' ', '', ucwords( str_replace( '_', ' ', $this->getFeatureSlug() ) ) );
-	}
-
-	/**
-	 * @return ICWP_APP_OptionsVO
+	 * @return \ICWP_APP_OptionsVO
+	 * @deprecated 4.5
 	 */
 	public function getOptionsVo() {
-		if ( !isset( $this->oOptions ) ) {
+		if ( \method_exists( $this, 'opts' ) ) {
+			return $this->opts();
+		}
+		elseif ( !isset( $this->oOptions ) ) {
 			$this->oOptions = new ICWP_APP_OptionsVO( $this->getFeatureSlug() );
-			$this->oOptions->setRebuildFromFile( $this->getController()->getIsRebuildOptionsFromFile() );
+			$this->oOptions->setRebuildFromFile( self::con()->getIsRebuildOptionsFromFile() );
 			$this->oOptions->setOptionsStorageKey( $this->getOptionsStorageKey() );
-			$this->oOptions->setIfLoadOptionsFromStorage( !$this->getController()->getIsResetPlugin() );
+			$this->oOptions->setIfLoadOptionsFromStorage( !self::con()->getIsResetPlugin() );
 		}
 		return $this->oOptions;
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function getIsUpgrading() {
-		return $this->getVersion() != $this->getController()->getVersion();
+	public function opts() :\ICWP_APP_OptionsVO {
+		if ( !isset( $this->opts ) ) {
+			$this->opts = new \ICWP_APP_OptionsVO( $this->getFeatureSlug() );
+			$this->opts->setRebuildFromFile( self::con()->getIsRebuildOptionsFromFile() );
+			$this->opts->setOptionsStorageKey( $this->getOptionsStorageKey() );
+			$this->opts->setIfLoadOptionsFromStorage( !self::con()->getIsResetPlugin() );
+		}
+		return $this->opts;
+	}
+
+	public function getIsUpgrading() :bool {
+		return $this->getVersion() != self::con()->getVersion();
 	}
 
 	/**
@@ -280,53 +193,30 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	protected function getOptionsStorageKey() {
 		if ( !isset( $this->sOptionsStoreKey ) ) {
 			// not ideal as it doesn't take into account custom storage keys as when passed into the constructor
-			$this->sOptionsStoreKey = $this->getOptionsVo()->getFeatureProperty( 'storage_key' );
+			$this->sOptionsStoreKey = $this->opts()->getFeatureProperty( 'storage_key' );
 		}
 
-		return $this->prefixOptionKey( $this->sOptionsStoreKey ).'_options';
+		return self::con()->doPluginPrefix( $this->sOptionsStoreKey, '_' ).'_options';
 	}
 
 	/**
-	 * @return ICWP_APP_Processor_Base
+	 * @return \ICWP_APP_Processor_Base
 	 */
 	public function getProcessor() {
-		return $this->loadFeatureProcessor();
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getFeatureAdminPageUrl() {
-		$sUrl = sprintf( 'admin.php?page=%s', $this->doPluginPrefix( $this->getFeatureSlug() ) );
-		if ( $this->getController()->getIsWpmsNetworkAdminOnly() ) {
-			$sUrl = network_admin_url( $sUrl );
+		if ( !isset( $this->processor ) ) {
+			include_once( self::con()
+							  ->getPath_SourceFile( sprintf( 'processors%s%s.php', \DIRECTORY_SEPARATOR, $this->getFeatureSlug() ) ) );
+			$class = $this->getProcessorClassName();
+			if ( !\class_exists( $class, false ) ) {
+				return null;
+			}
+			$this->processor = new $class( $this );
 		}
-		else {
-			$sUrl = admin_url( $sUrl );
-		}
-		return $sUrl;
-	}
-
-	/**
-	 * @return ICWP_APP_FeatureHandler_Email
-	 */
-	public function getEmailHandler() {
-		if ( is_null( self::$oEmailHandler ) ) {
-			self::$oEmailHandler = $this->getController()->loadFeatureHandler( [ 'slug' => 'email' ] );
-		}
-		return self::$oEmailHandler;
-	}
-
-	/**
-	 * @return ICWP_APP_Processor_Email
-	 */
-	public function getEmailProcessor() {
-		return $this->getEmailHandler()->getProcessor();
+		return $this->processor;
 	}
 
 	/**
 	 * @param bool $bEnable
-	 *
 	 * @return bool
 	 */
 	public function setIsMainFeatureEnabled( $bEnable ) {
@@ -337,35 +227,23 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 * @return mixed
 	 */
 	public function getIsMainFeatureEnabled() {
-		if ( apply_filters( $this->doPluginPrefix( 'globally_disabled' ), false ) ) {
+		if ( apply_filters( self::con()->doPluginPrefix( 'globally_disabled' ), false ) ) {
 			return false;
 		}
-
-		$bEnabled =
-			$this->getOptIs( 'enable_'.$this->getFeatureSlug(), 'Y' )
-			|| $this->getOptIs( 'enable_'.$this->getFeatureSlug(), true, true )
-			|| ( $this->getOptionsVo()->getFeatureProperty( 'auto_enabled' ) === true );
-		return $bEnabled;
+		return $this->getOptIs( 'enable_'.$this->getFeatureSlug(), 'Y' )
+			   || $this->getOptIs( 'enable_'.$this->getFeatureSlug(), true, true )
+			   || ( $this->opts()->getFeatureProperty( 'auto_enabled' ) === true );
 	}
 
-	/**
-	 * @return string
-	 */
-	protected function getMainFeatureName() {
-		if ( !isset( $this->sFeatureName ) ) {
-			$this->sFeatureName = $this->getOptionsVo()->getFeatureProperty( 'name' );
-		}
-		return $this->sFeatureName;
+	protected function getMainFeatureName() :string {
+		return $this->name ?? $this->name = $this->opts()->getFeatureProperty( 'name' );
 	}
 
 	/**
 	 * @return string
 	 */
 	public function getFeatureSlug() {
-		if ( !isset( $this->sFeatureSlug ) ) {
-			$this->sFeatureSlug = $this->getOptionsVo()->getFeatureProperty( 'slug' );
-		}
-		return $this->sFeatureSlug;
+		return $this->slug ?? $this->slug = $this->opts()->getFeatureProperty( 'slug' );
 	}
 
 	/**
@@ -376,39 +254,30 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * With trailing slash
-	 * @param string $sSourceFile
-	 * @return string
-	 */
-	public function getResourcesDir( $sSourceFile = '' ) {
-		return $this->getController()->getRootDir().'resources/'.ltrim( $sSourceFile, DIRECTORY_SEPARATOR );
-	}
-
-	/**
 	 * @param array $aItems
 	 * @return array
 	 */
 	public function filter_addPluginSubMenuItem( $aItems ) {
-		$sMenuTitleName = $this->getOptionsVo()->getFeatureProperty( 'menu_title' );
+		$sMenuTitleName = $this->opts()->getFeatureProperty( 'menu_title' );
 		if ( is_null( $sMenuTitleName ) ) {
 			$sMenuTitleName = $this->getMainFeatureName();
 		}
 		if ( $this->getIfShowFeatureMenuItem() && !empty( $sMenuTitleName ) ) {
 
-			$sHumanName = $this->getController()->getHumanName();
+			$sHumanName = self::con()->getHumanName();
 
-			$bMenuHighlighted = $this->getOptionsVo()->getFeatureProperty( 'highlight_menu_item' );
+			$bMenuHighlighted = $this->opts()->getFeatureProperty( 'highlight_menu_item' );
 			if ( $bMenuHighlighted ) {
 				$sMenuTitleName = sprintf( '<span class="icwp_highlighted">%s</span>', $sMenuTitleName );
 			}
 			$sMenuPageTitle = $sMenuTitleName.' - '.$sHumanName;
 			$aItems[ $sMenuPageTitle ] = [
 				$sMenuTitleName,
-				$this->doPluginPrefix( $this->getFeatureSlug() ),
+				self::con()->doPluginPrefix( $this->getFeatureSlug() ),
 				[ $this, 'displayFeatureConfigPage' ]
 			];
 
-			$aAdditionalItems = $this->getOptionsVo()->getAdditionalMenuItems();
+			$aAdditionalItems = $this->opts()->getAdditionalMenuItems();
 			if ( !empty( $aAdditionalItems ) && is_array( $aAdditionalItems ) ) {
 
 				foreach ( $aAdditionalItems as $aMenuItem ) {
@@ -420,7 +289,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 					$sMenuPageTitle = $sHumanName.' - '.$aMenuItem[ 'title' ];
 					$aItems[ $sMenuPageTitle ] = [
 						$aMenuItem[ 'title' ],
-						$this->doPluginPrefix( $aMenuItem[ 'slug' ] ),
+						self::con()->doPluginPrefix( $aMenuItem[ 'slug' ] ),
 						[ $this, $aMenuItem[ 'callback' ] ]
 					];
 				}
@@ -445,14 +314,15 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 			return $aSummaryData;
 		}
 
-		$sMenuTitle = $this->getOptionsVo()->getFeatureProperty( 'menu_title' );
+		$sMenuTitle = $this->opts()->getFeatureProperty( 'menu_title' );
 		$aSummaryData[] = [
 			'enabled'    => $this->getIsMainFeatureEnabled(),
 			'active'     => self::$sActivelyDisplayedModuleOptions == $this->getFeatureSlug(),
 			'slug'       => $this->getFeatureSlug(),
 			'name'       => $this->getMainFeatureName(),
 			'menu_title' => empty( $sMenuTitle ) ? $this->getMainFeatureName() : $sMenuTitle,
-			'href'       => network_admin_url( 'admin.php?page='.$this->doPluginPrefix( $this->getFeatureSlug() ) )
+			'href'       => network_admin_url( 'admin.php?page='.self::con()
+																	 ->doPluginPrefix( $this->getFeatureSlug() ) )
 		];
 
 		return $aSummaryData;
@@ -461,33 +331,8 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	/**
 	 * @return bool
 	 */
-	public function hasPluginManageRights() {
-		if ( !current_user_can( $this->getController()->getBasePermissions() ) ) {
-			return false;
-		}
-
-		$oWpFunc = $this->loadWP();
-		if ( is_admin() && !$oWpFunc->isMultisite() ) {
-			return true;
-		}
-		elseif ( is_network_admin() && $oWpFunc->isMultisite() ) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * @return boolean
-	 */
 	public function getIfShowFeatureMenuItem() {
-		return $this->getOptionsVo()->getFeatureProperty( 'show_feature_menu_item' );
-	}
-
-	/**
-	 * @return boolean
-	 */
-	public function getIfUseSessions() {
-		return $this->getOptionsVo()->getFeatureProperty( 'use_sessions' );
+		return $this->opts()->getFeatureProperty( 'show_feature_menu_item' );
 	}
 
 	/**
@@ -495,7 +340,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 * @return mixed|null
 	 */
 	public function getDefinition( $sDefinitionKey ) {
-		return $this->getOptionsVo()->getFeatureDefinition( $sDefinitionKey );
+		return $this->opts()->getFeatureDefinition( $sDefinitionKey );
 	}
 
 	/**
@@ -504,19 +349,17 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 * @return mixed
 	 */
 	public function getOpt( $sOptionKey, $mDefault = false ) {
-		return $this->getOptionsVo()->getOpt( $sOptionKey, $mDefault );
+		return $this->opts()->getOpt( $sOptionKey, $mDefault );
 	}
 
 	/**
-	 * @param string  $sOptionKey
-	 * @param mixed   $mValueToTest
-	 * @param boolean $bStrict
-	 *
-	 * @return bool
+	 * @param string $sOptionKey
+	 * @param mixed  $mValueToTest
+	 * @param bool   $strict
 	 */
-	public function getOptIs( $sOptionKey, $mValueToTest, $bStrict = false ) {
-		$mOptionValue = $this->getOptionsVo()->getOpt( $sOptionKey );
-		return $bStrict ? $mOptionValue === $mValueToTest : $mOptionValue == $mValueToTest;
+	public function getOptIs( $sOptionKey, $mValueToTest, $strict = false ) :bool {
+		$mOptionValue = $this->opts()->getOpt( $sOptionKey );
+		return $strict ? $mOptionValue === $mValueToTest : $mOptionValue == $mValueToTest;
 	}
 
 	/**
@@ -533,7 +376,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 */
 	public function getVersion() {
 		$sVersion = $this->getOpt( self::PluginVersionKey );
-		return empty( $sVersion ) ? $this->getController()->getVersion() : $sVersion;
+		return empty( $sVersion ) ? self::con()->getVersion() : $sVersion;
 	}
 
 	/**
@@ -541,74 +384,27 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 *
 	 * @param string $sOptionKey
 	 * @param mixed  $mValue
-	 * @return boolean
+	 * @return bool
 	 */
 	public function setOpt( $sOptionKey, $mValue ) {
-		return $this->getOptionsVo()->setOpt( $sOptionKey, $mValue );
+		return $this->opts()->setOpt( $sOptionKey, $mValue );
 	}
 
 	/**
-	 * @param array $aOptions
+	 * @param array $options
 	 */
-	public function setOptions( $aOptions ) {
-		foreach ( $aOptions as $sKey => $mValue ) {
+	public function setOptions( $options ) {
+		foreach ( $options as $sKey => $mValue ) {
 			$this->setOpt( $sKey, $mValue );
 		}
 	}
 
-	protected function setupAjaxHandlers() {
-		if ( $this->loadWP()->getIsAjax() ) {
-			if ( is_admin() || is_network_admin() ) {
-				$this->adminAjaxHandlers();
-			}
-			$this->frontEndAjaxHandlers();
-		}
-	}
-
-	protected function adminAjaxHandlers() {
-	}
-
-	protected function frontEndAjaxHandlers() {
-	}
-
 	/**
-	 * Will send ajax error response immediately upon failure
-	 * @return bool
+	 * @param       $success
+	 * @param array $data
 	 */
-	protected function checkAjaxNonce() {
-
-		$sNonce = $this->loadDP()->FetchRequest( '_ajax_nonce', '' );
-		if ( empty( $sNonce ) ) {
-			$sMessage = $this->getTranslatedString( 'nonce_failed_empty', 'Nonce security checking failed - the nonce value was empty.' );
-		}
-		elseif ( wp_verify_nonce( $sNonce, 'icwp_ajax' ) === false ) {
-			$sMessage = $this->getTranslatedString( 'nonce_failed_supplied', 'Nonce security checking failed - the nonce supplied was "%s".' );
-			$sMessage = sprintf( $sMessage, $sNonce );
-		}
-		else {
-			return true; // At this stage we passed the nonce check
-		}
-
-		// At this stage we haven't returned after success so we failed the nonce check
-		$this->sendAjaxResponse( false, [ 'message' => $sMessage ] );
-		return false; //unreachable
-	}
-
-	/**
-	 * @param string $sKey
-	 * @param string $sDefault
-	 * @return string
-	 */
-	protected function getTranslatedString( $sKey, $sDefault ) {
-		return $sDefault;
-	}
-
-	/**
-	 * @param       $bSuccess
-	 * @param array $aData
-	 */
-	protected function sendAjaxResponse( $bSuccess, $aData = [] ) {
-		$bSuccess ? wp_send_json_success( $aData ) : wp_send_json_error( $aData );
+	protected function sendAjaxResponse( $success, $data = [] ) {
+		$success ? wp_send_json_success( $data ) : wp_send_json_error( $data );
 	}
 
 	/**
@@ -621,15 +417,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 		$this->initialiseKeyVars();
 		$this->updateOptionsVersion();
 		$this->doPrePluginOptionsSave();
-		return $this->getOptionsVo()->doOptionsSave();
-	}
-
-	/**
-	 * @param array $aAggregatedOptions
-	 * @return array
-	 */
-	public function aggregateOptionsValues( $aAggregatedOptions ) {
-		return array_merge( $aAggregatedOptions, $this->getOptionsVo()->getAllOptionsValues() );
+		return $this->opts()->doOptionsSave();
 	}
 
 	/**
@@ -642,7 +430,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 */
 	public function buildOptions() {
 
-		$aOptions = $this->getOptionsVo()->getLegacyOptionsConfigData();
+		$aOptions = $this->opts()->getLegacyOptionsConfigData();
 		foreach ( $aOptions as $nSectionKey => $aOptionsSection ) {
 
 			if ( empty( $aOptionsSection ) || !isset( $aOptionsSection[ 'section_options' ] ) ) {
@@ -684,20 +472,6 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 							$aDisplay[] = key( $aParts ).', '.reset( $aParts );
 						}
 						$mCurrentOptionVal = implode( "\n", $aDisplay );
-					}
-					$aOptionParams[ 'rows' ] = substr_count( $mCurrentOptionVal, "\n" ) + 1;
-				}
-				elseif ( $sOptionType == 'comma_separated_lists' ) {
-
-					if ( empty( $mCurrentOptionVal ) ) {
-						$mCurrentOptionVal = '';
-					}
-					else {
-						$aNewValues = [];
-						foreach ( $mCurrentOptionVal as $sPage => $aParams ) {
-							$aNewValues[] = $sPage.', '.implode( ", ", $aParams );
-						}
-						$mCurrentOptionVal = implode( "\n", $aNewValues );
 					}
 					$aOptionParams[ 'rows' ] = substr_count( $mCurrentOptionVal, "\n" ) + 1;
 				}
@@ -746,12 +520,10 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	protected function doPrePluginOptionsSave() {
 	}
 
-	/**
-	 */
 	protected function updateOptionsVersion() {
-		if ( $this->getIsUpgrading() || $this->getController()->getIsRebuildOptionsFromFile() ) {
-			$this->setOpt( self::PluginVersionKey, $this->getController()->getVersion() );
-			$this->getOptionsVo()->cleanTransientStorage();
+		if ( $this->getIsUpgrading() || self::con()->getIsRebuildOptionsFromFile() ) {
+			$this->setOpt( self::PluginVersionKey, self::con()->getVersion() );
+			$this->opts()->cleanTransientStorage();
 		}
 	}
 
@@ -759,8 +531,8 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 * Deletes all the options including direct save.
 	 */
 	public function deletePluginOptions() {
-		if ( apply_filters( $this->doPluginPrefix( 'has_permission_to_submit' ), true ) ) {
-			$this->getOptionsVo()->doOptionsDelete();
+		if ( apply_filters( self::con()->doPluginPrefix( 'has_permission_to_submit' ), true ) ) {
+			$this->opts()->doOptionsDelete();
 			$this->bPluginDeleting = true;
 		}
 	}
@@ -785,150 +557,163 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 		return implode( self::CollateSeparator, $aToJoin );
 	}
 
-	/**
-	 */
-	public function handleFormSubmit() {
-		$bVerified = $this->verifyFormSubmit();
-
-		if ( !$bVerified ) {
+	public function handleFormSubmit() :bool {
+		if ( !$this->verifyFormSubmit() ) {
 			return false;
 		}
-
 		$this->doSaveStandardOptions();
 		$this->doExtraSubmitProcessing();
 		return true;
 	}
 
 	protected function verifyFormSubmit() {
-		if ( !apply_filters( $this->doPluginPrefix( 'has_permission_to_submit' ), true ) ) {
+		if ( !apply_filters( self::con()->doPluginPrefix( 'has_permission_to_submit' ), true ) ) {
 //				TODO: manage how we react to prohibited submissions
 			return false;
 		}
 
 		// Now verify this is really a valid submission.
-		return check_admin_referer( $this->getController()->getPluginPrefix() );
-	}
-
-	/**
-	 * @param string $sKey
-	 * @param bool   $bTrim
-	 * @return mixed|null|string
-	 */
-	protected function getFormInput( $sKey, $bTrim = true ) {
-		$sData = $this->loadDP()->FetchPost( $this->prefixOptionKey( $sKey ) );
-		return ( $bTrim && !empty( $sData ) && is_string( $sData ) ) ? trim( $sData ) : $sData;
+		return check_admin_referer( self::con()->getPluginPrefix() );
 	}
 
 	/**
 	 * @return bool
 	 */
 	protected function doSaveStandardOptions() {
-		$oDp = $this->loadDP();
-		$sAllOptions = $oDp->FetchPost( $this->prefixOptionKey( 'all_options_input' ) );
-
-		if ( empty( $sAllOptions ) ) {
-			return true;
-		}
-		return $this->updatePluginOptionsFromSubmit( $sAllOptions ); //it also saves
+		$allOptions = $this->loadDP()->FetchPost( self::con()->doPluginPrefix( 'all_options_input', '_' ) );
+		return empty( $allOptions ) ? true : $this->updatePluginOptionsFromSubmit( (string)$allOptions );
 	}
 
 	protected function doExtraSubmitProcessing() {
 	}
 
 	/**
-	 * Should be used sparingly - it allows immediate on-demand saving of plugin options that by-passes checking from
-	 * the admin access restriction feature.
+	 * @param string $allOptionsInput - comma separated list of all the input keys to be processed from the $_POST
+	 * @return void|bool
 	 */
-	protected function doSaveByPassAdminProtection() {
-		add_filter( $this->doPluginPrefix( 'has_permission_to_submit' ), '__return_true' );
-		$this->savePluginOptions();
-		remove_filter( $this->doPluginPrefix( 'has_permission_to_submit' ), '__return_true' );
-	}
-
-	/**
-	 * @param string $sAllOptionsInput - comma separated list of all the input keys to be processed from the $_POST
-	 * @return void|boolean
-	 */
-	public function updatePluginOptionsFromSubmit( $sAllOptionsInput ) {
-		if ( empty( $sAllOptionsInput ) ) {
+	protected function updatePluginOptionsFromSubmit( string $allOptionsInput ) {
+		if ( empty( $allOptionsInput ) ) {
 			return true;
 		}
-		$oDp = $this->loadDP();
+		$DP = $this->loadDP();
+		foreach ( \explode( self::CollateSeparator, $allOptionsInput ) as $inputKey ) {
+			list( $optType, $optKey ) = \explode( ':', $inputKey );
 
-		$aAllInputOptions = explode( self::CollateSeparator, $sAllOptionsInput );
-		foreach ( $aAllInputOptions as $sInputKey ) {
-			$aInput = explode( ':', $sInputKey );
-			list( $sOptionType, $sOptionKey ) = $aInput;
+			$value = $DP->FetchPost( self::con()->doPluginPrefix( $optKey, '_' ) );
+			if ( \is_null( $value ) ) {
 
-			$sOptionValue = $oDp->FetchPost( $this->prefixOptionKey( $sOptionKey ) );
-			if ( is_null( $sOptionValue ) ) {
-
-				if ( $sOptionType == 'text' || $sOptionType == 'email' ) { //if it was a text box, and it's null, don't update anything
+				if ( $optType == 'text' || $optType == 'email' ) { //if it was a text box, and it's null, don't update anything
 					continue;
 				}
-				elseif ( $sOptionType == 'checkbox' ) { //if it was a checkbox, and it's null, it means 'N'
-					$sOptionValue = 'N';
+				elseif ( $optType == 'checkbox' ) { //if it was a checkbox, and it's null, it means 'N'
+					$value = 'N';
 				}
-				elseif ( $sOptionType == 'integer' ) { //if it was a integer, and it's null, it means '0'
-					$sOptionValue = 0;
+				elseif ( $optType == 'integer' ) { //if it was a integer, and it's null, it means '0'
+					$value = 0;
 				}
 			}
 			else { //handle any pre-processing we need to.
 
-				if ( $sOptionType == 'text' || $sOptionType == 'email' ) {
-					$sOptionValue = trim( $sOptionValue );
+				if ( $optType == 'text' || $optType == 'email' ) {
+					$value = trim( $value );
 				}
-				if ( $sOptionType == 'integer' ) {
-					$sOptionValue = intval( $sOptionValue );
+				if ( $optType == 'integer' ) {
+					$value = intval( $value );
 				}
-				elseif ( $sOptionType == 'password' && $this->hasEncryptOption() ) { //md5 any password fields
-					$sTempValue = trim( $sOptionValue );
-					if ( empty( $sTempValue ) ) {
-						continue;
-					}
-					$sOptionValue = md5( $sTempValue );
+				elseif ( $optType == 'array' ) { //arrays are textareas, where each is separated by newline
+					$value = array_filter( explode( "\n", $value ), 'trim' );
 				}
-				elseif ( $sOptionType == 'array' ) { //arrays are textareas, where each is separated by newline
-					$sOptionValue = array_filter( explode( "\n", $sOptionValue ), 'trim' );
+				elseif ( $optType == 'email' && function_exists( 'is_email' ) && !is_email( $value ) ) {
+					$value = '';
 				}
-				elseif ( $sOptionType == 'email' && function_exists( 'is_email' ) && !is_email( $sOptionValue ) ) {
-					$sOptionValue = '';
-				}
-				elseif ( $sOptionType == 'comma_separated_lists' ) {
-					$sOptionValue = $oDp->extractCommaSeparatedList( $sOptionValue );
-				}
-				elseif ( $sOptionType == 'multiple_select' ) {
+				elseif ( $optType == 'multiple_select' ) {
 				}
 			}
-			$this->setOpt( $sOptionKey, $sOptionValue );
+			$this->setOpt( $optKey, $value );
 		}
 		return $this->savePluginOptions();
 	}
 
-	/**
-	 * Should be over-ridden by each new class to handle upgrades.
-	 *
-	 * Called upon construction and after plugin options are initialized.
-	 */
-	protected function updateHandler() {
+	public function displayFeatureConfigPage() {
+		$this->display();
+	}
+
+	protected function getBaseDisplayData() :array {
+		$con = self::con();
+		self::$sActivelyDisplayedModuleOptions = $this->getFeatureSlug();
+		return [
+			'var_prefix'      => $con->getOptionStoragePrefix(),
+			'sPluginName'     => $con->getHumanName(),
+			'sFeatureName'    => $this->getMainFeatureName(),
+			'bFeatureEnabled' => $this->getIsMainFeatureEnabled(),
+			'sTagline'        => $this->opts()->getFeatureTagline(),
+			'fShowAds'        => $this->getIsShowMarketing(),
+			'nonce_field'     => wp_create_nonce( $con->getPluginPrefix() ),
+			'sFeatureSlug'    => self::con()->doPluginPrefix( $this->getFeatureSlug() ),
+			'form_action'     => 'admin.php?page='.self::con()->doPluginPrefix( $this->getFeatureSlug() ),
+			'nOptionsPerRow'  => 1,
+			'aPluginLabels'   => $con->getPluginLabels(),
+
+			'bShowStateSummary' => false,
+			'aSummaryData'      => apply_filters( self::con()->doPluginPrefix( 'get_feature_summary_data' ), [] ),
+
+			'aAllOptions'       => $this->buildOptions(),
+			'aHiddenOptions'    => $this->opts()->getHiddenOptions(),
+			'all_options_input' => $this->collateAllFormInputsForAllOptions(),
+
+			'sPageTitle' => $this->getMainFeatureName(),
+			'strings'    => [
+				'go_to_settings'                    => __( 'Settings', 'worpit-admin-dashboard-plugin' ),
+				'on'                                => __( 'On', 'worpit-admin-dashboard-plugin' ),
+				'off'                               => __( 'Off', 'worpit-admin-dashboard-plugin' ),
+				'more_info'                         => __( 'More Info', 'worpit-admin-dashboard-plugin' ),
+				'blog'                              => __( 'Blog', 'worpit-admin-dashboard-plugin' ),
+				'plugin_activated_features_summary' => __( 'Plugin Activated Features Summary:', 'worpit-admin-dashboard-plugin' ),
+				'save_all_settings'                 => __( 'Save All Settings', 'worpit-admin-dashboard-plugin' ),
+			],
+		];
+	}
+
+	protected function getIsShowMarketing() :bool {
+		return false;
 	}
 
 	/**
-	 * @return boolean
+	 * @return void
 	 */
-	public function hasEncryptOption() {
-		return function_exists( 'md5' );
-		//	return extension_loaded( 'mcrypt' );
+	protected function display( array $data = [], string $view = '' ) {
+		// Get Base Data
+		$data[ 'mainFeatureInclude' ] = $this->loadDP()->addExtensionToFilePath( $view, 'php' );
+		$this->displayTemplate(
+			'index.php',
+			\array_merge( $this->getBaseDisplayData(), $data )
+		);
+	}
+
+	public function displayTemplate( string $template, array $data ) {
+		if ( empty( $data[ 'unique_render_id' ] ) ) {
+			$data[ 'unique_render_id' ] = 'u'.\substr( 0, 5, (string)wp_rand() );
+		}
+		$this->loadRenderer( self::con()->getPath_Templates() )
+			 ->setTemplate( $template )
+			 ->setRenderVars( $data )
+			 ->display();
 	}
 
 	/**
-	 * Prefixes an option key only if it's needed
-	 *
-	 * @param $sKey
-	 * @return string
+	 * @return \FernleafSystems\Wordpress\Plugin\iControlWP\Control\Controller
 	 */
-	public function prefixOptionKey( $sKey ) {
-		return $this->doPluginPrefix( $sKey, '_' );
+	public function getController() {
+		return $this->oPluginController;
+	}
+
+	/**
+	 * @param array $aAdminNotices
+	 * @return array
+	 * @deprecated 4.5
+	 */
+	public function fRegisterAdminNotices( $aAdminNotices ) {
+		return $aAdminNotices;
 	}
 
 	/**
@@ -937,229 +722,20 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 * @param string $sSuffix
 	 * @param string $sGlue
 	 * @return string
+	 * @deprecated 4.5
 	 */
 	public function doPluginPrefix( $sSuffix = '', $sGlue = '-' ) {
-		return $this->getController()->doPluginPrefix( $sSuffix, $sGlue );
+		return self::con()->doPluginPrefix( $sSuffix, $sGlue );
 	}
 
 	/**
-	 * @param string
+	 * Prefixes an option key only if it's needed
+	 *
+	 * @param $sKey
 	 * @return string
+	 * @deprecated 4.5
 	 */
-	public function getOptionStoragePrefix() {
-		return $this->getController()->getOptionStoragePrefix();
-	}
-
-	/**
-	 */
-	public function displayFeatureConfigPage() {
-		$this->display();
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function getIsCurrentPageConfig() {
-		$oWpFunctions = $this->loadWP();
-		return $oWpFunctions->getCurrentWpAdminPage() == $this->doPluginPrefix( $this->getFeatureSlug() );
-	}
-
-	/**
-	 * @return array
-	 */
-	protected function getBaseDisplayData() {
-		$oCon = $this->getController();
-		self::$sActivelyDisplayedModuleOptions = $this->getFeatureSlug();
-		return [
-			'var_prefix'      => $oCon->getOptionStoragePrefix(),
-			'sPluginName'     => $oCon->getHumanName(),
-			'sFeatureName'    => $this->getMainFeatureName(),
-			'bFeatureEnabled' => $this->getIsMainFeatureEnabled(),
-			'sTagline'        => $this->getOptionsVo()->getFeatureTagline(),
-			'fShowAds'        => $this->getIsShowMarketing(),
-			'nonce_field'     => wp_nonce_field( $oCon->getPluginPrefix() ),
-			'sFeatureSlug'    => $this->doPluginPrefix( $this->getFeatureSlug() ),
-			'form_action'     => 'admin.php?page='.$this->doPluginPrefix( $this->getFeatureSlug() ),
-			'nOptionsPerRow'  => 1,
-			'aPluginLabels'   => $oCon->getPluginLabels(),
-
-			'bShowStateSummary' => false,
-			'aSummaryData'      => apply_filters( $this->doPluginPrefix( 'get_feature_summary_data' ), [] ),
-
-			'aAllOptions'       => $this->buildOptions(),
-			'aHiddenOptions'    => $this->getOptionsVo()->getHiddenOptions(),
-			'all_options_input' => $this->collateAllFormInputsForAllOptions(),
-
-			'sPageTitle' => $this->getMainFeatureName(),
-			'strings'    => [
-				'go_to_settings'                    => __( 'Settings' ),
-				'on'                                => __( 'On' ),
-				'off'                               => __( 'Off' ),
-				'more_info'                         => __( 'More Info' ),
-				'blog'                              => __( 'Blog' ),
-				'plugin_activated_features_summary' => __( 'Plugin Activated Features Summary:' ),
-				'save_all_settings'                 => __( 'Save All Settings' ),
-			]
-		];
-	}
-
-	/**
-	 * @return boolean
-	 */
-	protected function getIsShowMarketing() {
-		return apply_filters( $this->doPluginPrefix( 'show_marketing' ), true );
-	}
-
-	/**
-	 * @param array  $aData
-	 * @param string $sSubView
-	 * @return bool
-	 */
-	protected function display( $aData = [], $sSubView = '' ) {
-		$oRndr = $this->loadRenderer( $this->getController()->getPath_Templates() );
-
-		// Get Base Data
-		$aData = apply_filters( $this->doPluginPrefix( $this->getFeatureSlug().'display_data' ), array_merge( $this->getBaseDisplayData(), $aData ) );
-		$bPermissionToView = apply_filters( $this->doPluginPrefix( 'has_permission_to_view' ), true );
-
-		if ( !$bPermissionToView ) {
-			$sSubView = 'subfeature-access_restricted';
-		}
-
-		if ( empty( $sSubView ) || !$oRndr->getTemplateExists( $sSubView ) ) {
-			$sSubView = 'feature-default';
-		}
-
-		$aData[ 'sFeatureInclude' ] = $this->loadDP()->addExtensionToFilePath( $sSubView, '.php' );
-		$aData[ 'strings' ] = array_merge( $aData[ 'strings' ], $this->getDisplayStrings() );
-		try {
-			echo $oRndr
-				->setTemplate( 'index.php' )
-				->setRenderVars( $aData )
-				->render();
-		}
-		catch ( Exception $oE ) {
-			echo $oE->getMessage();
-		}
-	}
-
-	/**
-	 * @param array  $aData
-	 * @param string $sSubView
-	 * @return bool
-	 */
-	protected function displayByTemplate( $aData = [], $sSubView = '' ) {
-
-		// Get Base Data
-		$aData = apply_filters( $this->doPluginPrefix( $this->getFeatureSlug().'display_data' ), array_merge( $this->getBaseDisplayData(), $aData ) );
-		$bPermissionToView = apply_filters( $this->doPluginPrefix( 'has_permission_to_view' ), true );
-
-		if ( !$bPermissionToView ) {
-			$sSubView = 'subfeature-access_restricted';
-		}
-
-		if ( empty( $sSubView ) ) {
-			$oWpFs = $this->loadFS();
-			$sFeatureInclude = 'feature-'.$this->getFeatureSlug();
-			if ( $oWpFs->exists( $this->getController()->getPath_TemplatesFile( $sFeatureInclude ) ) ) {
-				$sSubView = $sFeatureInclude;
-			}
-			else {
-				$sSubView = 'feature-default';
-			}
-		}
-
-		$aData[ 'sFeatureInclude' ] = $sSubView;
-		$aData[ 'strings' ] = array_merge( $aData[ 'strings' ], $this->getDisplayStrings() );
-		try {
-			$this
-				->loadRenderer( $this->getController()->getPath_Templates() )
-				->setTemplate( 'features/'.$sSubView )
-				->setRenderVars( $aData )
-				->display();
-		}
-		catch ( Exception $oE ) {
-			echo $oE->getMessage();
-		}
-	}
-
-	/**
-	 * @param array $aData
-	 * @return string
-	 * @throws Exception
-	 */
-	public function renderAdminNotice( $aData ) {
-		if ( empty( $aData[ 'notice_attributes' ] ) ) {
-			throw new Exception( 'notice_attributes is empty' );
-		}
-
-		if ( !isset( $aData[ 'icwp_ajax_nonce' ] ) ) {
-			$aData[ 'icwp_ajax_nonce' ] = wp_create_nonce( 'icwp_ajax' );
-		}
-		if ( !isset( $aData[ 'icwp_admin_notice_template' ] ) ) {
-			$aData[ 'icwp_admin_notice_template' ] = $aData[ 'notice_attributes' ][ 'notice_id' ];
-		}
-
-		if ( !isset( $aData[ 'notice_classes' ] ) ) {
-			$aData[ 'notice_classes' ] = [];
-		}
-		if ( is_array( $aData[ 'notice_classes' ] ) ) {
-			if ( empty( $aData[ 'notice_classes' ] ) ) {
-				$aData[ 'notice_classes' ][] = 'updated';
-			}
-			$aData[ 'notice_classes' ][] = $aData[ 'notice_attributes' ][ 'type' ];
-		}
-		$aData[ 'notice_classes' ] = implode( ' ', $aData[ 'notice_classes' ] );
-
-		return $this->renderTemplate( 'notices/admin-notice-template', $aData );
-	}
-
-	/**
-	 * @param string $sTemplate
-	 * @param array  $aData
-	 * @return string
-	 */
-	public function renderTemplate( $sTemplate, $aData ) {
-		if ( empty( $aData[ 'unique_render_id' ] ) ) {
-			$aData[ 'unique_render_id' ] = substr( md5( mt_rand() ), 0, 5 );
-		}
-		try {
-			$sOutput = $this
-				->loadRenderer( $this->getController()->getPath_Templates() )
-				->setTemplate( $sTemplate )
-				->setRenderVars( $aData )
-				->render();
-		}
-		catch ( Exception $oE ) {
-			$sOutput = $oE->getMessage();
-		}
-
-		return $sOutput;
-	}
-
-	/**
-	 * @return array
-	 */
-	protected function getDisplayStrings() {
-		return [];
-	}
-
-	/**
-	 * @return \ICWP_APP_Plugin_Controller|\FernleafSystems\Wordpress\Plugin\iControlWP\Controller
-	 */
-	public function getController() {
-		return $this->oPluginController;
-	}
-
-	/**
-	 * @param array $aTransferableOptions
-	 * @return array
-	 */
-	public function exportTransferableOptions( $aTransferableOptions ) {
-		if ( !is_array( $aTransferableOptions ) ) {
-			$aTransferableOptions = [];
-		}
-		$aTransferableOptions[ $this->getOptionsStorageKey() ] = $this->getOptionsVo()->getTransferableOptions();
-		return $aTransferableOptions;
+	public function prefixOptionKey( $sKey ) {
+		return self::con()->doPluginPrefix( $sKey, '_' );
 	}
 }

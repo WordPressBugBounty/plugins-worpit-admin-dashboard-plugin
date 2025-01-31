@@ -7,30 +7,41 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	/**
 	 * @var LegacyApi\RequestParameters
 	 */
-	protected $oRequestParams;
+	protected $reqParams;
 
 	protected function doPostConstruction() {
 		if ( is_admin() ) {
 			add_action( 'wp_loaded', [ $this, 'doAutoRemoteSiteAdd' ] );
 		}
-		add_filter( 'plugin_action_links_'.$this->getController()->getPluginBaseFile(), [
+		add_filter( 'plugin_action_links_'.self::con()->getPluginBaseFile(), [
 			$this,
 			'onWpPluginActionLinks'
 		], 100, 1 );
 	}
 
 	/**
+	 * @return bool
 	 */
+	protected function getIsShowMarketing() :bool {
+		return $this->getInstallationDays() > 1
+			   && !ICWP_Plugin::getController()->loadCorePluginFeatureHandler()->getIsSiteLinked();
+	}
+
+	protected function getInstallationDays() :int {
+		$installedFor = $this->getPluginInstallationTime();
+		return empty( $installedFor ) ? 0 : (int)\round( ( $this->loadDP()->time() - $installedFor )/DAY_IN_SECONDS );
+	}
+
 	public function displayFeatureConfigPage() {
 		$this->display(
 			[
-				'aPluginLabels' => $this->getController()->getPluginLabels(),
+				'aPluginLabels' => self::con()->getPluginLabels(),
 				'sAuthKey'      => $this->getPluginAuthKey(),
 				'sAssignedTo'   => $this->getAssignedTo(),
 				'bAssigned'     => $this->getAssigned(),
 				'bIsLinked'     => $this->getIsSiteLinked(),
 				'bCanHandshake' => $this->getCanHandshake(),
-				'sExtraContent' => apply_filters( $this->getController()->doPluginPrefix( 'main_extracontent' ), '' ),
+				'sExtraContent' => apply_filters( self::con()->doPluginPrefix( 'main_extracontent' ), '' ),
 			],
 			'feature-plugin'
 		);
@@ -49,26 +60,12 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	}
 
 	/**
-	 */
-	public function doClearAdminFeedback() {
-		$this->setOpt( 'feedback_admin_notice', [] );
-	}
-
-	/**
 	 * @param string $sMessage
 	 */
 	public function doAddAdminFeedback( $sMessage ) {
 		$aFeedback = $this->getOpt( 'feedback_admin_notice', [] );
 		$aFeedback[] = $sMessage;
 		$this->setOpt( 'feedback_admin_notice', $aFeedback );
-	}
-
-	/**
-	 * @param bool $bDoHidePlugin
-	 * @return bool
-	 */
-	public function getIfHidePlugin( $bDoHidePlugin ) {
-		return $this->getIsSiteLinked() && $this->getOptIs( 'enable_hide_plugin', 'Y' );
 	}
 
 	/**
@@ -79,16 +76,16 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 
 		if ( !$doVerify ) { // we always verify can handshake at least once every 24hrs
 			$sinceLastHandshakeCheck = $this->loadDP()
-											 ->time() - $this->getOpt( 'time_last_check_can_handshake', 0 );
+											->time() - $this->getOpt( 'time_last_check_can_handshake', 0 );
 			if ( $sinceLastHandshakeCheck > DAY_IN_SECONDS ) {
 				$doVerify = true;
 			}
 		}
 
 		if ( $doVerify ) {
-			$canHandshake = apply_filters( $this->getController()
-												 ->doPluginPrefix( 'verify_site_can_handshake' ), false );
-			$this->setOpt( 'can_handshake', ( $canHandshake ? 'Y' : 'N' ) );
+			$canHandshake = apply_filters( self::con()
+												->doPluginPrefix( 'verify_site_can_handshake' ), false );
+			$this->setOpt( 'can_handshake', $canHandshake ? 'Y' : 'N' );
 		}
 		return $this->getOptIs( 'can_handshake', 'Y' );
 	}
@@ -100,17 +97,14 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 		return $this->getCanHandshake( true );
 	}
 
-	/***
-	 * @return bool
-	 */
-	public function getIsSiteLinked() {
+	public function getIsSiteLinked() :bool {
 		return $this->getAssigned() && is_email( $this->getAssignedTo() );
 	}
 
 	public function doExtraSubmitProcessing() {
-		$oDp = $this->loadDP();
+		$DP = $this->loadDP();
 
-		if ( $oDp->FetchPost( $this->getController()->doPluginOptionPrefix( 'reset_plugin' ) ) ) {
+		if ( $DP->FetchPost( self::con()->doPluginOptionPrefix( 'reset_plugin' ) ) ) {
 			$sTo = $this->getAssignedTo();
 			$sKey = $this->getPluginAuthKey();
 			$sPin = $this->getPluginPin();
@@ -125,54 +119,43 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 			return;
 		}
 
-		//Clicked the button to remotely add site$this->getController()->doPluginOptionPrefix( 'reset_plugin' )
-		if ( $oDp->FetchPost( $this->getController()->doPluginOptionPrefix( 'remotely_add_site_submit' ) ) ) {
-			$sAuthKey = $oDp->FetchPost( 'account_auth_key' );
-			$sEmailAddress = $oDp->FetchPost( 'account_email_address' );
-			if ( $sAuthKey && $sEmailAddress ) {
-
-				$sAuthKey = trim( $sAuthKey );
-				$sEmailAddress = trim( $sEmailAddress );
-
-				$oResponse = $this->doRemoteAddSiteLink( $sAuthKey, $sEmailAddress );
-				if ( $oResponse ) {
-					$this->doAddAdminFeedback( sprintf( ( '%s Plugin options updated successfully.' ), $this->getController()
-																											->getHumanName() ) );
+		//Clicked the button to remotely add siteself::con()->doPluginOptionPrefix( 'reset_plugin' )
+		if ( $DP->FetchPost( self::con()->doPluginOptionPrefix( 'remotely_add_site_submit' ) ) ) {
+			$auth = $DP->FetchPost( 'account_auth_key' );
+			$email = $DP->FetchPost( 'account_email_address' );
+			if ( $auth && $email ) {
+				if ( $this->doRemoteAddSiteLink( $auth, $email ) ) {
+					$this->doAddAdminFeedback( sprintf( ( '%s Plugin options updated successfully.' ),
+						self::con()->getHumanName() ) );
 				}
 			}
-			$this->doAddAdminFeedback( sprintf( ( '%s Site NOT added.' ), $this->getController()->getHumanName() ) );
+			$this->doAddAdminFeedback( sprintf( ( '%s Site NOT added.' ), self::con()->getHumanName() ) );
 			return;
 		}
-		$this->doAddAdminFeedback( sprintf( ( '%s Plugin options updated successfully.' ), $this->getController()
+		$this->doAddAdminFeedback( sprintf( ( '%s Plugin options updated successfully.' ), self::con()
 																								->getHumanName() ) );
 	}
 
 	/**
 	 * This function always returns false, however the return is never actually used just yet.
 	 *
-	 * @param string $sAuthKey
-	 * @param string $sEmailAddress
-	 * @return boolean
+	 * @param string $authKey
+	 * @param string $email
+	 * @return bool
 	 */
-	protected function doRemoteAddSiteLink( $sAuthKey, $sEmailAddress ) {
-		if ( $this->getIsSiteLinked() ) {
-			return false;
-		}
-
-		if ( strlen( $sAuthKey ) == 32 && is_email( $sEmailAddress ) ) {
-
-			//looks good. Now attempt remote link.
-			$aPostVars = [
-				'wordpress_url'         => home_url(),
-				'plugin_url'            => $this->getController()->getPluginUrl(),
-				'account_email_address' => $sEmailAddress,
-				'account_auth_key'      => $sAuthKey,
-				'plugin_key'            => $this->getPluginAuthKey()
-			];
-			$aArgs = [
-				'body' => $aPostVars
-			];
-			return $this->loadFS()->postUrl( $this->getAppUrl( 'remote_add_site_url' ), $aArgs );
+	private function doRemoteAddSiteLink( $authKey, $email ) {
+		$authKey = \trim( $authKey );
+		$email = \trim( $email );
+		if ( !$this->getIsSiteLinked() && \strlen( $authKey ) === 32 && is_email( $email ) ) {
+			return $this->loadFS()->postUrl( $this->getAppUrl( 'remote_add_site_url' ), [
+				'body' => [
+					'wordpress_url'         => home_url(),
+					'plugin_url'            => self::con()->getPluginUrl(),
+					'account_email_address' => $email,
+					'account_auth_key'      => $authKey,
+					'plugin_key'            => $this->getPluginAuthKey()
+				]
+			] );
 		}
 		return false;
 	}
@@ -181,18 +164,15 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	 * reads the auto_add.php file (yaml) to an api key and email and automatically adds the site to the account.
 	 */
 	public function doAutoRemoteSiteAdd() {
-		$sAutoAddFilePath = $this->getController()->getRootDir().'auto_add.php';
-		if ( $this->getIsSiteLinked() || !$this->loadFS()->isFile( $sAutoAddFilePath ) ) {
+		$autoAddPath = self::con()->getRootDir().'auto_add.php';
+		if ( $this->getIsSiteLinked() || !$this->loadFS()->isFile( $autoAddPath ) ) {
 			return;
 		}
-		$sContent = $this->loadDP()
-						 ->readFileContentsUsingInclude( $sAutoAddFilePath );
-		$this->loadFS()->deleteFile( $sAutoAddFilePath );
-		if ( !empty( $sContent ) ) {
-			$aParsed = json_decode( $sContent, true );
-			$sApiKey = isset( $aParsed[ 'api-key' ] ) ? $aParsed[ 'api-key' ] : '';
-			$sEmail = isset( $aParsed[ 'email' ] ) ? $aParsed[ 'email' ] : '';
-			$this->doRemoteAddSiteLink( $sApiKey, $sEmail );
+		$content = $this->loadDP()->readFileContentsUsingInclude( $autoAddPath );
+		$this->loadFS()->deleteFile( $autoAddPath );
+		if ( !empty( $content ) ) {
+			$dec = \json_decode( $content, true );
+			$this->doRemoteAddSiteLink( $dec[ 'api-key' ] ?? '', $dec[ 'email' ] ?? '' );
 		}
 	}
 
@@ -200,7 +180,7 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	 * @return array
 	 */
 	public function getActivePluginFeatures() {
-		$aActiveFeatures = $this->getOptionsVo()->getRawData_SingleOption( 'active_plugin_features' );
+		$aActiveFeatures = $this->opts()->getRawData_SingleOption( 'active_plugin_features' );
 		$aPluginFeatures = [];
 		if ( empty( $aActiveFeatures[ 'value' ] ) || !is_array( $aActiveFeatures[ 'value' ] ) ) {
 			return $aPluginFeatures;
@@ -264,10 +244,7 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 		return $this->getOpt( 'pin' );
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getPermittedApiChannels() {
+	public function getPermittedApiChannels() :array {
 		return $this->getDefinition( 'permitted_api_channels' );
 	}
 
@@ -329,14 +306,10 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	}
 
 	public function getRequestParams() :LegacyApi\RequestParameters {
-		if ( !isset( $this->oRequestParams ) ) {
-			$DP = $this->loadDP();
-			$this->oRequestParams = new LegacyApi\RequestParameters(
-				$DP->FetchGet( 'reqpars', [] ),
-				$DP->FetchPost( 'reqpars', [] )
-			);
-		}
-		return $this->oRequestParams;
+		return $this->reqParams ?? $this->reqParams = new LegacyApi\RequestParameters(
+			$this->loadDP()->FetchGet( 'reqpars', [] ),
+			$this->loadDP()->FetchPost( 'reqpars', [] )
+		);
 	}
 
 	/**
@@ -351,16 +324,13 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	 * This is the point where you would want to do any options verification
 	 */
 	protected function doPrePluginOptionsSave() {
-		$DP = $this->loadDP();
-
 		if ( $this->getOpt( 'activated_at', 0 ) <= 0 ) {
-			$this->setOpt( 'activated_at', $DP->time() );
+			$this->setOpt( 'activated_at', $this->loadDP()->time() );
 		}
 		if ( $this->getOpt( 'installation_time', 0 ) <= 0 ) {
-			$this->setOpt( 'installation_time', $DP->time() );
+			$this->setOpt( 'installation_time', $this->loadDP()->time() );
 		}
-
-		$this->setOpt( 'installed_version', $this->getController()->getVersion() );
+		$this->setOpt( 'installed_version', self::con()->getVersion() );
 	}
 
 	/**
@@ -370,5 +340,14 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	public function getAppUrl( $key ) {
 		$urls = $this->getDefinition( 'urls' );
 		return empty( $urls[ $key ] ) ? '' : $urls[ $key ];
+	}
+
+	/**
+	 * @param bool $bDoHidePlugin
+	 * @return bool
+	 * @deprecated 4.5
+	 */
+	public function getIfHidePlugin( $bDoHidePlugin ) {
+		return false;
 	}
 }

@@ -18,9 +18,7 @@ class Info extends Base {
 	}
 
 	public function process() :ApiResponse {
-		( new \FernleafSystems\Wordpress\Plugin\iControlWP\Ops\ZipDownload\Clean() )
-			->setCon( $this->getCon() )
-			->run();
+		( new \FernleafSystems\Wordpress\Plugin\iControlWP\Ops\ZipDownload\Clean() )->run();
 		return $this->success( $this->collect() );
 	}
 }

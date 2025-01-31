@@ -46,11 +46,6 @@
       "key":     "hide_rsd_link",
       "section": "section_non_ui",
       "default": "N"
-    },
-    {
-      "key":     "cloudflare_flexible_ssl",
-      "section": "section_non_ui",
-      "default": "N"
     }
   ]
 }

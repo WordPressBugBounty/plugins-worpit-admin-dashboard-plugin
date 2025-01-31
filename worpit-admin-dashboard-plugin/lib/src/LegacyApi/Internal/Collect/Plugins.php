@@ -2,6 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Collect;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers;
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
 
 class Plugins extends Base {
@@ -56,13 +57,14 @@ class Plugins extends Base {
 	 * Gets all the installed plugin and filters out unnecessary information based on "desired attributes"
 	 */
 	protected function getInstalledPlugins( array $attributes = [] ) :array {
-		$plugins = $this->loadWpPlugins()->getPlugins();
-		if ( !empty( $attributes ) ) {
-			foreach ( $plugins as $file => $aData ) {
-				$plugins[ $file ] = \array_intersect_key( $aData, \array_flip( $attributes ) );
-			}
-		}
-		return $plugins;
+		return empty( $attributes ) ?
+			Handlers\Plugins::Instance()->getPlugins() :
+			\array_map(
+				function ( $pluginData ) use ( $attributes ) {
+					return \array_intersect_key( $pluginData, \array_flip( $attributes ) );
+				},
+				Handlers\Plugins::Instance()->getPlugins()
+			);
 	}
 
 	protected function getDesiredPluginAttributes() :array {

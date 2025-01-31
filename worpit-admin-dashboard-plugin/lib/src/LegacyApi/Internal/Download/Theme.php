@@ -12,9 +12,7 @@ class Theme extends Base {
 		try {
 			return $this->success( [
 				'success'  => true,
-				'zip_data' => ( new Create() )
-					->setCon( $this->getCon() )
-					->theme( $this->getFile() ),
+				'zip_data' => ( new Create() )->theme( $this->getFile() ),
 			] );
 		}
 		catch ( \Exception $e ) {

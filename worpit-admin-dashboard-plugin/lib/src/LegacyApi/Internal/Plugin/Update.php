@@ -2,6 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Plugin;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\Plugins;
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
 
 class Update extends Base {
@@ -17,21 +18,20 @@ class Update extends Base {
 			'rollback' => false,
 		];
 
-		$WPP = $this->loadWpPlugins();
-		$plugin = $WPP->getPlugin( $file );
+		$plugin = Plugins::Instance()->getPlugin( $file );
 		if ( !empty( $plugin ) ) {
-			$data[ 'rollback' ] = $this->getActionParam( 'do_rollback_prep' ) && $this->prepRollbackData( $file, 'plugins' );
+			$data[ 'rollback' ] = $this->getActionParam( 'do_rollback_prep' ) && $this->prepRollbackData( $file );
 
-			$wasActive = $WPP->getIsActive( $file );
+			$wasActive = Plugins::Instance()->isActive( $file );
 			$wasNetworkActive = $this->loadWP()->isMultisite() && is_plugin_active_for_network( $file );
 			$preVersion = $plugin[ 'Version' ];
 
 			$this->isMethodAuto() ? $this->processAuto( $file ) : $this->processLegacy( $file );
 
-			$plugin = $WPP->getPlugin( $file );
+			$plugin = Plugins::Instance()->getPlugin( $file );
 			$success = !empty( $plugin ) && $preVersion !== $plugin[ 'Version' ];
 
-			if ( $success && $wasActive && !$WPP->getIsActive( $file ) ) {
+			if ( $success && $wasActive && !Plugins::Instance()->isActive( $file ) ) {
 				activate_plugin( $file, '', $wasNetworkActive );
 			}
 		}
@@ -55,7 +55,6 @@ class Update extends Base {
 		if ( empty( $availableUpdates ) || empty( $availableUpdates->response[ $mAsset ] ) ) {
 			$this->loadWP()->updatesCheck( 'plugins', true );
 		}
-
 		return $this->loadWpPlugins()->update( $mAsset );
 	}
 }

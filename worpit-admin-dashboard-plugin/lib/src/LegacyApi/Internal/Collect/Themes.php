@@ -28,7 +28,7 @@ class Themes extends Base {
 				$isChild = $theme->offsetGet( 'Template' ) != $theme->offsetGet( 'Stylesheet' );
 				$this->hasChildThemes = $this->hasChildThemes || $isChild;
 
-				$data = array_intersect_key( [
+				$data = \array_intersect_key( [
 					'Name'           => $theme->display( 'Name' ),
 					'Title'          => $theme->offsetGet( 'Title' ),
 					'Description'    => $theme->offsetGet( 'Description' ),
@@ -48,7 +48,7 @@ class Themes extends Base {
 
 					// We add our own
 					'network_active' => $theme->is_allowed( 'network' )
-				], array_flip( $this->getDesiredThemeAttributes() ) );
+				], \array_flip( $this->getDesiredThemeAttributes() ) );
 
 				$data[ 'active' ] = $stylesheet === $activeTheme ? 1 : 0;
 				$data[ 'auto_update' ] = \in_array( $stylesheet, $autoUpdates ) ? 1 : 0;

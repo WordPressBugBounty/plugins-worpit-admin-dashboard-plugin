@@ -18,22 +18,41 @@ class FileSystem {
 		return self::$instance ?? self::$instance = new self();
 	}
 
+	/**
+	 * @return false|string
+	 */
+	public function getContents( string $pathname ) {
+		return $this->fs() ? $this->fs()->get_contents( $pathname ) : \file_get_contents( $pathname );
+	}
+
 	public function deleteDir( string $dir ) :bool {
-		return ( $this->fs() && $this->fs()->delete( $dir, true ) ) || @\rmdir( $dir );
+		return $this->fs() && $this->fs()->delete( $dir, true );
 	}
 
-	public function isDir( string $path ) :bool {
-		return ( $this->fs() && $this->fs()->is_dir( $path ) ) || @\is_dir( $path );
+	public function isDir( string $pathname ) :bool {
+		return $this->fs() && $this->fs()->is_dir( $pathname );
 	}
 
-	public function mkdir( string $path ) :bool {
-		return wp_mkdir_p( $path );
+	public function isDirEmpty( string $dir ) :bool {
+		return \is_readable( $dir ) && \count( \scandir( $dir ) ) == 2;
+	}
+
+	public function mkdir( string $pathname ) :bool {
+		return wp_mkdir_p( $pathname );
+	}
+
+	public function move( string $source, string $target ) :bool {
+		return $this->fs() && $this->fs()->move( $source, $target );
+	}
+
+	public function touch( string $pathname, int $ts = 0 ) :bool {
+		return $this->fs() && $this->fs()->touch( $pathname, $ts );
 	}
 
 	/**
 	 * @return \WP_Filesystem_Base|mixed|false
 	 */
-	protected function fs() {
+	public function fs() {
 		if ( \is_null( $this->wpfs ) ) {
 			$this->wpfs = false;
 			require_once( ABSPATH.'wp-admin/includes/file.php' );

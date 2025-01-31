@@ -40,8 +40,8 @@ class RequestParameters {
 	 * @param string $thePOST
 	 */
 	public function __construct( $theGET, $thePOST ) {
-		$theGET = empty( $theGET ) ? [] : maybe_unserialize( \base64_decode( $theGET ) );
-		$thePOST = empty( $thePOST ) ? [] : maybe_unserialize( \base64_decode( $thePOST ) );
+		$theGET = empty( $theGET ) ? [] : \json_decode( \base64_decode( $theGET ), true );
+		$thePOST = empty( $thePOST ) ? [] : \json_decode( \base64_decode( $thePOST ), true );
 		$this->applyFromArray( \array_merge(
 			\is_array( $_GET ) ? $_GET : [],
 			\is_array( $_POST ) ? $_POST : [],
@@ -61,7 +61,6 @@ class RequestParameters {
 		switch ( $sProperty ) {
 
 			case 'action_params':
-				$mVal = empty( $mVal ) ? [] : \unserialize( $mVal );
 				if ( !\is_array( $mVal ) ) {
 					$mVal = [];
 				}
@@ -99,10 +98,6 @@ class RequestParameters {
 		return $mVal;
 	}
 
-	public function getActionParams() :array {
-		return $this->action_params;
-	}
-
 	/**
 	 * @return string
 	 */
@@ -114,48 +109,6 @@ class RequestParameters {
 			}
 		}
 		return $this->api_hook;
-	}
-
-	/**
-	 * @return string email
-	 */
-	public function getAccountId() {
-		return $this->accname;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getApiAction() {
-		return $this->action;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getApiChannel() {
-		return empty( $this->m ) ? 'index' : $this->m;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getAuthKey() {
-		return $this->key;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getOpenSslSignature() {
-		return base64_decode( $this->opensig );
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getPackageName() {
-		return $this->package_name;
 	}
 
 	/**
@@ -173,52 +126,17 @@ class RequestParameters {
 	}
 
 	/**
-	 * @return string
-	 */
-	public function getVerificationCode() {
-		return $this->verification_code;
-	}
-
-	/**
 	 * @return int
 	 */
 	public function getApiHookPriority() {
-		$nPri = $this->api_priority;
-		if ( is_null( $nPri ) || !is_numeric( $nPri ) ) {
-			$nPri = is_admin() ? 101 : 1;
-			if ( class_exists( 'ITSEC_Core', false ) ) {
-				$nPri = 100;
+		$pri = $this->api_priority;
+		if ( !\is_numeric( $pri ) ) {
+			$pri = is_admin() ? 101 : 1;
+			if ( \class_exists( 'ITSEC_Core', false ) ) {
+				$pri = 100;
 			}
 		}
-		return (int)$nPri;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isSilentLogin() {
-		return (bool)$this->silent_login;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function getIsApiCall() {
-		return $this->getIsApiCall_Action() || $this->getIsApiCall_LinkSite();
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function getIsApiCall_Action() :bool {
-		return $this->worpit_api || $this->icwpapi;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function getIsApiCall_LinkSite() {
-		return $this->worpit_link;
+		return (int)$pri;
 	}
 
 	/**
@@ -238,5 +156,13 @@ class RequestParameters {
 	 */
 	public function getParam( $sKey, $mDefault = '' ) {
 		return $this->{$sKey};
+	}
+
+	/**
+	 * @return bool
+	 * @deprecated 4.5
+	 */
+	public function isSilentLogin() {
+		return (bool)$this->silent_login;
 	}
 }

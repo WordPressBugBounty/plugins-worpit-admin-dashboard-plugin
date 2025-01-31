@@ -2,15 +2,16 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Theme;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\Themes;
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
-use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Collect\Themes;
+use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Collect;
 
 class Activate extends Base {
 
 	public function process() :ApiResponse {
 		return $this->success( [
-			'result'           => $this->loadWpFunctionsThemes()->activate( $this->getFile() ),
-			'wordpress-themes' => ( new Themes() )->setRequestParams( $this->getRequestParams() )->collect(),
+			'result'           => Themes::Instance()->activate( $this->getFile() ),
+			'wordpress-themes' => ( new Collect\Themes() )->setRequestParams( $this->getRequestParams() )->collect(),
 		] );
 	}
 }

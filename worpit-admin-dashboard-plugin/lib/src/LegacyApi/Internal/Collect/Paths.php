@@ -20,15 +20,15 @@ class Paths extends Base {
 		$dirSite = preg_replace( '|https?://[^/]+|i', '', trim( $urlWP, '/' ).'/' );
 		$bIsSplitPath = trim( $dirHome, '/' ) !== trim( $dirSite, '/' );
 
-		$sServer_ScriptFilename = $_SERVER[ 'SCRIPT_FILENAME' ] ?? '';
+		$scriptFilename = $this->loadDP()->FetchServer( 'SCRIPT_FILENAME', '' );
 
 		// we cannot trust paths, as a whole world of things can happen to manipulate them
-		if ( !empty( $sServer_ScriptFilename ) && !preg_match( '/wp-content|plugins/i', $sServer_ScriptFilename ) ) {
-			$dirRoot = rtrim( dirname( $sServer_ScriptFilename ), DIRECTORY_SEPARATOR );
-			$sDiff = trim( str_replace( $dirHome, '', $dirSite ), '/' );
+		if ( !empty( $scriptFilename ) && !\preg_match( '/wp-content|plugins/i', $scriptFilename ) ) {
+			$dirRoot = \rtrim( \dirname( $scriptFilename ), DIRECTORY_SEPARATOR );
+			$sDiff = \trim( \str_replace( $dirHome, '', $dirSite ), '/' );
 
 			// It's running through the WP Admin so we chop it off.
-			if ( strpos( $sServer_ScriptFilename, 'wp-admin' ) !== false ) {
+			if ( strpos( $scriptFilename, 'wp-admin' ) !== false ) {
 				$dirRoot = rtrim( dirname( $dirRoot ), DIRECTORY_SEPARATOR );
 			}
 
@@ -53,9 +53,9 @@ class Paths extends Base {
 			}
 		}
 		else {
-			$dirRoot = rtrim( $_SERVER[ 'DOCUMENT_ROOT' ], '/' );
-			$dirAbsHome = rtrim( rtrim( $dirRoot, '/' ).'/'.trim( $dirHome, '/' ), '/' );
-			$dirAbsSite = rtrim( rtrim( $dirRoot, '/' ).'/'.trim( $dirSite, '/' ), '/' );
+			$dirRoot = \rtrim( (string)$this->loadDP()->FetchServer( 'DOCUMENT_ROOT', '' ), '/' );
+			$dirAbsHome = \rtrim( \rtrim( $dirRoot, '/' ).'/'.trim( $dirHome, '/' ), '/' );
+			$dirAbsSite = \rtrim( \rtrim( $dirRoot, '/' ).'/'.trim( $dirSite, '/' ), '/' );
 		}
 
 		$wpConfig = $this->findWpConfig();
@@ -88,10 +88,10 @@ class Paths extends Base {
 			'wordpress_worpit_plugin_dir'  => rtrim( $this->getDriverRootDir(), '/' ),
 			'wordpress_wpconfig'           => $wpConfig,
 			'wordpress_wpconfig_relocated' => $bRelocatedWpConfig ? 1 : 0,
-			'php_self'                     => $_SERVER[ 'PHP_SELF' ] ?? '-1',
-			'document_root'                => $_SERVER[ 'DOCUMENT_ROOT' ] ?? '-1',
-			'script_filename'              => $_SERVER[ 'SCRIPT_FILENAME' ] ?? '-1',
-			'path_translated'              => $_SERVER[ 'PATH_TRANSLATED' ] ?? '-1'
+			'php_self'        => $this->loadDP()->FetchServer( 'PHP_SELF', -1 ),
+			'document_root'   => $this->loadDP()->FetchServer( 'DOCUMENT_ROOT', -1 ),
+			'script_filename' => $this->loadDP()->FetchServer( 'SCRIPT_FILENAME', -1 ),
+			'path_translated' => $this->loadDP()->FetchServer( 'PATH_TRANSLATED', -1 ),
 		];
 	}
 
@@ -105,16 +105,16 @@ class Paths extends Base {
 
 	/**
 	 * @param string $sSearchLocation
-	 * @param bool   $bIncludeBackwardsLookup
+	 * @param bool $includeBackwardsLookup
 	 * @return string|bool
 	 */
-	protected function findWpConfig( $sSearchLocation = null, $bIncludeBackwardsLookup = true ) {
-		if ( is_null( $sSearchLocation ) ) {
-			if ( defined( 'ABSPATH' ) ) {
+	protected function findWpConfig( $sSearchLocation = null, $includeBackwardsLookup = true ) {
+		if ( \is_null( $sSearchLocation ) ) {
+			if ( \defined( 'ABSPATH' ) ) {
 				if ( is_file( rtrim( ABSPATH, '/' ).'/wp-config.php' ) ) {
 					return rtrim( ABSPATH, '/' ).'/wp-config.php';
 				}
-				if ( $bIncludeBackwardsLookup && is_file( rtrim( ABSPATH, '/' ).'/../wp-config.php' ) ) {
+				if ( $includeBackwardsLookup && is_file( rtrim( ABSPATH, '/' ).'/../wp-config.php' ) ) {
 					return realpath( rtrim( ABSPATH, '/' ).'/../wp-config.php' );
 				}
 			}
@@ -122,7 +122,7 @@ class Paths extends Base {
 				if ( is_file( rtrim( \REQUEST_ABS_HOME_DIR, '/' ).'/wp-config.php' ) ) {
 					return rtrim( \REQUEST_ABS_HOME_DIR, '/' ).'/wp-config.php';
 				}
-				if ( $bIncludeBackwardsLookup && is_file( rtrim( \REQUEST_ABS_HOME_DIR, '/' ).'/../wp-config.php' ) ) {
+				if ( $includeBackwardsLookup && is_file( rtrim( \REQUEST_ABS_HOME_DIR, '/' ).'/../wp-config.php' ) ) {
 					return realpath( rtrim( \REQUEST_ABS_HOME_DIR, '/' ).'/../wp-config.php' );
 				}
 			}
@@ -130,17 +130,18 @@ class Paths extends Base {
 				if ( is_file( rtrim( \REQUEST_ABS_SITE_DIR, '/' ).'/wp-config.php' ) ) {
 					return rtrim( \REQUEST_ABS_SITE_DIR, '/' ).'/wp-config.php';
 				}
-				if ( $bIncludeBackwardsLookup && is_file( rtrim( \REQUEST_ABS_SITE_DIR, '/' ).'/../wp-config.php' ) ) {
+				if ( $includeBackwardsLookup && is_file( rtrim( \REQUEST_ABS_SITE_DIR, '/' ).'/../wp-config.php' ) ) {
 					return realpath( rtrim( \REQUEST_ABS_SITE_DIR, '/' ).'/../wp-config.php' );
 				}
 			}
 
-			if ( isset( $_SERVER[ 'DOCUMENT_ROOT' ] ) ) {
-				if ( is_file( rtrim( $_SERVER[ 'DOCUMENT_ROOT' ], '/' ).'/wp-config.php' ) ) {
-					return rtrim( $_SERVER[ 'DOCUMENT_ROOT' ], '/' ).'/wp-config.php';
+			$docRoot = $this->loadDP()->FetchServer( 'DOCUMENT_ROOT' );
+			if ( isset( $docRoot ) ) {
+				if ( is_file( rtrim( $docRoot, '/' ).'/wp-config.php' ) ) {
+					return rtrim( $docRoot, '/' ).'/wp-config.php';
 				}
-				if ( $bIncludeBackwardsLookup && is_file( rtrim( $_SERVER[ 'DOCUMENT_ROOT' ], '/' ).'/../wp-config.php' ) ) {
-					return realpath( rtrim( $_SERVER[ 'DOCUMENT_ROOT' ], '/' ).'/../wp-config.php' );
+				if ( $includeBackwardsLookup && is_file( rtrim( $docRoot, '/' ).'/../wp-config.php' ) ) {
+					return realpath( rtrim( $docRoot, '/' ).'/../wp-config.php' );
 				}
 			}
 		}
@@ -148,7 +149,7 @@ class Paths extends Base {
 			if ( is_file( rtrim( $sSearchLocation, '/' ).'/wp-config.php' ) ) {
 				return rtrim( $sSearchLocation, '/' ).'/wp-config.php';
 			}
-			if ( $bIncludeBackwardsLookup && is_file( rtrim( $sSearchLocation, '/' ).'/../wp-config.php' ) ) {
+			if ( $includeBackwardsLookup && is_file( rtrim( $sSearchLocation, '/' ).'/../wp-config.php' ) ) {
 				return realpath( rtrim( $sSearchLocation, '/' ).'/../wp-config.php' );
 			}
 		}

@@ -10,50 +10,46 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 	public function getDatabaseTableStatus( bool $includeViews = false ) :array {
 		$DB = $this->loadDbProcessor();
 
-		$aTableStatusResults = $DB->showTableStatus();
-		if ( empty( $aTableStatusResults ) ) {
+		$tablesStatus = $DB->showTableStatus();
+		if ( empty( $tablesStatus ) ) {
 			throw new \Exception( 'Empty results from TABLE STATUS query is not as expected.' );
 		}
 
-		$nDatabaseTotal = 0;
-		$nGainTotal = 0;
+		$dbTotal = 0;
+		$gainTotal = 0;
 		$tables = [];
-		/** @var \stdClass $oTable */
-		foreach ( $aTableStatusResults as $oTable ) {
-			$nDataLength = $oTable->Data_length;
-			$nIndexLength = $oTable->Index_length;
-			$nDataFree = $oTable->Data_free;
+		foreach ( $tablesStatus as $table ) {
+			/** @var \stdClass $table */
+			if ( !empty( $table->Name ) && \str_starts_with( $table->Name, $this->loadDbProcessor()->getPrefix() ) ) {
+				if ( !$DB->isTableView( $table ) || $includeViews ) {
 
-			$nTableTotal = $nDataLength + $nIndexLength;
-			$nDatabaseTotal += $nTableTotal;
-			$nGainTotal += $nDataFree;
+					$tableTotal = $table->Data_length + $table->Index_length;
+					$dbTotal += $tableTotal;
+					$gainTotal += $table->Data_free;
 
-			$sComment = empty( $oTable->Comment ) ? '' : $oTable->Comment;
+					$tbl = [
+						'name'    => $table->Name,
+						'records' => $table->Rows,
+						'size'    => $tableTotal,
+						'gain'    => $table->Data_free,
+						'comment' => empty( $table->Comment ) ? '' : $table->Comment,
+						'crashed' => 0
+					];
 
-			if ( !$DB->isTableView( $oTable ) || $includeViews ) {
+					if ( $DB->isTableCrashed( $table ) ) {
+						$tbl[ 'comment' ] = sprintf( 'Table "%s" appears to be crashed', $table->Name );
+						$tbl[ 'crashed' ] = 1;
+					}
 
-				$table = [
-					'name'    => $oTable->Name,
-					'records' => $oTable->Rows,
-					'size'    => $nTableTotal,
-					'gain'    => $nDataFree,
-					'comment' => $sComment,
-					'crashed' => 0
-				];
-
-				if ( $DB->isTableCrashed( $oTable ) ) {
-					$table[ 'comment' ] = sprintf( 'Table "%s" appears to be crashed', $oTable->Name );
-					$table[ 'crashed' ] = 1;
+					$tables[] = $tbl;
 				}
-
-				$tables[] = $table;
 			}
 		}
 
 		return [
 			'tables'         => $tables,
-			'database_total' => $nDatabaseTotal,
-			'database_gain'  => $nGainTotal
+			'database_total' => $dbTotal,
+			'database_gain'  => $gainTotal
 		];
 	}
 }

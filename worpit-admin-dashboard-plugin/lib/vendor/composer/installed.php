@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'odp-icontrolwp/requirements',
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
-        'reference' => 'a20492eb0fba462e7f17414174fdaa042bfcf54d',
+        'pretty_version' => 'dev-develop',
+        'version' => 'dev-develop',
+        'reference' => '9daceedc1265410e97e366596473db20671cb224',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'odp-icontrolwp/requirements' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => 'a20492eb0fba462e7f17414174fdaa042bfcf54d',
+            'pretty_version' => 'dev-develop',
+            'version' => 'dev-develop',
+            'reference' => '9daceedc1265410e97e366596473db20671cb224',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

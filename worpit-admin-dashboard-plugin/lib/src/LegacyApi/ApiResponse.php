@@ -36,15 +36,6 @@ class ApiResponse {
 	}
 
 	/**
-	 * @param array $aData
-	 * @return $this
-	 */
-	public function setData( array $aData ) {
-		$this->data = $aData;
-		return $this;
-	}
-
-	/**
 	 * @param int $code
 	 * @return $this
 	 */
@@ -60,13 +51,6 @@ class ApiResponse {
 	public function setErrorMessage( $sMsg ) {
 		$this->error_message = (int)$sMsg;
 		return $this;
-	}
-
-	/**
-	 * @return $this
-	 */
-	public function setFailed() {
-		return $this->setSuccess( false );
 	}
 
 	/**
@@ -114,18 +98,6 @@ class ApiResponse {
 	 */
 	public function getResponsePackage() {
 		return (object)$this->getRawDataAsArray();
-	}
-
-	/**
-	 * @param string $sItem
-	 * @param mixed  $mValue
-	 * @return $this
-	 * @deprecated
-	 */
-	public function setDataItem( $sItem, $mValue ) {
-		$aData = $this->getData();
-		$aData[ $sItem ] = $mValue;
-		return $this->setData( $aData );
 	}
 
 	/**

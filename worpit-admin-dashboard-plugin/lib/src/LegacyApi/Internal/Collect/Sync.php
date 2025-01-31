@@ -23,12 +23,12 @@ class Sync extends Base {
 	}
 
 	protected function cleanRollbackData() {
-		$boundary = time() - WEEK_IN_SECONDS;
+		$boundary = \time() - WEEK_IN_SECONDS;
 		$FS = $this->loadFS();
 
 		foreach ( [ 'plugins', 'themes' ] as $context ) {
 			$dir = path_join( $this->getRollbackBaseDir(), $context );
-			if ( is_dir( $dir ) ) {
+			if ( \is_dir( $dir ) ) {
 				try {
 					foreach ( new \DirectoryIterator( $dir ) as $file ) {
 						if ( $file->isDir() && !$file->isDot() ) {
@@ -38,7 +38,7 @@ class Sync extends Base {
 						}
 					}
 				}
-				catch ( \Exception $oE ) { //  UnexpectedValueException, RuntimeException, Exception
+				catch ( \Exception $e ) { //  UnexpectedValueException, RuntimeException, Exception
 					continue;
 				}
 			}

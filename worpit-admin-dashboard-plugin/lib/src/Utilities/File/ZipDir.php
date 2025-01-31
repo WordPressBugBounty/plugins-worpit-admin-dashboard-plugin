@@ -24,12 +24,12 @@ class ZipDir {
 		$sourceDir = \str_replace( '\\', '/', \realpath( $sourceDir ) );
 
 		if ( \is_dir( $sourceDir ) === true ) {
-			$oFileIT = new \RecursiveIteratorIterator(
+			$fileIT = new \RecursiveIteratorIterator(
 				new \RecursiveDirectoryIterator( $sourceDir ),
 				\RecursiveIteratorIterator::SELF_FIRST
 			);
 
-			foreach ( $oFileIT as $file ) {
+			foreach ( $fileIT as $file ) {
 				$file = \str_replace( '\\', '/', $file );
 
 				// Ignore "." and ".." folders
@@ -43,12 +43,12 @@ class ZipDir {
 					$zip->addEmptyDir( \str_replace( $sourceDir.'/', '', $file.'/' ) );
 				}
 				elseif ( \is_file( $file ) === true ) {
-					$zip->addFromString( \str_replace( $sourceDir.'/', '', $file ), \file_get_contents( $file ) );
+					$zip->addFile( $file, \str_replace( $sourceDir.'/', '', $file ) );
 				}
 			}
 		}
-		elseif ( is_file( $sourceDir ) === true ) {
-			$zip->addFromString( \basename( $sourceDir ), \file_get_contents( $sourceDir ) );
+		elseif ( \is_file( $sourceDir ) === true ) {
+			$zip->addFile( $sourceDir, \basename( $sourceDir ) );
 		}
 
 		return $zip->close();

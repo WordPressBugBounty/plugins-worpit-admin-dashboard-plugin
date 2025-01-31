@@ -13,8 +13,7 @@ class ICWP_APP_Processor_Plugin_Api_Login extends ICWP_APP_Processor_Plugin_Api 
 		try {
 			$this->processAction();
 		}
-		catch ( \Exception $oE ) {
-			wp_die( $oE->getMessage() );
+		catch ( \Exception $e ) {
 		}
 		return $this->setSuccessResponse();
 	}
@@ -24,12 +23,12 @@ class ICWP_APP_Processor_Plugin_Api_Login extends ICWP_APP_Processor_Plugin_Api 
 	 * @throws \Exception
 	 */
 	protected function processAction() {
-		$oReqParams = $this->getRequestParams();
+		$req = $this->getRequestParams();
 		$WP = $this->loadWP();
 
 		$this->getStandardResponse()->die = true;
 
-		if ( empty( $oReqParams->token ) ) {
+		if ( empty( $req->token ) ) {
 			throw new \Exception( 'No valid Login Token was sent.' );
 		}
 
@@ -42,13 +41,13 @@ class ICWP_APP_Processor_Plugin_Api_Login extends ICWP_APP_Processor_Plugin_Api 
 		if ( empty( $token[ 'token' ] ) || \strlen( $token[ 'token' ] ) !== 64 ) {
 			throw new \Exception( 'Login Token is not correct.' );
 		}
-		if ( !\hash_equals( $token[ 'token' ], $oReqParams->token ) ) {
+		if ( !\hash_equals( $token[ 'token' ], $req->token ) ) {
 			throw new \Exception( 'Login Token does not match.' );
 		}
 
 		$WPU = $this->loadWpUsers();
 
-		$username = $oReqParams->getStringParam( 'username' );
+		$username = $req->getStringParam( 'username' );
 		$user = $WPU->getUserByUsername( $username );
 		if ( empty( $username ) || empty( $user ) ) {
 			$aUserRecords = \version_compare( $WP->getWordpressVersion(), '3.1', '>=' ) ? get_users( 'role=administrator' ) : [];
@@ -62,10 +61,10 @@ class ICWP_APP_Processor_Plugin_Api_Login extends ICWP_APP_Processor_Plugin_Api 
 		add_filter( 'odp-shield-2fa_skip', '__return_true' );
 
 		if ( !$WPU->setUserLoggedIn( $user->get( 'user_login' ) ) ) {
-			throw new \Exception( sprintf( 'There was a problem logging you in as "%s".', $user->get( 'user_login' ) ) );
+			throw new \Exception( sprintf( 'There was a problem logging you in as "%s".', esc_html( $user->get( 'user_login' ) ) ) );
 		}
 
-		$redirectTo = $oReqParams->getStringParam( 'redirect' );
+		$redirectTo = $req->getStringParam( 'redirect' );
 		if ( empty( $redirectTo ) ) {
 			$redirectTo = $token[ 'redirect' ];
 		}

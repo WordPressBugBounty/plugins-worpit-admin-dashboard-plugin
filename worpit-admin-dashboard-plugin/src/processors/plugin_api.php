@@ -2,7 +2,7 @@
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
 
-abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp {
+abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp {
 
 	/**
 	 * @var LegacyApi\ApiResponse
@@ -29,15 +29,12 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 	}
 
 	protected function preActionVerify() {
-		/** @var \ICWP_APP_FeatureHandler_Plugin $oMod */
-		$oMod = $this->getFeatureOptions();
-
-		$oResponse = $this->getStandardResponse();
-		$oResponse->channel = $this->getApiChannel();
+		$r = $this->getStandardResponse();
+		$r->channel = $this->getApiChannel();
 
 		$this->preApiCheck();
 
-		if ( !$oResponse->success ) {
+		if ( !$r->success ) {
 			if ( !$this->attemptSiteReassign()->success ) {
 				return;
 			}
@@ -45,9 +42,9 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 
 		$this->handshake();
 
-		if ( !$oResponse->success ) {
-			if ( $oResponse->code == 9991 ) {
-				$oMod->setCanHandshake(); //recheck ability to handshake
+		if ( !$r->success ) {
+			if ( $r->code == 9991 ) {
+				$this->mod->setCanHandshake(); //recheck ability to handshake
 			}
 		}
 	}
@@ -67,22 +64,18 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 	 * @return string
 	 */
 	protected function getApiChannel() {
-		/** @var ICWP_APP_FeatureHandler_Plugin $oMod */
-		$oMod = $this->getFeatureOptions();
 		$oParams = $this->getRequestParams();
-		return in_array( $oParams->m, $oMod->getPermittedApiChannels() ) ? $oParams->m : 'index';
+		return in_array( $oParams->m, $this->mod->getPermittedApiChannels() ) ? $oParams->m : 'index';
 	}
 
 	/**
 	 * @return LegacyApi\ApiResponse
 	 */
 	protected function preApiCheck() {
-		/** @var ICWP_APP_FeatureHandler_Plugin $oMod */
-		$oMod = $this->getFeatureOptions();
 		$oReqParams = $this->getRequestParams();
 		$oResponse = $this->getStandardResponse();
 
-		if ( !$oMod->getIsSiteLinked() ) {
+		if ( !$this->mod->getIsSiteLinked() ) {
 			$sErrorMessage = 'NotAssigned';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -98,7 +91,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 			);
 		}
 
-		if ( $oReqParams->key != $oMod->getPluginAuthKey() ) {
+		if ( $oReqParams->key != $this->mod->getPluginAuthKey() ) {
 			$sErrorMessage = 'InvalidKey';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -113,7 +106,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 				9994
 			);
 		}
-		$sPin = $oMod->getPluginPin();
+		$sPin = $this->mod->getPluginPin();
 		if ( md5( $oReqParams->pin ) != $sPin ) {
 			$sErrorMessage = 'InvalidPin';
 			return $this->setErrorResponse(
@@ -135,11 +128,9 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 	 * @return LegacyApi\ApiResponse
 	 */
 	protected function attemptSiteReassign() {
-		/** @var ICWP_APP_FeatureHandler_Plugin $oMod */
-		$oMod = $this->getFeatureOptions();
-		$oReqParams = $this->getRequestParams();
+		$req = $this->getRequestParams();
 
-		if ( empty( $oReqParams->m ) || !in_array( $oReqParams->m, [ 'auth', 'internal', 'retrieve' ] ) ) {
+		if ( empty( $req->m ) || !in_array( $req->m, [ 'auth', 'internal', 'retrieve' ] ) ) {
 			return $this->setErrorResponse(
 				sprintf( 'Attempting Site Reassign Failed: %s.', 'Site action method is neither "retrieve" nor "internal".' ),
 				9806
@@ -147,7 +138,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 		}
 
 		// We first verify fully if we CAN handshake
-		if ( !$oMod->getCanHandshake( true ) ) {
+		if ( !$this->mod->getCanHandshake( true ) ) {
 			return $this->setErrorResponse(
 				sprintf( 'Attempting Site Reassign Failed: %s.', 'Site cannot handshake' ),
 				9801
@@ -155,40 +146,40 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 		}
 
 		$this->handshake();
-		$oResponse = $this->getStandardResponse();
+		$r = $this->getStandardResponse();
 
-		if ( !$oResponse->success ) {
+		if ( !$r->success ) {
 			return $this->setErrorResponse(
 				sprintf( 'Attempting Site Reassign Failed: %s.', 'Handshake verify failed' ),
 				9802
 			);
 		}
 
-		if ( empty( $oReqParams->accname ) || !is_email( $oReqParams->accname ) ) {
+		if ( empty( $req->accname ) || !is_email( $req->accname ) ) {
 			return $this->setErrorResponse(
 				sprintf( 'Attempting Site Reassign Failed: %s.', 'Request account empty or invalid' ),
 				9803
 			);
 		}
 
-		if ( empty( $oReqParams->key ) || strlen( $oReqParams->key ) != 24 ) {
+		if ( empty( $req->key ) || strlen( $req->key ) != 24 ) {
 			return $this->setErrorResponse(
 				sprintf( 'Attempting Site Reassign Failed: %s.', 'Auth Key not of the correct format' ),
 				9804
 			);
 		}
 
-		if ( empty( $oReqParams->pin ) ) {
+		if ( empty( $req->pin ) ) {
 			return $this->setErrorResponse(
 				sprintf( 'Attempting Site Reassign Failed: %s.', 'PIN empty' ),
 				9805
 			);
 		}
 
-		$oMod->setOpt( 'key', $oReqParams->key );
-		$oMod->setAssignedAccount( $oReqParams->accname );
-		$oMod->setPluginPin( $oReqParams->pin );
-		$oMod->savePluginOptions();
+		$this->mod->setOpt( 'key', $req->key );
+		$this->mod->setAssignedAccount( $req->accname );
+		$this->mod->setPluginPin( $req->pin );
+		$this->mod->savePluginOptions();
 
 		return $this->setSuccessResponse(
 			'Attempting Site Reassign Succeeded.',
@@ -200,61 +191,56 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 	 * @return LegacyApi\ApiResponse
 	 */
 	protected function handshake() {
-		/** @var ICWP_APP_FeatureHandler_Plugin $oMod */
-		$oMod = $this->getFeatureOptions();
-		$oParams = $this->getRequestParams();
+		$req = $this->getRequestParams();
 		$oResponse = $this->getStandardResponse();
 
-		if ( !$oMod->getCanHandshake() ) {
+		if ( !$this->mod->getCanHandshake() ) {
 			$oResponse->handshake = 'unsupported';
 			return $oResponse;
 		}
 		$oResponse->handshake = 'failed';
 
-		if ( empty( $oParams->verification_code ) || empty( $oParams->package_name ) || empty( $oParams->pin ) ) {
+		if ( empty( $req->verification_code ) || empty( $req->package_name ) || empty( $req->pin ) ) {
 			return $this->setErrorResponse(
 				'Either the Verification Code, Package Name, or PIN were empty. Could not Handshake.',
 				9990
 			);
 		}
 
-		$oEncryptProcessor = $this->loadEncryptProcessor();
-		if ( $oEncryptProcessor->getSupportsOpenSslSign() ) {
-			$sPublicKey = $oMod->getIcwpPublicKey();
-			if ( !empty( $oParams->opensig ) && !empty( $sPublicKey ) ) {
-				$nSslSuccess = $oEncryptProcessor->verifySslSignature(
-					$oParams->verification_code, $oParams->opensig, $sPublicKey
-				);
-				$oResponse->openssl_verify = $nSslSuccess;
-				if ( $nSslSuccess === 1 ) {
+		$enc = $this->loadEncryptProcessor();
+		if ( $enc->getSupportsOpenSslSign() ) {
+			$publicKey = $this->mod->getIcwpPublicKey();
+			if ( !empty( $req->opensig ) && !empty( $publicKey ) ) {
+				$sslSuccess = $enc->verifySslSignature( $req->verification_code, $req->opensig, $publicKey );
+				$oResponse->openssl_verify = $sslSuccess;
+				if ( $sslSuccess === 1 ) {
 					$oResponse->handshake = 'openssl';
 					return $this->setSuccessResponse(); // just to be sure we proceed thereafter
 				}
 			}
 		}
 
-		$sHandshakeVerifyBaseUrl = $oMod->getAppUrl( 'handshake_verify_url' );
 		// We can do this because we've assumed at this point we've validated the communication with iControlWP
-		$sHandshakeVerifyUrl = sprintf(
+		$verifyURL = sprintf(
 			'%s/%s/%s/%s',
-			rtrim( $sHandshakeVerifyBaseUrl, '/' ),
-			$oParams->verification_code,
-			$oParams->package_name,
-			$oParams->pin
+			\rtrim( $this->mod->getAppUrl( 'handshake_verify_url' ), '/' ),
+			$req->verification_code,
+			$req->package_name,
+			$req->pin
 		);
 
-		$sResponse = $this->loadFS()->getUrlContent( $sHandshakeVerifyUrl );
-		if ( empty( $sResponse ) ) {
+		$rawResponse = $this->loadFS()->getUrlContent( $verifyURL );
+		if ( empty( $rawResponse ) ) {
 			return $this->setErrorResponse(
-				sprintf( 'Package Handshaking Failed against URL "%s" with an empty response.', $sHandshakeVerifyUrl ),
+				sprintf( 'Package Handshaking Failed against URL "%s" with an empty response.', $verifyURL ),
 				9991
 			);
 		}
 
-		$oJsonResponse = json_decode( trim( $sResponse ) );
-		if ( !is_object( $oJsonResponse ) || !isset( $oJsonResponse->success ) || $oJsonResponse->success !== true ) {
+		$jsonResponse = \json_decode( \trim( $rawResponse ) );
+		if ( !\is_object( $jsonResponse ) || empty( $jsonResponse->success ) ) {
 			return $this->setErrorResponse(
-				sprintf( 'Package Handshaking Failed against URL "%s" with response: "%s".', $sHandshakeVerifyUrl, print_r( $oJsonResponse, true ) ),
+				sprintf( 'Package Handshaking Failed against URL "%s" with response: "%s".', $verifyURL, $rawResponse ),
 				9992
 			);
 		}
@@ -265,7 +251,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 
 	protected function preActionEnvironmentSetup() {
 		$this->loadWP()->doBustCache();
-		@set_time_limit( $this->getRequestParams()->timeout );
+//		@set_time_limit( $this->getRequestParams()->timeout );
 	}
 
 	/**
@@ -284,12 +270,11 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 	 * @return bool
 	 */
 	protected function setAuthorizedUser() {
-
 		if ( !$this->isLoggedInUser() ) {
-			$oWpUser = $this->loadWpUsers();
-			$oReqParams = $this->getRequestParams();
-			$sWpUser = $oReqParams->wpadmin_user;
-			if ( empty( $sWpUser ) ) {
+			$WPU = $this->loadWpUsers();
+			$req = $this->getRequestParams();
+			$wpUser = $req->wpadmin_user;
+			if ( empty( $wpUser ) ) {
 
 				if ( version_compare( $this->loadWP()->getWordpressVersion(), '3.1', '>=' ) ) {
 					$aUserRecords = get_users( [
@@ -302,13 +287,13 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 					}
 				}
 				else {
-					$oUser = $oWpUser->getUserById( 1 );
+					$oUser = $WPU->getUserById( 1 );
 				}
-				$sWpUser = ( !empty( $oUser ) && is_a( $oUser, 'WP_User' ) ) ? $oUser->get( 'user_login' ) : 'admin';
+				$wpUser = ( !empty( $oUser ) && is_a( $oUser, 'WP_User' ) ) ? $oUser->get( 'user_login' ) : 'admin';
 			}
 
-			if ( $oWpUser->setUserLoggedIn( $sWpUser, $oReqParams->isSilentLogin() ) ) {
-				$this->setLoggedInUser( $sWpUser );
+			if ( $WPU->setUserLoggedIn( $wpUser, (bool)$req->silent_login ) ) {
+				$this->setLoggedInUser( $wpUser );
 			}
 		}
 		return $this->isLoggedInUser();
@@ -361,36 +346,35 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 	}
 
 	/**
-	 * @param string $sErrorMessage
-	 * @param int    $nErrorCode
-	 * @param mixed  $mErrorData
-	 * @return LegacyApi\ApiResponse
+	 * @param string $msg
+	 * @param int    $code
+	 * @param mixed  $data
 	 */
-	protected function setErrorResponse( $sErrorMessage = '', $nErrorCode = -1, $mErrorData = [] ) {
-		return $this->getStandardResponse()
-					->setFailed()
-					->setErrorMessage( $sErrorMessage )
-					->setCode( $nErrorCode )
-					->setData( $mErrorData );
+	protected function setErrorResponse( $msg = '', $code = -1, $data = [] ) :LegacyApi\ApiResponse {
+		$r = $this->getStandardResponse();
+		$r->success = false;
+		$r->error_message = $msg;
+		$r->message = $msg;
+		$r->code = $code;
+		$r->data = $data;
+		return $r;
 	}
 
 	/**
 	 * @param string $msg
-	 * @param int    $successCode
+	 * @param int    $code
 	 * @param mixed  $data
 	 * @return LegacyApi\ApiResponse
 	 */
-	protected function setSuccessResponse( $msg = '', $successCode = 0, $data = [] ) {
-		return $this->getStandardResponse()
-					->setSuccess( true )
-					->setMessage( $msg )
-					->setCode( $successCode )
-					->setData( empty( $data ) ? [ 'success' => 1 ] : $data );
+	protected function setSuccessResponse( $msg = '', $code = 0, $data = [] ) :LegacyApi\ApiResponse {
+		$r = $this->getStandardResponse();
+		$r->success = true;
+		$r->message = $msg;
+		$r->code = $code;
+		$r->data = empty( $data ) ? [ 'success' => 1 ] : $data;
+		return $r;
 	}
 
-	/**
-	 * @return LegacyApi\ApiResponse
-	 */
 	public static function getStandardResponse() :LegacyApi\ApiResponse {
 		return self::$oActionResponse ?? self::$oActionResponse = new LegacyApi\ApiResponse();
 	}
@@ -419,11 +403,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends ICWP_APP_Processor_BaseApp 
 		return $this->sLoggedInUser;
 	}
 
-	/**
-	 * @return bool
-	 */
-	protected function isLoggedInUser() {
-		$sLoggedInUser = $this->getLoggedInUser();
-		return !empty( $sLoggedInUser );
+	protected function isLoggedInUser() :bool {
+		return !empty( $this->getLoggedInUser() );
 	}
 }

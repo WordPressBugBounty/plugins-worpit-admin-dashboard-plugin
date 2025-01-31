@@ -2,6 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Plugin;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Collect\Plugins;
 
@@ -15,13 +16,13 @@ class Rollback extends Base {
 			return $this->fail( '"plugin_file" not provided in action' );
 		}
 
-		$FS = $this->loadFS();
+		$FS = FileSystem::Instance();
 
 		$dirName = \dirname( $this->getFile() );
 		$dirPath = path_join( WP_PLUGIN_DIR, $dirName );
 
 		$rollbackSourcePath = path_join( $this->getRollbackBaseDir(), sprintf( 'plugins/%s', $dirName ) );
-		if ( !$FS->isDir( $rollbackSourcePath ) || $FS->isDirEmpty( $rollbackSourcePath ) ) {
+		if ( !FileSystem::Instance()->isDir( $rollbackSourcePath ) || $FS->isDirEmpty( $rollbackSourcePath ) ) {
 			return $this->fail( 'The Rollback directory is either empty or does not exist.' );
 		}
 

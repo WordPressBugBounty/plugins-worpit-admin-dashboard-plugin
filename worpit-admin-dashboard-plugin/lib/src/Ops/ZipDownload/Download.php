@@ -8,20 +8,14 @@ class Download extends Base {
 	 * @throws \Exception
 	 */
 	public function byID( string $id ) {
-		$FS = $this->loadFS();
-
 		$id = sanitize_key( $id ); // no funky biz
-		if ( empty( $id ) ) {
-			throw new \Exception( 'No ID provided.' );
+		if ( !empty( $id ) ) {
+			$file = \realpath( path_join( $this->getZipsDir(), $id.'.zip' ) );
+			if ( !empty( $file ) && $this->loadFS()->exists( $file ) ) {
+				$this->sendFile( $file );
+				$this->loadFS()->deleteFile( $file );
+			}
 		}
-
-		$file = realpath( path_join( $this->getZipsDir(), $id.'.zip' ) );
-		if ( empty( $file ) || !$FS->exists( $file ) ) {
-			throw new \Exception( 'File does not exist.' );
-		}
-
-		$this->sendFile( $file );
-		$FS->deleteFile( $file );
 		die();
 	}
 
@@ -34,7 +28,7 @@ class Download extends Base {
 		\header( "Content-type: application/octet-stream" );
 		\header( 'Content-Disposition: attachment; filename="'.\basename( $file ).'"' );
 		\header( "Content-Transfer-Encoding: binary" );
-		\header( "Content-Length: ".filesize( $file ) );
+		\header( "Content-Length: ".\filesize( $file ) );
 		@\readfile( $file );
 	}
 }

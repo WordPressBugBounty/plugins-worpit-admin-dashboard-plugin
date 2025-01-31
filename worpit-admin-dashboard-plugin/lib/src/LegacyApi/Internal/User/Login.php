@@ -10,7 +10,7 @@ class Login extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Inter
 
 	public function process() :ApiResponse {
 		$source = home_url().'$'.\uniqid().'$'.\time();
-		$token = hash( 'sha256', $source );
+		$token = \hash( 'sha256', $source );
 
 		$this->loadWP()
 			 ->setTransient(

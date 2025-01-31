@@ -50,13 +50,12 @@ class Update extends LegacyApi\Internal\Base {
 	}
 
 	/**
-	 * @param $oCoreUpdate
+	 * @param $coreUpdate
 	 * @return false|string|\WP_Error
 	 */
-	protected function processLegacy( $oCoreUpdate ) {
+	protected function processLegacy( $coreUpdate ) {
 		$oSkin = $this->loadWP()->getWordpressIsAtLeastVersion( '3.7' ) ?
-			new \Automatic_Upgrader_Skin()
-			: new \ICWP_Upgrader_Skin();
-		return ( new \Core_Upgrader( $oSkin ) )->upgrade( $oCoreUpdate );
+			new \Automatic_Upgrader_Skin() : new \ICWP_Upgrader_Skin();
+		return ( new \Core_Upgrader( $oSkin ) )->upgrade( $coreUpdate );
 	}
 }

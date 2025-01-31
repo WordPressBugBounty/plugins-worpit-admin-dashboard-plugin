@@ -33,14 +33,14 @@ class RunAutoupdates {
 				/**
 				 * As above - some premium plugins break this, so we "fix" it.
 				 */
-				if ( in_array( $item->slug, [ $file, explode( '/', $file )[ 0 ] ] ) ) {
+				if ( \in_array( $item->slug, [ $file, explode( '/', $file )[ 0 ] ] ) ) {
 					$update = true;
 					$item->plugin = $file;
 				}
 			}
 
 			return $update;
-		}, PHP_INT_MAX, 2 );
+		}, \PHP_INT_MAX, 2 );
 		wp_maybe_auto_update();
 	}
 

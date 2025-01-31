@@ -47,7 +47,7 @@ class Configure extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\I
 	}
 
 	protected function getStoredOptions() :array {
-		return $this->getSubSystem()->getOptionsVo()->getStoredOptions();
+		return $this->getSubSystem()->opts()->getStoredOptions();
 	}
 
 	/**
@@ -56,24 +56,24 @@ class Configure extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\I
 	protected function getSubSystem() {
 		switch ( $this->getActionParam( 'subsystem_id' ) ) {
 			case self::SYS_AUTOUPDATES:
-				$sys = \ICWP_Plugin::GetAutoUpdatesSystem();
+				$slug = 'autoupdates';
 				break;
 			case self::SYS_GOOGLEANALYTICS:
-				$sys = \ICWP_Plugin::GetGoogleAnalyticsSystem();
+				$slug = 'google_analytics';
 				break;
 			case self::SYS_SITESECURITY:
-				$sys = \ICWP_Plugin::GetSecuritySystem();
+				$slug = 'security';
 				break;
 			case self::SYS_WHITELABEL:
-				$sys = \ICWP_Plugin::GetWhiteLabelSystem();
+				$slug = 'whitelabel';
 				break;
 			case self::SYS_PLUGIN:
-				$sys = \ICWP_Plugin::GetPluginSystem();
+				$slug = 'plugin';
 				break;
 			default:
-				$sys = null;
+				$slug = 'null';
 				break;
 		}
-		return $sys;
+		return self::con()->modules[ $slug ] ?? null;
 	}
 }

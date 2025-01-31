@@ -2,8 +2,6 @@
 
 class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 
-	/**
-	 */
 	public function run() {
 		$this->setupWhitelists();
 		// Only when the request comes from iControlWP.
@@ -14,23 +12,15 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 		}
 	}
 
-	/**
-	 * @param int $nIpVersion
-	 *
-	 * @return array
-	 */
-	public function getServiceIps( $nIpVersion = 4 ) {
-		$nVersion = in_array( $nIpVersion, [ 4, 6 ] ) ? $nIpVersion : 4;
-		$aResult = apply_filters( $this->getController()->doPluginPrefix( 'get_service_ips_v'.$nVersion ), [] );
-		return is_array( $aResult ) ? $aResult : [];
+	public function getServiceIps( int $ipVersion = 4 ) :array {
+		$v = \in_array( $ipVersion, [ 4, 6 ] ) ? $ipVersion : 4;
+		$aResult = apply_filters( self::con()->doPluginPrefix( 'get_service_ips_v'.$v ), [] );
+		return \is_array( $aResult ) ? $aResult : [];
 	}
 
-	/**
-	 * @return bool
-	 */
-	protected function getIsRequestFromServiceIp() {
-		$sIp = $this->loadDP()->getVisitorIpAddress( true );
-		return ( in_array( $sIp, $this->getServiceIps( 4 ) ) || in_array( $sIp, $this->getServiceIps( 6 ) ) );
+	protected function getIsRequestFromServiceIp() :bool {
+		$ip = $this->loadDP()->getVisitorIpAddress();
+		return \in_array( $ip, $this->getServiceIps() ) || \in_array( $ip, $this->getServiceIps( 6 ) );
 	}
 
 	/**
@@ -40,40 +30,32 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 	public function setupWhitelists() {
 		$this->addToWordfence();
 		$this->addToBadBehaviour();
-		$this->addToWordpressFirewall2();
-//			$this->addToWpMaintenanceMode(); // replaced with unhooking of init action
-//			$this->addToIThemesSecurity();
-		// Add WordPress Simple Firewall plugin whitelist
-		add_filter( 'icwp_simple_firewall_whitelist_ips', [ $this, 'addToSimpleFirewallWhitelist' ] );
 	}
 
 	protected function addToWordfence() {
-		if ( !class_exists( 'wordfence' ) || !method_exists( 'wordfence', 'whitelistIP' ) ) {
+		if ( !\class_exists( 'wordfence' ) || !\method_exists( 'wordfence', 'whitelistIP' ) ) {
 			return;
 		}
-
-		$aServiceIps = $this->getServiceIps( 4 );
 		try {
-			foreach ( $aServiceIps as $sServiceIp ) {
-				if ( !empty( $sServiceIp ) && is_string( $sServiceIp ) ) {
+			foreach ( $this->getServiceIps() as $sServiceIp ) {
+				if ( !empty( $sServiceIp ) && \is_string( $sServiceIp ) ) {
 					wordfence::whitelistIP( $sServiceIp );
 				}
 			}
 		}
-		catch ( Exception $oE ) {
+		catch ( \Exception $e ) {
 		}
 	}
 
 	protected function addToBadBehaviour() {
-		$bInstalled = ( defined( 'BB2_VERSION' ) && defined( 'BB2_CORE' ) && function_exists( 'bb2_read_whitelist' ) );
-		if ( !$bInstalled ) {
+		if ( !( \defined( 'BB2_VERSION' ) && \defined( 'BB2_CORE' ) && \function_exists( 'bb2_read_whitelist' ) ) ) {
 			return;
 		}
 
 		$bAdded = false;
-		$aServiceIps = $this->getServiceIps( 4 );
+		$aServiceIps = $this->getServiceIps();
 		$sBbIpWhitelist = bb2_read_whitelist();
-		if ( empty( $sBbIpWhitelist[ 'ip' ] ) || !is_array( $sBbIpWhitelist[ 'ip' ] ) ) {
+		if ( empty( $sBbIpWhitelist[ 'ip' ] ) || !\is_array( $sBbIpWhitelist[ 'ip' ] ) ) {
 			$sBbIpWhitelist[ 'ip' ] = $aServiceIps;
 			$bAdded = true;
 		}
@@ -92,126 +74,27 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 	}
 
 	/**
-	 * No longer used in favour of removing init hook
-	 */
-	protected function addToWpMaintenanceMode() {
-		if ( class_exists( 'WP_Maintenance_Mode', false ) ) {
-			$aWpmmOptions = $this->loadWP()->getOption( 'wpmm_settings' );
-			$aExcludes = empty( $aWpmmOptions[ 'general' ][ 'exclude' ] ) ? [] : array_unique( $aWpmmOptions[ 'general' ][ 'exclude' ] );
-			$bAdded = false;
-			foreach ( $this->getServiceIps( 4 ) as $sIp ) {
-				if ( !in_array( $sIp, $aExcludes ) ) {
-					$aExcludes[] = $sIp;
-					$bAdded = true;
-				}
-			}
-			if ( $bAdded ) {
-				$aWpmmOptions[ 'general' ][ 'exclude' ] = $aExcludes;
-				$this->loadWP()->updateOption( 'wpmm_settings', $aWpmmOptions );
-			}
-		}
-	}
-
-	/**
-	 * If Wordfence is found on the site, it'll add the iControlWP IP address to the whitelist
-	 * @return boolean
-	 */
-	protected function addToWordpressFirewall2() {
-		$bUpdate = false;
-		$mWhiteListIps = get_option( 'WP_firewall_whitelisted_ip' );
-		if ( $mWhiteListIps !== false ) { //WP firewall 2 is installed.
-
-			$aFirewallIps = maybe_unserialize( $mWhiteListIps );
-			if ( !is_array( $aFirewallIps ) ) {
-				return false;
-			}
-
-			$aServiceIps = $this->getServiceIps( 4 );
-			foreach ( $aServiceIps as $sAddress ) {
-				if ( !in_array( $sAddress, $aFirewallIps ) ) {
-					$aFirewallIps[] = $sAddress;
-					$bUpdate = true;
-				}
-			}
-			if ( $bUpdate ) {
-				update_option( 'WP_firewall_whitelisted_ip', serialize( $aFirewallIps ) );
-			}
-		}
-		return $bUpdate;
-	}
-
-	/**
-	 * If Wordfence is found on the site, it'll add the iControlWP IP address to the whitelist
-	 * @return boolean
-	 */
-	protected function addToIThemesSecurity() {
-		// Now handle it as the new iThemes Security
-		global $itsec_globals;
-		if ( isset( $itsec_globals ) && is_array( $itsec_globals ) && !empty( $itsec_globals[ 'settings' ] ) ) {
-			$aItsecIpsWhiteList = isset( $itsec_globals[ 'settings' ][ 'white_list' ] ) ? $itsec_globals[ 'settings' ][ 'white_list' ] : [];
-			$aItsecIpsLockoutWhiteList = isset( $itsec_globals[ 'settings' ][ 'lockout_white_list' ] ) ? $itsec_globals[ 'settings' ][ 'lockout_white_list' ] : [];
-
-			$aServiceIps = $this->getServiceIps( 4 );
-			$bAdded = false;
-			foreach ( $aServiceIps as $sIp ) {
-				if ( !in_array( $sIp, $aItsecIpsWhiteList ) ) {
-					$aItsecIpsWhiteList[] = $sIp;
-					$bAdded = true;
-				}
-
-				if ( !in_array( $sIp, $aItsecIpsLockoutWhiteList ) ) {
-					$aItsecIpsLockoutWhiteList[] = $sIp;
-					$bAdded = true;
-				}
-			}
-			if ( $bAdded ) {
-				$itsec_globals[ 'settings' ][ 'lockout_white_list' ] = $aItsecIpsLockoutWhiteList;
-				$itsec_globals[ 'settings' ][ 'white_list' ] = $aItsecIpsWhiteList;
-				update_site_option( 'itsec_global', $itsec_globals );
-			}
-		}
-	}
-
-	/**
-	 * Adds the iControlWP public IP addresses to the Simple Firewall Whitelist.
-	 *
-	 * @param array $aWhitelistIps
-	 * @return array
-	 */
-	public function addToSimpleFirewallWhitelist( $aWhitelistIps ) {
-		$sServiceName = $this->getOption( 'service_name', 'iControlWP' );
-		$aIpLists = array_merge( $this->getServiceIps( 4 ), $this->getServiceIps( 6 ) );
-		foreach ( $aIpLists as $sAddress ) {
-			if ( !in_array( $sAddress, $aWhitelistIps ) ) {
-				$aWhitelistIps[ $sAddress ] = $sServiceName;
-			}
-		}
-
-		return $aWhitelistIps;
-	}
-
-	/**
 	 * Removes any interruption from Maintenance Mode plugins while iControlWP is executing a package.
 	 * @return void
 	 */
 	public function unhookMaintenanceModePlugins() {
 		//ET Anticipate Maintenance Plugin from elegant themes
-		if ( class_exists( 'ET_Anticipate' ) ) {
+		if ( \class_exists( 'ET_Anticipate' ) ) {
 			remove_action( 'init', 'ET_Anticipate_Init', 5 );
 		}
 
-		if ( class_exists( 'tf_maintenance', false ) ) {
+		if ( \class_exists( 'tf_maintenance', false ) ) {
 			remove_action( 'init', 'tf_maintenance_Init', 5 );
 		}
 
 		// WP Maintenance Mode Plugin ( https://wordpress.org/plugins/wp-maintenance-mode/ )
-		if ( class_exists( 'WP_Maintenance_Mode', false ) && method_exists( 'WP_Maintenance_Mode', 'get_instance' ) ) {
+		if ( \class_exists( 'WP_Maintenance_Mode', false ) && \method_exists( 'WP_Maintenance_Mode', 'get_instance' ) ) {
 			remove_action( 'init', [ WP_Maintenance_Mode::get_instance(), 'init' ] );
 		}
 
 		//underConstruction plugin
 		global $underConstructionPlugin;
-		if ( class_exists( 'underConstruction', false ) && isset( $underConstructionPlugin ) && is_object( $underConstructionPlugin ) ) {
+		if ( class_exists( 'underConstruction', false ) && isset( $underConstructionPlugin ) && \is_object( $underConstructionPlugin ) ) {
 			remove_action( 'template_redirect', [ $underConstructionPlugin, 'uc_overrideWP' ] );
 			remove_action( 'admin_init', [ $underConstructionPlugin, 'uc_admin_override_WP' ] );
 			remove_action( 'wp_login', [ $underConstructionPlugin, 'uc_admin_override_WP' ] );
@@ -219,29 +102,15 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 
 		//Ultimate Maintenance Mode plugin
 		global $seedprod_umm;
-		if ( class_exists( 'SeedProd_Ultimate_Maintenance_Mode' ) && isset( $seedprod_umm ) && is_object( $seedprod_umm ) ) {
+		if ( \class_exists( 'SeedProd_Ultimate_Maintenance_Mode' ) && isset( $seedprod_umm ) && \is_object( $seedprod_umm ) ) {
 			remove_action( 'template_redirect', [ $seedprod_umm, 'render_maintenancemode_page' ] );
 		}
 
 		global $seedprod_comingsoon;
-		if ( class_exists( 'SeedProd_Ultimate_Coming_Soon_Page', false ) && isset( $seedprod_comingsoon ) && is_object( $seedprod_comingsoon ) ) {
+		if ( \class_exists( 'SeedProd_Ultimate_Coming_Soon_Page', false ) && isset( $seedprod_comingsoon ) && \is_object( $seedprod_comingsoon ) ) {
 			remove_action( 'template_redirect', [ $seedprod_comingsoon, 'render_comingsoon_page' ] );
 			remove_action( 'template_redirect', [ $seedprod_comingsoon, 'render_comingsoon_page' ], 9 );
 		}
-
-		/* doesn't seem to work.
-		global $seed_csp3;
-		if ( class_exists( 'SEED_CSP3_PLUGIN' ) && isset( $seed_csp3 ) && is_object( $seed_csp3 ) ) {
-			remove_action( 'template_redirect', array( $seed_csp3, 'render_comingsoon_page' ), 9 );
-			remove_action( 'template_redirect', array( $seed_csp3, 'render_comingsoon_page' ) );
-		}
-		*/
-		/*
-		// This tries to ensure that no-one can just add "worpit_link" to a url to by-pass maintenance mode.
-		if ( ( isset( $_GET['worpit_link'] ) || isset( $_GET['worpit_prelink'] ) ) && !$this->isVisitorIcwp() ) {
-			add_action( 'init', array( $this, 'goBackHome' ), 99 );
-		}
-		*/
 	}
 
 	/**
@@ -254,9 +123,6 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 		$this->removeBetterWpSecurityHooks();
 		$this->removeWordfence();
 		$this->removeSucuri();
-
-		// Seems to interfere with update detection? Easy Plugin for Adsense Pro
-		remove_filter( 'pre_set_site_transient_update_plugins', 'killUpdate_ezad' );
 	}
 
 	protected function removeWordfence() {
@@ -338,8 +204,8 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 		}
 
 		// Adds our IP addresses to the BWPS whitelist
-		if ( !is_null( $bwpsoptions ) && is_array( $bwpsoptions ) ) {
-			$sServiceIps = implode( "\n", $this->getServiceIps( 4 ) );
+		if ( \is_array( $bwpsoptions ) ) {
+			$sServiceIps = \implode( "\n", $this->getServiceIps( 4 ) );
 			if ( !isset( $bwpsoptions[ 'id_whitelist' ] ) || strlen( $bwpsoptions[ 'id_whitelist' ] ) == 0 ) {
 				$bwpsoptions[ 'id_whitelist' ] = $sServiceIps;
 			}

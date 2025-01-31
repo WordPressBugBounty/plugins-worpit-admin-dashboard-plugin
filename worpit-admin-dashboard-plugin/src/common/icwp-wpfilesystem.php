@@ -1,44 +1,31 @@
 <?php
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
+
 class ICWP_APP_WpFilesystem {
 
 	/**
-	 * @var ICWP_APP_WpFilesystem
+	 * @var \ICWP_APP_WpFilesystem
 	 */
-	protected static $oInstance = null;
+	protected static $I = null;
 
 	/**
-	 * @var WP_Filesystem_Base
+	 * @var \WP_Filesystem_Base
 	 */
-	protected $oWpfs = null;
+	protected $wpfs = null;
 
 	/**
 	 * @var string
 	 */
 	protected $sWpConfigPath = null;
 
-	/**
-	 * @return ICWP_APP_WpFilesystem
-	 */
-	public static function GetInstance() {
-		if ( is_null( self::$oInstance ) ) {
-			self::$oInstance = new self();
-		}
-		return self::$oInstance;
-	}
-
-	/**
-	 * @param string $sBase
-	 * @param string $sPath
-	 * @return string
-	 */
-	public function pathJoin( $sBase, $sPath ) {
-		return rtrim( $sBase, DIRECTORY_SEPARATOR ).DIRECTORY_SEPARATOR.ltrim( $sPath, DIRECTORY_SEPARATOR );
+	public static function GetInstance() :self {
+		return self::$I ?? self::$I = new self();
 	}
 
 	/**
 	 * @param $sFilePath
-	 * @return boolean|null    true/false whether file/directory exists
+	 * @return bool|null    true/false whether file/directory exists
 	 */
 	public function exists( $sFilePath ) {
 		$oFs = $this->getWpfs();
@@ -46,117 +33,6 @@ class ICWP_APP_WpFilesystem {
 			return true;
 		}
 		return function_exists( 'file_exists' ) ? file_exists( $sFilePath ) : null;
-	}
-
-	/**
-	 * @param string  $sNeedle
-	 * @param string  $sDir
-	 * @param boolean $bIncludeExtension
-	 * @param boolean $bCaseSensitive
-	 *
-	 * @return bool|null
-	 */
-	public function fileExistsInDir( $sNeedle, $sDir, $bIncludeExtension = true, $bCaseSensitive = false ) {
-		if ( empty( $sNeedle ) || empty( $sDir ) ) {
-			return false;
-		}
-
-		if ( !$bCaseSensitive ) {
-			$sNeedle = strtolower( $sNeedle );
-		}
-
-		try {
-			$oDirIt = new DirectoryIterator( $sDir );
-		}
-		catch ( Exception $oE ) { //  UnexpectedValueException, RuntimeException, Exception
-		}
-
-		if ( !empty( $oDirIt ) ) {
-
-			//if the file you're searching for doesn't have an extension, then we don't include extensions in search
-			$nDotPosition = strpos( $sNeedle, '.' );
-			$bHasExtension = $nDotPosition !== false;
-			$bIncludeExtension = $bIncludeExtension && $bHasExtension;
-
-			$sNeedlePreExtension = $bHasExtension ? substr( $sNeedle, 0, $nDotPosition ) : $sNeedle;
-
-			$bFound = false;
-			foreach ( $oDirIt as $oFileItem ) {
-				if ( !$oFileItem->isFile() ) {
-					continue;
-				}
-				$sFilename = $oFileItem->getFilename();
-				if ( !$bCaseSensitive ) {
-					$sFilename = strtolower( $sFilename );
-				}
-
-				if ( $bIncludeExtension ) {
-					$bFound = ( $sFilename == $sNeedle );
-				}
-				else {
-					// This is not entirely accurate as it only finds whether a file "starts" with needle, ignoring subsequent characters
-					$bFound = ( strpos( $sFilename, $sNeedlePreExtension ) === 0 );
-				}
-
-				if ( $bFound ) {
-					break;
-				}
-			}
-
-			return $bFound;
-		}
-
-		if ( $bCaseSensitive ) {
-			return $this->exists( $this->pathJoin( $sDir, $sNeedle ) );
-		}
-		$sNeedle = strtolower( $sNeedle );
-		if ( $oHandle = opendir( $sDir ) ) {
-
-			while ( false !== ( $sFileEntry = readdir( $oHandle ) ) ) {
-				if ( !$this->isFile( $this->pathJoin( $sDir, $sFileEntry ) ) ) {
-					continue;
-				}
-				if ( $sNeedle == strtolower( $sFileEntry ) ) {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-	protected function setWpConfigPath() {
-		$this->sWpConfigPath = ABSPATH.'wp-config.php';
-		if ( !$this->exists( $this->sWpConfigPath ) ) {
-			$this->sWpConfigPath = ABSPATH.'../wp-config.php';
-			if ( !$this->exists( $this->sWpConfigPath ) ) {
-				$this->sWpConfigPath = false;
-			}
-		}
-	}
-
-	public function getContent_WpConfig() {
-		return $this->getFileContent( $this->sWpConfigPath );
-	}
-
-	/**
-	 * @param string $sContent
-	 * @return bool
-	 */
-	public function putContent_WpConfig( $sContent ) {
-		return $this->putFileContent( $this->sWpConfigPath, $sContent );
-	}
-
-	/**
-	 * @param string  $sUrl
-	 * @param boolean $bSecure
-	 *
-	 * @return boolean
-	 */
-	public function getIsUrlValid( $sUrl, $bSecure = false ) {
-		$sSchema = $bSecure ? 'https://' : 'http://';
-		$sUrl = ( strpos( $sUrl, 'http' ) !== 0 ) ? $sSchema.$sUrl : $sUrl;
-		return ( $this->getUrl( $sUrl ) != false );
 	}
 
 	/**
@@ -173,7 +49,6 @@ class ICWP_APP_WpFilesystem {
 	 * @return array|bool
 	 */
 	public function requestUrl( $sUrl, $aRequestArgs = [] ) {
-
 		$mResult = wp_remote_request( $sUrl, $aRequestArgs );
 		if ( is_wp_error( $mResult ) ) {
 			return false;
@@ -186,13 +61,13 @@ class ICWP_APP_WpFilesystem {
 
 	/**
 	 * @param string $sUrl
-	 * @param array  $aRequestArgs
+	 * @param array  $args
 	 *
 	 * @return bool
 	 */
-	public function getUrl( $sUrl, $aRequestArgs = [] ) {
-		$aRequestArgs[ 'method' ] = 'GET';
-		return $this->requestUrl( $sUrl, $aRequestArgs );
+	public function getUrl( $sUrl, $args = [] ) {
+		$args[ 'method' ] = 'GET';
+		return $this->requestUrl( $sUrl, $args );
 	}
 
 	/**
@@ -202,50 +77,21 @@ class ICWP_APP_WpFilesystem {
 	 * @return false|string
 	 */
 	public function getUrlContent( $sUrl, $aRequestArgs = [] ) {
-		$aResponse = $this->getUrl( $sUrl, $aRequestArgs );
-		if ( !$aResponse || !isset( $aResponse[ 'body' ] ) ) {
+		$response = $this->getUrl( $sUrl, $aRequestArgs );
+		if ( !$response || !isset( $response[ 'body' ] ) ) {
 			return false;
 		}
-		return $aResponse[ 'body' ];
+		return $response[ 'body' ];
 	}
 
 	/**
-	 * @param string $sUrl
-	 * @param array  $aRequestArgs
-	 *
+	 * @param string $url
+	 * @param array  $args
 	 * @return bool
 	 */
-	public function postUrl( $sUrl, $aRequestArgs = [] ) {
-		$aRequestArgs[ 'method' ] = 'POST';
-		return $this->requestUrl( $sUrl, $aRequestArgs );
-	}
-
-	public function getCanWpRemoteGet() {
-		$aUrlsToTest = [
-			'https://www.microsoft.com',
-			'https://www.google.com',
-			'https://www.facebook.com'
-		];
-		foreach ( $aUrlsToTest as $sUrl ) {
-			if ( $this->getUrl( $sUrl ) !== false ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public function getCanDiskWrite() {
-		$sFilePath = dirname( __FILE__ ).'/testfile.'.rand().'txt';
-		$sContents = "Testing icwp file read and write.";
-
-		// Write, read, verify, delete.
-		if ( $this->putFileContent( $sFilePath, $sContents ) ) {
-			$sFileContents = $this->getFileContent( $sFilePath );
-			if ( !is_null( $sFileContents ) && $sFileContents === $sContents ) {
-				return $this->deleteFile( $sFilePath );
-			}
-		}
-		return false;
+	public function postUrl( $url, $args = [] ) {
+		$args[ 'method' ] = 'POST';
+		return $this->requestUrl( $url, $args );
 	}
 
 	/**
@@ -258,57 +104,22 @@ class ICWP_APP_WpFilesystem {
 
 	/**
 	 * @param string $sFilePath
+	 * @param string $property
 	 * @return int|null
 	 */
-	public function getAccessedTime( $sFilePath ) {
-		return $this->getTime( $sFilePath, 'accessed' );
-	}
-
-	/**
-	 * @param string $sFilePath
-	 * @param string $sProperty
-	 * @return int|null
-	 */
-	public function getTime( $sFilePath, $sProperty = 'modified' ) {
-
+	public function getTime( $sFilePath, $property = 'modified' ) {
 		if ( !$this->exists( $sFilePath ) ) {
 			return null;
 		}
-
-		$oFs = $this->getWpfs();
-		switch ( $sProperty ) {
-
+		$fs = $this->getWpfs();
+		switch ( $property ) {
 			case 'modified' :
-				return $oFs ? $oFs->mtime( $sFilePath ) : filemtime( $sFilePath );
-				break;
+				return $fs ? $fs->mtime( $sFilePath ) : filemtime( $sFilePath );
 			case 'accessed' :
-				return $oFs ? $oFs->atime( $sFilePath ) : fileatime( $sFilePath );
-				break;
+				return $fs ? $fs->atime( $sFilePath ) : fileatime( $sFilePath );
 			default:
 				return null;
-				break;
 		}
-	}
-
-	/**
-	 * @param string $sFilePath
-	 * @return NULL|boolean
-	 */
-	public function getCanReadWriteFile( $sFilePath ) {
-		if ( !file_exists( $sFilePath ) ) {
-			return null;
-		}
-
-		$nFileSize = filesize( $sFilePath );
-		if ( $nFileSize === 0 ) {
-			return null;
-		}
-
-		$sFileContent = $this->getFileContent( $sFilePath );
-		if ( empty( $sFileContent ) ) {
-			return false; //can't even read the file!
-		}
-		return $this->putFileContent( $sFilePath, $sFileContent );
 	}
 
 	/**
@@ -316,16 +127,16 @@ class ICWP_APP_WpFilesystem {
 	 * @return string|null
 	 */
 	public function getFileContent( $sFilePath ) {
-		$sContents = null;
-		$oFs = $this->getWpfs();
-		if ( $oFs ) {
-			$sContents = $oFs->get_contents( $sFilePath );
+		$contents = null;
+		$fs = $this->getWpfs();
+		if ( $fs ) {
+			$contents = $fs->get_contents( $sFilePath );
 		}
 
-		if ( empty( $sContents ) && function_exists( 'file_get_contents' ) ) {
-			$sContents = file_get_contents( $sFilePath );
+		if ( empty( $contents ) && \function_exists( 'file_get_contents' ) ) {
+			$contents = \file_get_contents( $sFilePath );
 		}
-		return $sContents;
+		return $contents;
 	}
 
 	/**
@@ -333,52 +144,26 @@ class ICWP_APP_WpFilesystem {
 	 * @return bool
 	 */
 	public function getFileSize( $sFilePath ) {
-		$oFs = $this->getWpfs();
-		if ( $oFs && ( $oFs->size( $sFilePath ) > 0 ) ) {
-			return $oFs->size( $sFilePath );
+		$fs = $this->getWpfs();
+		if ( $fs && ( $fs->size( $sFilePath ) > 0 ) ) {
+			return $fs->size( $sFilePath );
 		}
-		return @filesize( $sFilePath );
+		return @\filesize( $sFilePath );
 	}
 
 	/**
-	 * @param string|null $sBaseDir
-	 * @param string      $sPrefix
-	 * @param string      $outsRandomDir
-	 * @return bool|string
+	 * @param string $path
+	 * @param string $contents
+	 * @return bool
 	 */
-	public function getTempDir( $sBaseDir = null, $sPrefix = '', &$outsRandomDir = '' ) {
-		$sTemp = rtrim( ( is_null( $sBaseDir ) ? get_temp_dir() : $sBaseDir ), DIRECTORY_SEPARATOR ).DIRECTORY_SEPARATOR;
-
-		$sCharset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789';
-		do {
-			$sDir = $sPrefix;
-			for ( $i = 0 ; $i < 8 ; $i++ ) {
-				$sDir .= $sCharset[ ( rand()%strlen( $sCharset ) ) ];
-			}
-		} while ( is_dir( $sTemp.$sDir ) );
-
-		$outsRandomDir = $sDir;
-
-		$bSuccess = true;
-		if ( !@mkdir( $sTemp.$sDir, 0755, true ) ) {
-			$bSuccess = false;
-		}
-		return ( $bSuccess ? $sTemp.$sDir : false );
-	}
-
-	/**
-	 * @param string $sFilePath
-	 * @param string $sContents
-	 * @return boolean
-	 */
-	public function putFileContent( $sFilePath, $sContents ) {
-		$oFs = $this->getWpfs();
-		if ( $oFs && $oFs->put_contents( $sFilePath, $sContents, FS_CHMOD_FILE ) ) {
+	public function putFileContent( $path, $contents ) {
+		$fs = $this->getWpfs();
+		if ( $fs && $fs->put_contents( $path, $contents, FS_CHMOD_FILE ) ) {
 			return true;
 		}
 
-		if ( function_exists( 'file_put_contents' ) ) {
-			return file_put_contents( $sFilePath, $sContents ) !== false;
+		if ( \function_exists( 'file_put_contents' ) ) {
+			return \file_put_contents( $path, $contents ) !== false;
 		}
 		return false;
 	}
@@ -386,63 +171,44 @@ class ICWP_APP_WpFilesystem {
 	/**
 	 * Recursive delete
 	 *
-	 * @param string $sDir
+	 * @param string $dir
 	 * @return bool
 	 */
-	public function deleteDir( $sDir ) {
-		$oFs = $this->getWpfs();
-		if ( $oFs && $oFs->delete( $sDir, true ) ) {
-			return true;
-		}
-		return @rmdir( $sDir );
+	public function deleteDir( $dir ) {
+		return FileSystem::Instance()->deleteDir( $dir );
 	}
 
 	/**
-	 * @param string $sFilePath
-	 * @return boolean|null
-	 */
-	public function deleteFile( $sFilePath ) {
-		$oFs = $this->getWpfs();
-		if ( $oFs && $oFs->delete( $sFilePath ) ) {
-			return true;
-		}
-		return function_exists( 'unlink' ) ? @unlink( $sFilePath ) : null;
-	}
-
-	/**
-	 * @param string $sFilePathSource
-	 * @param string $sFilePathDestination
+	 * @param string $path
 	 * @return bool|null
 	 */
-	public function move( $sFilePathSource, $sFilePathDestination ) {
-		$oFs = $this->getWpfs();
-		if ( $oFs && $oFs->move( $sFilePathSource, $sFilePathDestination ) ) {
+	public function deleteFile( $path ) {
+		$fs = $this->getWpfs();
+		if ( $fs && $fs->delete( $path ) ) {
 			return true;
 		}
-		return function_exists( 'rename' ) ? @rename( $sFilePathSource, $sFilePathDestination ) : null;
+		return \function_exists( '\unlink' ) ? @\unlink( $path ) : null;
 	}
 
 	/**
-	 * @param string $sFilePath
+	 * @param string $source
+	 * @param string $target
 	 * @return bool|null
 	 */
-	public function isDir( $sFilePath ) {
-		$oFs = $this->getWpfs();
-		if ( $oFs && $oFs->is_dir( $sFilePath ) ) {
-			return true;
-		}
-		return function_exists( 'is_dir' ) ? @is_dir( $sFilePath ) : null;
+	public function move( $source, $target ) {
+		return FileSystem::Instance()->move( (string)$source, (string)$target );
 	}
 
 	/**
-	 * @param string $sDir
-	 * @return bool
+	 * @param string $path
+	 * @return bool|null
 	 */
-	public function isDirEmpty( $sDir ) {
-		if ( !is_readable( $sDir ) ) {
-			return null;
+	public function isDir( $path ) {
+		$fs = $this->getWpfs();
+		if ( $fs && $fs->is_dir( $path ) ) {
+			return true;
 		}
-		return ( count( scandir( $sDir ) ) == 2 );
+		return \function_exists( 'is_dir' ) ? @\is_dir( $path ) : null;
 	}
 
 	/**
@@ -450,59 +216,43 @@ class ICWP_APP_WpFilesystem {
 	 * @return bool|mixed
 	 */
 	public function isFile( $sFilePath ) {
-		$oFs = $this->getWpfs();
-		if ( $oFs && $oFs->is_file( $sFilePath ) ) {
+		$fs = $this->getWpfs();
+		if ( $fs && $fs->is_file( $sFilePath ) ) {
 			return true;
 		}
-		return function_exists( 'is_file' ) ? @is_file( $sFilePath ) : null;
+		return \function_exists( 'is_file' ) ? @\is_file( $sFilePath ) : null;
 	}
 
 	/**
-	 * @param $sDirPath
-	 * @return bool
+	 * @param $path
 	 */
-	public function mkdir( $sDirPath ) {
-		return wp_mkdir_p( $sDirPath );
+	public function mkdir( $path ) :bool {
+		return wp_mkdir_p( $path );
 	}
 
 	/**
 	 * @param string $path
 	 * @param int    $time
-	 * @return bool|mixed
+	 * @return bool
 	 */
-	public function touch( $path, $time = null ) {
-		$FS = $this->getWpfs();
-		if ( empty( $time ) ) {
-			$time = time();
-		}
-		if ( $FS && $FS->touch( $path, $time ) ) {
-			return true;
-		}
-		return function_exists( 'touch' ) && @touch( $path, $time );
+	public function touch( $path, $time = null ) :bool {
+		return FileSystem::Instance()->touch( (string)$path, $time === null ? \time() : (int)$time );
 	}
 
 	/**
-	 * @return WP_Filesystem_Base
+	 * @return \WP_Filesystem_Base
 	 */
-	protected function getWpfs() {
-		if ( is_null( $this->oWpfs ) ) {
-			$this->initFileSystem();
-		}
-		return $this->oWpfs;
-	}
-
-	/**
-	 */
-	private function initFileSystem() {
-		if ( is_null( $this->oWpfs ) ) {
-			$this->oWpfs = false;
+	public function getWpfs() {
+		if ( is_null( $this->wpfs ) ) {
+			$this->wpfs = false;
 			require_once( ABSPATH.'wp-admin/includes/file.php' );
-			if ( WP_Filesystem() ) {
+			if ( \WP_Filesystem() ) {
 				global $wp_filesystem;
-				if ( isset( $wp_filesystem ) && is_object( $wp_filesystem ) ) {
-					$this->oWpfs = $wp_filesystem;
+				if ( isset( $wp_filesystem ) && \is_object( $wp_filesystem ) ) {
+					$this->wpfs = $wp_filesystem;
 				}
 			}
 		}
+		return $this->wpfs;
 	}
 }

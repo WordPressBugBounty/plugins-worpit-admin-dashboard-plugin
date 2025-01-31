@@ -11,19 +11,9 @@ class ICWP_APP_Processor_Autoupdates extends ICWP_APP_Processor_BaseApp {
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function getIfForceRunAutoupdates() {
-		return false;
-	}
-
-	public function force_run_autoupdates() {
-	}
-
-	/**
 	 * @param bool             $doUpdate
 	 * @param \stdClass|string $mItem
-	 * @return boolean
+	 * @return bool
 	 */
 	public function autoupdate_plugins( $doUpdate, $mItem ) {
 
@@ -37,9 +27,7 @@ class ICWP_APP_Processor_Autoupdates extends ICWP_APP_Processor_BaseApp {
 			return $doUpdate;
 		}
 
-		/** @var \ICWP_APP_FeatureHandler_Autoupdates $mod */
-		$mod = $this->getFeatureOptions();
-		if ( in_array( $sItemFile, $mod->getAutoUpdates( 'plugins' ) ) ) {
+		if ( \in_array( $sItemFile, $this->mod->getAutoUpdates() ) ) {
 			$doUpdate = true;
 		}
 
@@ -62,18 +50,13 @@ class ICWP_APP_Processor_Autoupdates extends ICWP_APP_Processor_BaseApp {
 			return $doUpdate;
 		}
 
-		/** @var \ICWP_APP_FeatureHandler_Autoupdates $mod */
-		$mod = $this->getFeatureOptions();
-		if ( in_array( $sItemFile, $mod->getAutoUpdates( 'themes' ) ) ) {
+		if ( in_array( $sItemFile, $this->mod->getAutoUpdates( 'themes' ) ) ) {
 			$doUpdate = true;
 		}
 		return $doUpdate;
 	}
 
-	/**
-	 * @return int
-	 */
-	protected function getHookPriority() {
-		return $this->getOption( 'action_hook_priority', 1001 );
+	protected function getHookPriority() :int {
+		return (int)$this->mod->getOpt( 'action_hook_priority', 1001 );
 	}
 }

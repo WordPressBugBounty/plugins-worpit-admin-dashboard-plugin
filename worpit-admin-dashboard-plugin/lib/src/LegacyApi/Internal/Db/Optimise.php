@@ -23,9 +23,9 @@ class Optimise extends Base {
 		if ( empty( $status[ 'tables' ] ) ) {
 			throw new \Exception( 'Empty results from TABLE STATUS query is not expected.' );
 		}
-		foreach ( $status[ 'tables' ] as $aTable ) {
-			if ( $aTable[ 'gain' ] > 0 ) {
-				$this->loadDbProcessor()->optimizeTable( $aTable[ 'name' ] );
+		foreach ( $status[ 'tables' ] as $t ) {
+			if ( $t[ 'gain' ] > 0 ) {
+				$this->loadDbProcessor()->optimizeTable( $t[ 'name' ] );
 			}
 		}
 		return $this->getDatabaseTableStatus();

@@ -4,11 +4,8 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
-use FernleafSystems\Wordpress\Plugin\iControlWP\Traits\PluginControllerConsumer;
 
 abstract class Base extends \ICWP_APP_Foundation {
-
-	use PluginControllerConsumer;
 
 	/**
 	 * @var ApiResponse
@@ -23,45 +20,6 @@ abstract class Base extends \ICWP_APP_Foundation {
 	public function preProcess() {
 		if ( $this->isIgnoreUserAbort() ) {
 			\ignore_user_abort( true );
-		}
-		$this->initFtp();
-	}
-
-	protected function initFtp() {
-		$ftpCred = $this->getRequestParams()->ftpcred;
-		if ( !empty( $ftpCred ) && \is_array( $ftpCred ) ) {
-			$mapRequestToWpFtp = [
-				'hostname'        => 'ftp_host',
-				'username'        => 'ftp_user',
-				'password'        => 'ftp_pass',
-				'public_key'      => 'ftp_public_key',
-				'private_key'     => 'ftp_private_key',
-				'connection_type' => 'ftp_protocol',
-			];
-			foreach ( $mapRequestToWpFtp as $sWpKey => $sRequestKey ) {
-				$_POST[ $sWpKey ] = $ftpCred[ $sRequestKey ] ?? '';
-			}
-
-			$useFtp = false;
-			if ( !empty( $ftpCred[ 'ftp_user' ] ) ) {
-				if ( !defined( 'FTP_USER' ) ) {
-					$useFtp = true;
-					\define( 'FTP_USER', $ftpCred[ 'ftp_user' ] );
-				}
-			}
-			if ( !empty( $ftpCred[ 'ftp_pass' ] ) ) {
-				if ( !defined( 'FTP_PASS' ) ) {
-					$useFtp = true;
-					\define( 'FTP_PASS', $ftpCred[ 'ftp_pass' ] );
-				}
-			}
-
-			if ( !empty( $_POST[ 'public_key' ] ) && !empty( $_POST[ 'private_key' ] ) && !defined( 'FS_METHOD' ) ) {
-				\define( 'FS_METHOD', 'ssh' );
-			}
-			elseif ( $useFtp ) {
-				\define( 'FS_METHOD', 'ftpext' );
-			}
 		}
 	}
 
@@ -141,13 +99,5 @@ abstract class Base extends \ICWP_APP_Foundation {
 	protected function isIgnoreUserAbort() :bool {
 		$params = $this->getActionParams();
 		return isset( $params[ 'ignore_user_abort' ] ) && $params[ 'ignore_user_abort' ];
-	}
-
-	/**
-	 * @return \ICWP_APP_WpCollectInfo
-	 * @deprecated 4.3.3
-	 */
-	protected function getWpCollector() {
-		return \ICWP_APP_WpCollectInfo::GetInstance();
 	}
 }

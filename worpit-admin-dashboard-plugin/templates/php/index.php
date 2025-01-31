@@ -1,9 +1,7 @@
 <?php
-if ( empty( $sFeatureInclude ) ) {
-	$sFeatureInclude = 'feature-default';
+if ( !empty( $mainFeatureInclude ) ) {
+	$baseDirName = \dirname(__FILE__).'/';
+	include_once( $baseDirName.'index_header.php' );
+	include_once( $baseDirName.$mainFeatureInclude );
+	include_once( $baseDirName.'index_footer.php' );
 }
-
-$sBaseDirName = dirname(__FILE__).'/';
-include_once( $sBaseDirName . 'index_header.php' );
-include_once( $sBaseDirName.$sFeatureInclude );
-include_once( $sBaseDirName . 'index_footer.php' );

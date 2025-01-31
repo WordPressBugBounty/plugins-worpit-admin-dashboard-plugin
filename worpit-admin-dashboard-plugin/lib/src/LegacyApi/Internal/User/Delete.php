@@ -12,7 +12,7 @@ class Delete extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Inte
 				'result' => $this->loadWpUsers()->deleteUser(
 					(int)$this->getActionParam( 'user_id' ),
 					false,
-					$this->getActionParam( 'reassign_id' )
+					(int)$this->getActionParam( 'reassign_id' )
 				)
 			] );
 		}

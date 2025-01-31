@@ -3,15 +3,16 @@
  * Plugin Name: iControlWP
  * Plugin URI: https://icwp.io/home
  * Description: All-In-One Multiple WordPress Site Management - Backups, Security, Updates, and Uptime Monitoring
- * Version: 4.4.5
+ * Version: 4.5.1
  * Author: iControlWP
  * Author URI: https://www.icontrolwp.com/
+ * License: GPLv2 or later
  * Requires at least: 4.0
- * Requires PHP: 5.6
+ * Requires PHP: 7.0
  */
 
 /**
- * Copyright (c) 2024 iControlWP <support@icontrolwp.com>
+ * Copyright (c) 2025 iControlWP <support@icontrolwp.com>
  * All rights reserved.
  *
  * "iControlWP" (previously "Worpit") is distributed under the GNU General Public License, Version 2,
@@ -30,10 +31,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if ( version_compare( PHP_VERSION, '7.0', '<' ) ) {
+	add_action( 'admin_notices', function () {
+		echo sprintf( '<div class="notice notice warning"><p>%s</p></div>', 'iControlWP v4.5+ requires PHP 7.0 or later. Please upgrade your PHP version.' );
+	} );
+	return;
+}
 if ( !defined( 'ICWP_DS' ) ) {
 	define( 'ICWP_DS', DIRECTORY_SEPARATOR );
 }
-
 if ( !defined( 'WORPIT_DS' ) ) {
 	define( 'WORPIT_DS', DIRECTORY_SEPARATOR );
 }

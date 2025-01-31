@@ -2,8 +2,6 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Channel;
 
-use FernleafSystems\Wordpress\Plugin\iControlWP\Ops\ZipDownload;
-
 class Download extends \ICWP_APP_Processor_Plugin_Api {
 
 	/**
@@ -16,7 +14,7 @@ class Download extends \ICWP_APP_Processor_Plugin_Api {
 			$this->processAction();
 		}
 		catch ( \Exception $e ) {
-			wp_die( $e->getMessage() );
+			wp_die( esc_textarea( $e->getMessage() ) );
 		}
 		return $this->setSuccessResponse();
 	}
@@ -25,11 +23,7 @@ class Download extends \ICWP_APP_Processor_Plugin_Api {
 	 * @throws \Exception
 	 */
 	protected function processAction() {
-		$this->getStandardResponse()->die = true;
-
-		( new ZipDownload\Download() )
-			->setCon( $this->getController() )
-			->byID( $this->getRequestParams()->zip_id );
+		( new \FernleafSystems\Wordpress\Plugin\iControlWP\Ops\ZipDownload\Download() )->byID( $this->getRequestParams()->zip_id );
 		die();
 	}
 }

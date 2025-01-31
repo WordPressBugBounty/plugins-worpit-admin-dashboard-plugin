@@ -11,7 +11,6 @@ class Environment extends Base {
 	}
 
 	public function collect() :array {
-		$DP = $this->loadDP();
 		if ( \function_exists( 'set_time_limit' ) ) {
 			@set_time_limit( 15 );
 		}
@@ -30,8 +29,8 @@ class Environment extends Base {
 
 		return [
 			'open_basedir'    => \ini_get( 'open_basedir' ),
-			'can_exec'        => $DP->checkCanExec() ? 1 : 0,
-			'can_timelimit'   => $DP->checkCanTimeLimit() ? 1 : 0,
+			'can_exec'        => 0,
+			'can_timelimit'   => $this->testCanTimeLimit() ? 1 : 0,
 			'can_write'       => $this->checkCanWrite() ? 1 : 0,
 			'can_tar'         => ( $appsData[ 'tar' ][ 'version-info' ] ?? 0 ) > 0 ? 1 : 0,
 			'can_zip'         => ( $appsData[ 'zip' ][ 'version-info' ] ?? 0 ) > 0 ? 1 : 0,
@@ -41,6 +40,15 @@ class Environment extends Base {
 			'can_mysqlimport' => ( $appsData[ 'mysqlimport' ][ 'version-info' ] ?? 0 ) > 0 ? 1 : 0,
 			'applications'    => $appsData,
 		];
+	}
+
+	protected function testCanTimeLimit() :bool {
+		if ( !\function_exists( 'set_time_limit' ) ) {
+			return false;
+		}
+		$new = \ini_get( 'max_execution_time' ) + 30;
+		@\set_time_limit( $new );
+		return \ini_get( 'max_execution_time' ) == $new;
 	}
 
 	protected function collectApplicationVersions( array $appVersionCmds ) :array {

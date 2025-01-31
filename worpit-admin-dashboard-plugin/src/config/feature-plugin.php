@@ -61,11 +61,6 @@
       "section": "section_non_ui"
     },
     {
-      "key":     "enable_hide_plugin",
-      "section": "section_non_ui",
-      "default": "N"
-    },
-    {
       "key":     "feedback_admin_notice",
       "section": "section_non_ui"
     },
@@ -112,7 +107,6 @@
       "auth",
       "internal",
       "retrieve",
-      "execute",
       "download",
       "login"
     ],
@@ -154,11 +148,11 @@
       "user_delete",
       "user_list",
       "user_login",
-      "user_logout"
+      "user_logout",
+      "worpdrive_filesystem_map"
     ],
     "supported_modules":              [
       "security",
-      "google_analytics",
       "whitelabel",
       "autoupdates"
     ],

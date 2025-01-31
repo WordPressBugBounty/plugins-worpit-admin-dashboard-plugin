@@ -1,5 +1,7 @@
 <?php
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\Plugins;
+
 class ICWP_APP_FeatureHandler_Autoupdates extends ICWP_APP_FeatureHandler_BaseApp {
 
 	/**
@@ -15,7 +17,7 @@ class ICWP_APP_FeatureHandler_Autoupdates extends ICWP_APP_FeatureHandler_BaseAp
 		}
 
 		if ( $context == 'plugins' ) {
-			$items = \array_intersect( \array_keys( $this->loadWpPlugins()->getPlugins() ), $items );
+			$items = \array_intersect( \array_keys( Plugins::Instance()->getPlugins() ), $items );
 		}
 
 		// handover storage to WordPress itself

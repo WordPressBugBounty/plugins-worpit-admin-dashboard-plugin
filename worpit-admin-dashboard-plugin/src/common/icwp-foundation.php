@@ -2,6 +2,8 @@
 
 class ICWP_APP_Foundation {
 
+	use \FernleafSystems\Wordpress\Plugin\iControlWP\Control\PluginControllerConsumer;
+
 	/**
 	 * @var ICWP_APP_Render
 	 */
@@ -13,69 +15,32 @@ class ICWP_APP_Foundation {
 	private static $oWpComments;
 
 	/**
-	 * @var ICWP_APP_WpTrack
-	 */
-	private static $oTrack;
-
-	/**
-	 * @var ICWP_APP_WpUpgrades
-	 */
-	private static $oUpgrades;
-
-	/**
 	 * @return ICWP_APP_DataProcessor
 	 */
-	static public function loadDP() {
+	public static function loadDP() {
 		return ICWP_APP_DataProcessor::GetInstance();
 	}
 
 	/**
 	 * @return ICWP_APP_WpFilesystem
 	 */
-	static public function loadFS() {
+	public static function loadFS() {
 		return ICWP_APP_WpFilesystem::GetInstance();
 	}
 
 	/**
 	 * @return ICWP_APP_WpFunctions
 	 */
-	static public function loadWP() {
+	public static function loadWP() {
 		return ICWP_APP_WpFunctions::GetInstance();
 	}
 
-	/**
-	 * @return ICWP_APP_WpCron
-	 */
-	static public function loadWpCronProcessor() {
-		return ICWP_APP_WpCron::GetInstance();
+	public function loadWpPlugins() :\ICWP_APP_WpFunctions_Plugins {
+		return \ICWP_APP_WpFunctions_Plugins::GetInstance();
 	}
 
-	/**
-	 * @return void
-	 */
-	static public function loadWpWidgets() {
-	}
-
-	/**
-	 * @return ICWP_APP_WpFunctions_Plugins
-	 * @deprecated 4.0
-	 */
-	public function loadWpFunctionsPlugins() {
-		return $this->loadWpPlugins();
-	}
-
-	/**
-	 * @return ICWP_APP_WpFunctions_Plugins
-	 */
-	public function loadWpPlugins() {
-		return ICWP_APP_WpFunctions_Plugins::GetInstance();
-	}
-
-	/**
-	 * @return ICWP_APP_WpFunctions_Themes
-	 */
-	public function loadWpFunctionsThemes() {
-		return ICWP_APP_WpFunctions_Themes::GetInstance();
+	public function loadWpFunctionsThemes() :\ICWP_APP_WpFunctions_Themes {
+		return \ICWP_APP_WpFunctions_Themes::GetInstance();
 	}
 
 	/**
@@ -86,35 +51,17 @@ class ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return ICWP_APP_WpDb
+	 * @return \ICWP_APP_WpDb
 	 */
-	static public function loadDbProcessor() {
-		return ICWP_APP_WpDb::GetInstance();
-	}
-
-	/**
-	 * @return ICWP_APP_Ip
-	 */
-	static public function loadIpProcessor() {
-		return ICWP_APP_Ip::GetInstance();
-	}
-
-	/**
-	 * @return ICWP_APP_WpTrack
-	 * @deprecated 3.7
-	 */
-	static public function loadWpTrack() {
-		if ( !isset( self::$oTrack ) ) {
-			self::$oTrack = ICWP_APP_WpTrack::GetInstance();
-		}
-		return self::$oTrack;
+	public static function loadDbProcessor() {
+		return \ICWP_APP_WpDb::GetInstance();
 	}
 
 	/**
 	 * @param string $sTemplatePath
 	 * @return ICWP_APP_Render
 	 */
-	static public function loadRenderer( $sTemplatePath = '' ) {
+	public static function loadRenderer( $sTemplatePath = '' ) {
 		if ( !isset( self::$oRender ) ) {
 			self::$oRender = ICWP_APP_Render::GetInstance()
 											->setAutoloaderPath( dirname( __FILE__ ).'/Twig/Autoloader.php' );
@@ -129,56 +76,28 @@ class ICWP_APP_Foundation {
 	/**
 	 * @return ICWP_APP_WpAdminNotices
 	 */
-	static public function loadAdminNoticesProcessor() {
+	public static function loadAdminNoticesProcessor() {
 		return ICWP_APP_WpAdminNotices::GetInstance();
 	}
 
 	/**
 	 * @return ICWP_APP_WpUsers
 	 */
-	static public function loadWpUsers() {
+	public static function loadWpUsers() {
 		return ICWP_APP_WpUsers::GetInstance();
 	}
 
-	/**
-	 * @return ICWP_APP_WpUpgrades
-	 */
-	static public function loadWpUpgrades() {
+	public static function loadWpUpgrades() {
 		@include_once( ABSPATH.'wp-admin/includes/class-wp-upgrader.php' );
 	}
 
 	/**
 	 * @return ICWP_APP_WpComments
 	 */
-	static public function loadWpCommentsProcessor() {
+	public static function loadWpCommentsProcessor() {
 		if ( !isset( self::$oWpComments ) ) {
 			self::$oWpComments = ICWP_APP_WpComments::GetInstance();
 		}
-
 		return self::$oWpComments;
-	}
-
-	/**
-	 * @return ICWP_APP_DataProcessor
-	 * @deprecated 3.7
-	 */
-	static public function loadDataProcessor() {
-		return self::loadDP();
-	}
-
-	/**
-	 * @return ICWP_APP_WpFunctions
-	 * @deprecated 3.7
-	 */
-	static public function loadWpFunctions() {
-		return self::loadWP();
-	}
-
-	/**
-	 * @return ICWP_APP_WpUsers
-	 * @deprecated 3.7
-	 */
-	static public function loadWpUsersProcessor() {
-		return self::loadWpUsers();
 	}
 }

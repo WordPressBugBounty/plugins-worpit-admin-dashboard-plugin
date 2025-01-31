@@ -1,8 +1,8 @@
 {
   "properties":   {
-    "version":                 "4.4.5",
-    "release_timestamp":       1721900001,
-    "build":                   "202407.2502",
+    "version":                 "4.5.1",
+    "release_timestamp":       1738235300,
+    "build":                   "202501.3002",
     "slug_parent":             "icwp",
     "slug_plugin":             "app",
     "text_domain":             "worpit-admin-dashboard-plugin",
@@ -13,12 +13,11 @@
     "autoupdate":              "confidence"
   },
   "requirements": {
-    "php":       "5.2.4",
-    "wordpress": "3.5.0"
+    "php":       "7.0",
+    "wordpress": "4.0"
   },
   "paths":        {
     "source":        "src",
-    "source-legacy": "src-legacy",
     "assets":        "assets",
     "temp":          "tmp",
     "languages":     "languages",
@@ -47,7 +46,6 @@
     "show":           true,
     "top_level":      true,
     "do_submenu_fix": true,
-    "callback":       "onDisplayTopMenu",
     "icon_image":     "icontrolwp_16x16.png",
     "has_submenu":    true
   },

@@ -19,13 +19,11 @@ class ICWP_APP_Processor_Plugin_SiteLink extends ICWP_APP_Processor_Plugin_Api {
 	 * @return LegacyApi\ApiResponse
 	 */
 	public function processAction() {
-		/** @var ICWP_APP_FeatureHandler_Plugin $oMod */
-		$oMod = $this->getFeatureOptions();
 		$oParams = $this->getRequestParams();
 		$oResponse = $this->getStandardResponse();
 
-		if ( $oMod->getIsSiteLinked() ) {
-			return $oResponse->setMessage( 'Assigned To:'.$this->getOption( 'assigned_to' ) )
+		if ( $this->mod->getIsSiteLinked() ) {
+			return $oResponse->setMessage( 'Assigned To:'.$this->mod->getOpt( 'assigned_to' ) )
 							 ->setStatus( 'AlreadyAssigned' )
 							 ->setCode( 1 )
 							 ->setSuccess( false );
@@ -35,7 +33,7 @@ class ICWP_APP_Processor_Plugin_SiteLink extends ICWP_APP_Processor_Plugin_Api {
 			return $oResponse->setMessage( 'KeyEmpty:'.'.' )
 							 ->setCode( 2 );
 		}
-		if ( $oParams->key != $oMod->getPluginAuthKey() ) {
+		if ( $oParams->key != $this->mod->getPluginAuthKey() ) {
 			return $oResponse->setMessage( 'KeyMismatch:'.$oParams->key.'.' )
 							 ->setCode( 3 );
 		}
@@ -57,7 +55,7 @@ class ICWP_APP_Processor_Plugin_SiteLink extends ICWP_APP_Processor_Plugin_Api {
 		$oEncryptProcessor = $this->loadEncryptProcessor();
 		if ( $oEncryptProcessor->getSupportsOpenSslSign() ) {
 
-			$sPublicKey = $oMod->getIcwpPublicKey();
+			$sPublicKey = $this->mod->getIcwpPublicKey();
 			if ( !empty( $oParams->opensig ) && !empty( $sPublicKey ) ) {
 				$nSslSuccess = $oEncryptProcessor->verifySslSignature(
 					$oParams->verification_code, $oParams->opensig, $sPublicKey
@@ -71,8 +69,8 @@ class ICWP_APP_Processor_Plugin_SiteLink extends ICWP_APP_Processor_Plugin_Api {
 			}
 		}
 
-		$oMod->setPluginPin( $oParams->pin );
-		$oMod->setAssignedAccount( $oParams->accname );
+		$this->mod->setPluginPin( $oParams->pin );
+		$this->mod->setAssignedAccount( $oParams->accname );
 		return $oResponse->setSuccess( true );
 	}
 }

@@ -12,9 +12,7 @@ class Plugin extends Base {
 		try {
 			return $this->success( [
 				'success'  => true,
-				'zip_data' => ( new Create() )
-					->setCon( $this->getCon() )
-					->plugin( $this->getFile() ),
+				'zip_data' => ( new Create() )->plugin( $this->getFile() ),
 			] );
 		}
 		catch ( \Exception $e ) {

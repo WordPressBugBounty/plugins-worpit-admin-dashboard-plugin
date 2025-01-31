@@ -1,10 +1,10 @@
-=== iControlWP - Multiple WordPress Site Manager ===
+=== iControlWP ===
 Contributors: paultgoodchild
 Donate link: https://www.icontrolwp.com/
-License: GPLv3
+License: GPLv2 or later
 Tags: manage, backup, security, umbrella, dashboard
-Tested up to: 6.6
-Stable tag: 4.4.5
+Tested up to: 6.7
+Stable tag: 4.5.1
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -113,6 +113,14 @@ No. WorpDrive is available for a small monthly fee.
 4. Get a view of all your plugins and how each one is distributed across each site.
 
 == Changelog ==
+
+= 4.5 Series =
+*Released: February 2025*
+
+* **(.1)  CHANGED**:	Cleaning & Fixed a few render bugs.
+* **(.0)  SECURITY**:	Address critical security vulnerabilities.
+* **(.0)  CHANGED**:	Minimum support version is PHP 7.0.
+* **(.0)  IMPROVED**:	Major code rewrite and clean-up.
 
 = 4.4 Series =
 *Released: July 2024*

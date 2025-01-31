@@ -4,24 +4,27 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Traits;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Controller;
 
+/**
+ * @deprecated 4.5
+ */
 trait PluginControllerConsumer {
 
 	private $con;
 
 	/**
-	 * @var \ICWP_APP_Plugin_Controller|Controller
+	 * @var Controller
 	 */
 	private $oPlugCon;
 
 	/**
-	 * @return \ICWP_APP_Plugin_Controller|Controller
+	 * @return Controller
 	 */
 	public function getCon() {
 		return $this->con ?? $this->oPlugCon;
 	}
 
 	/**
-	 * @param \ICWP_APP_Plugin_Controller|Controller $con
+	 * @param Controller $con
 	 * @return $this
 	 */
 	public function setCon( $con ) {
