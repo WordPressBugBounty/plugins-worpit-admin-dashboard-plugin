@@ -19,58 +19,58 @@ class ICWP_APP_Processor_Plugin_SiteLink extends ICWP_APP_Processor_Plugin_Api {
 	 * @return LegacyApi\ApiResponse
 	 */
 	public function processAction() {
-		$oParams = $this->getRequestParams();
-		$oResponse = $this->getStandardResponse();
+		$params = $this->getRequestParams();
+		$response = $this->getStandardResponse();
 
 		if ( $this->mod->getIsSiteLinked() ) {
-			return $oResponse->setMessage( 'Assigned To:'.$this->mod->getOpt( 'assigned_to' ) )
-							 ->setStatus( 'AlreadyAssigned' )
-							 ->setCode( 1 )
-							 ->setSuccess( false );
+			return $response->setMessage( 'Assigned To:'.$this->mod->getOpt( 'assigned_to' ) )
+							->setStatus( 'AlreadyAssigned' )
+							->setCode( 1 )
+							->setSuccess( false );
 		}
 
-		if ( empty( $oParams->key ) ) {
-			return $oResponse->setMessage( 'KeyEmpty:'.'.' )
-							 ->setCode( 2 );
+		if ( empty( $params->key ) ) {
+			return $response->setMessage( 'KeyEmpty:'.'.' )
+							->setCode( 2 );
 		}
-		if ( $oParams->key != $this->mod->getPluginAuthKey() ) {
-			return $oResponse->setMessage( 'KeyMismatch:'.$oParams->key.'.' )
-							 ->setCode( 3 );
-		}
-
-		if ( empty( $oParams->pin ) ) {
-			return $oResponse->setMessage( 'PinEmpty:.' )
-							 ->setCode( 4 );
+		if ( $params->key != $this->mod->getPluginAuthKey() ) {
+			return $response->setMessage( 'KeyMismatch:'.$params->key.'.' )
+							->setCode( 3 );
 		}
 
-		if ( empty( $oParams->accname ) ) {
-			return $oResponse->setMessage( 'AccountEmpty:.' )
-							 ->setCode( 5 );
+		if ( empty( $params->pin ) ) {
+			return $response->setMessage( 'PinEmpty:.' )
+							->setCode( 4 );
 		}
-		if ( !is_email( $oParams->accname ) ) {
-			return $oResponse->setMessage( 'AccountNotValid:'.$oParams->accname )
-							 ->setCode( 6 );
+
+		if ( empty( $params->accname ) ) {
+			return $response->setMessage( 'AccountEmpty:.' )
+							->setCode( 5 );
+		}
+		if ( !is_email( $params->accname ) ) {
+			return $response->setMessage( 'AccountNotValid:'.$params->accname )
+							->setCode( 6 );
 		}
 
 		$oEncryptProcessor = $this->loadEncryptProcessor();
 		if ( $oEncryptProcessor->getSupportsOpenSslSign() ) {
 
 			$sPublicKey = $this->mod->getIcwpPublicKey();
-			if ( !empty( $oParams->opensig ) && !empty( $sPublicKey ) ) {
+			if ( !empty( $params->opensig ) && !empty( $sPublicKey ) ) {
 				$nSslSuccess = $oEncryptProcessor->verifySslSignature(
-					$oParams->verification_code, $oParams->opensig, $sPublicKey
+					$params->verification_code, $params->opensig, $sPublicKey
 				);
-				$oResponse->openssl_verify = $nSslSuccess;
+				$response->openssl_verify = $nSslSuccess;
 				if ( $nSslSuccess !== 1 ) {
-					$oResponse->message = 'Failed to Verify SSL Signature.';
-					$oResponse->code = 7;
-					return $oResponse;
+					$response->message = 'Failed to Verify SSL Signature.';
+					$response->code = 7;
+					return $response;
 				}
 			}
 		}
 
-		$this->mod->setPluginPin( $oParams->pin );
-		$this->mod->setAssignedAccount( $oParams->accname );
-		return $oResponse->setSuccess( true );
+		$this->mod->setPluginPin( $params->pin );
+		$this->mod->setAssignedAccount( $params->accname );
+		return $response->setSuccess( true );
 	}
 }

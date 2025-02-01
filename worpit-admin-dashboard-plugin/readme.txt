@@ -4,7 +4,7 @@ Donate link: https://www.icontrolwp.com/
 License: GPLv2 or later
 Tags: manage, backup, security, umbrella, dashboard
 Tested up to: 6.7
-Stable tag: 4.5.1
+Stable tag: 4.5.2
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -117,6 +117,7 @@ No. WorpDrive is available for a small monthly fee.
 = 4.5 Series =
 *Released: February 2025*
 
+* **(.1)  FIXED**:		Fatal error in some circumstances.
 * **(.1)  CHANGED**:	Cleaning & Fixed a few render bugs.
 * **(.0)  SECURITY**:	Address critical security vulnerabilities.
 * **(.0)  CHANGED**:	Minimum support version is PHP 7.0.

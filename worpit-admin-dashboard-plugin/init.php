@@ -17,7 +17,14 @@ class ICWP_Plugin {
 	 */
 	protected static $con;
 
+	private static $i;
+
+	public static function GetInstance() :self {
+		return self::$i;
+	}
+
 	public function __construct( Controller $con ) {
+		self::$i = $this;
 		self::$con = $con;
 	}
 
@@ -47,5 +54,6 @@ if ( !class_exists( 'Worpit_Plugin' ) ) {
 }
 
 $oICWP_App_Controller = Controller::GetInstance( $sIcwpPluginRootFile );
+global $g_oWorpit;
 $g_oWorpit = new \ICWP_Plugin( $oICWP_App_Controller );
 $g_oWorpit->boot();
