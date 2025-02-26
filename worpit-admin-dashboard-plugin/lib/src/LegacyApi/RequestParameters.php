@@ -40,8 +40,12 @@ class RequestParameters {
 	 * @param string $thePOST
 	 */
 	public function __construct( $theGET, $thePOST ) {
-		$theGET = empty( $theGET ) ? [] : \json_decode( \base64_decode( $theGET ), true );
-		$thePOST = empty( $thePOST ) ? [] : \json_decode( \base64_decode( $thePOST ), true );
+		if ( !\is_array( $theGET ) ) {
+			$theGET = empty( $theGET ) ? [] : @\json_decode( @\base64_decode( $theGET ), true );
+		}
+		if ( !\is_array( $thePOST ) ) {
+			$thePOST = empty( $thePOST ) ? [] : @\json_decode( @\base64_decode( $thePOST ), true );
+		}
 		$this->applyFromArray( \array_merge(
 			\is_array( $_GET ) ? $_GET : [],
 			\is_array( $_POST ) ? $_POST : [],
