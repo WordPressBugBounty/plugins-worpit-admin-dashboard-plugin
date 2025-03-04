@@ -4,10 +4,7 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
 
 abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp {
 
-	/**
-	 * @var LegacyApi\ApiResponse
-	 */
-	protected static $oActionResponse;
+	protected static LegacyApi\ApiResponse $actionResponse;
 
 	/**
 	 * @var string
@@ -192,32 +189,28 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 	 */
 	protected function handshake() {
 		$req = $this->getRequestParams();
-		$oResponse = $this->getStandardResponse();
+		$response = $this->getStandardResponse();
 
 		if ( !$this->mod->getCanHandshake() ) {
-			$oResponse->handshake = 'unsupported';
-			return $oResponse;
+			$response->handshake = 'unsupported';
+			return $response;
 		}
-		$oResponse->handshake = 'failed';
+		$response->handshake = 'failed';
 
-		if ( empty( $req->verification_code ) || empty( $req->package_name ) || empty( $req->pin ) ) {
-			return $this->setErrorResponse(
-				'Either the Verification Code, Package Name, or PIN were empty. Could not Handshake.',
-				9990
-			);
-		}
-
-		$enc = $this->loadEncryptProcessor();
-		if ( $enc->getSupportsOpenSslSign() ) {
-			$publicKey = $this->mod->getIcwpPublicKey();
-			if ( !empty( $req->opensig ) && !empty( $publicKey ) ) {
-				$sslSuccess = $enc->verifySslSignature( $req->verification_code, $req->opensig, $publicKey );
-				$oResponse->openssl_verify = $sslSuccess;
-				if ( $sslSuccess === 1 ) {
-					$oResponse->handshake = 'openssl';
+		$publicKey = $this->mod->getIcwpPublicKey();
+		if ( !empty( $publicKey ) && !empty( $req->verification_code ) && !empty( $req->opensig ) ) {
+			$enc = $this->loadEncryptProcessor();
+			if ( $enc->getSupportsOpenSslSign() ) {
+				$response->openssl_verify = $enc->verifySslSignature( $req->verification_code, $req->opensig, $publicKey );
+				if ( $response->openssl_verify === 1 ) {
+					$response->handshake = 'openssl';
 					return $this->setSuccessResponse(); // just to be sure we proceed thereafter
 				}
 			}
+		}
+
+		if ( empty( $req->package_name ) || empty( $req->pin ) ) {
+			return $this->setErrorResponse( 'Package Name or PIN were empty. Could not Handshake.', 9990 );
 		}
 
 		// We can do this because we've assumed at this point we've validated the communication with iControlWP
@@ -245,7 +238,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			);
 		}
 
-		$oResponse->handshake = 'url';
+		$response->handshake = 'url';
 		return $this->setSuccessResponse(); //just to be sure we proceed thereafter
 	}
 
@@ -376,7 +369,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 	}
 
 	public static function getStandardResponse() :LegacyApi\ApiResponse {
-		return self::$oActionResponse ?? self::$oActionResponse = new LegacyApi\ApiResponse();
+		return self::$actionResponse ??= new LegacyApi\ApiResponse();
 	}
 
 	/**

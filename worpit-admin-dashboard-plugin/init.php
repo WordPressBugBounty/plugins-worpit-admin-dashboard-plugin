@@ -47,11 +47,13 @@ class ICWP_Plugin {
 	}
 }
 
-if ( !class_exists( 'Worpit_Plugin' ) ) {
+if ( !\class_exists( 'Worpit_Plugin' ) ) {
 	class Worpit_Plugin extends ICWP_Plugin {
 
 	}
 }
+
+\FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\Request::Instance();
 
 $oICWP_App_Controller = Controller::GetInstance( $sIcwpPluginRootFile );
 global $g_oWorpit;

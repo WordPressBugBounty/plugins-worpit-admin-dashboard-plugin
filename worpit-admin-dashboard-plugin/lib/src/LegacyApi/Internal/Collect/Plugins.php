@@ -39,7 +39,7 @@ class Plugins extends Base {
 					unset( $updateInfo->changelog );
 				}
 
-				$data[ 'update_info' ] = json_encode( $updateInfo );
+				$data[ 'update_info' ] = wp_json_encode( $updateInfo );
 				if ( !empty( $updateInfo->slug ) ) {
 					$data[ 'slug' ] = $updateInfo->slug;
 				}

@@ -1,0 +1,43 @@
+<?php declare( strict_types=1 );
+
+namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Operators;
+
+class TableEnum {
+
+	/**
+	 * @throws \Exception
+	 */
+	public function enum( array $exclusions ) :array {
+		$DB = \ICWP_APP_WpDb::GetInstance();
+		$tableStatus = $DB->showTableStatus( ARRAY_A );
+		if ( !\is_array( $tableStatus ) ) {
+			throw new \Exception( 'showTableStatus() did not return an array.' );
+		}
+		$tables = [];
+		foreach ( $tableStatus as $s ) {
+			if ( empty( $s[ 'Name' ] ) ) {
+				throw new \Exception( 'The name field for a table was empty. This is irregular.' );
+			}
+			if ( \str_starts_with( $s[ 'Name' ], $DB->getPrefix() ) ) {
+				$excluded = false;
+				$exPrefix = \preg_replace( sprintf( '#^%s#', \preg_quote( $DB->getPrefix(), '#' ) ), '', $s[ 'Name' ] );
+				foreach ( $exclusions as $exclusion ) {
+					if ( \preg_match( $exclusion, $exPrefix ) ) {
+						$excluded = true;
+						break;
+					}
+				}
+				if ( !$excluded ) {
+					$tables[ $s[ 'Name' ] ] = [
+						'name'   => $s[ 'Name' ],
+						'rows'   => $DB->getVar( sprintf( "SELECT COUNT(*) AS `total_records` FROM `%s`", $s[ 'Name' ] ) ),
+						'size'   => \round( ( $s[ 'Data_length' ] + $s[ 'Index_length' ] )/1024/1024, 2 ),
+						'bytes'  => $s[ 'Data_length' ],
+						'engine' => \strtolower( $s[ 'Engine' ] )
+					];
+				}
+			}
+		}
+		return $tables;
+	}
+}

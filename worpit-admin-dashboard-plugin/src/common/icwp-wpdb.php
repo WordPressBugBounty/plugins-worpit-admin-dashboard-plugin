@@ -38,14 +38,23 @@ class ICWP_APP_WpDb {
 
 	/**
 	 * @return array|null|object
-	 * @throws Exception
 	 */
-	public function showTableStatus() {
-		if ( !defined( 'DB_NAME' ) ) {
-			throw new Exception( 'DB_NAME constant not defined.' );
-		}
-		$sQuery = sprintf( "SHOW TABLE STATUS FROM `%s`", DB_NAME );
-		return $this->getWpdb()->get_results( $sQuery );
+	public function getResults( string $query, $format = ARRAY_A ) {
+		return $this->getWpdb()->get_results( $query, $format );
+	}
+
+	/**
+	 * @return array|null|object
+	 */
+	public function showTableStatus( $format = OBJECT ) {
+		return $this->getResults( sprintf( "SHOW TABLE STATUS FROM `%s`", DB_NAME ), $format );
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getVar( string $sql ) {
+		return $this->getWpdb()->get_var( $sql );
 	}
 
 	/**
@@ -75,12 +84,10 @@ class ICWP_APP_WpDb {
 	}
 
 	/**
-	 * Loads our WPDB object if required.
-	 *
-	 * @return\ wpdb
+	 * @return \wpdb
 	 */
-	protected function loadWpdb() {
-		return $this->wpdb ?? $this->wpdb = $this->getWpdb();
+	public function loadWpdb() :\wpdb {
+		return $this->wpdb ??= $this->getWpdb();
 	}
 
 	private function getWpdb() {

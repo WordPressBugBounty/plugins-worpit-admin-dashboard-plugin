@@ -3,8 +3,11 @@ Contributors: paultgoodchild
 Donate link: https://www.icontrolwp.com/
 License: GPLv2 or later
 Tags: manage, backup, security, umbrella, dashboard
+Requires at least: 4.9
+Requires PHP: 7.4
+Recommended PHP: 7.4
 Tested up to: 6.7
-Stable tag: 4.5.3
+Stable tag: 5.0.2
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -113,6 +116,12 @@ No. WorpDrive is available for a small monthly fee.
 4. Get a view of all your plugins and how each one is distributed across each site.
 
 == Changelog ==
+
+= 5.0 Series =
+*Released: March 2025*
+
+* **(.2)  NEW**:		Support for WorpDrive 2.0 - Rapid Backups.
+* **(.2)  CHANGED**:	Switch to minimum PHP 7.4.
 
 = 4.5 Series =
 *Released: February 2025*

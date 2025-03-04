@@ -84,7 +84,7 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 
 		if ( $doVerify ) {
 			$canHandshake = apply_filters( self::con()
-												->doPluginPrefix( 'verify_site_can_handshake' ), false );
+											   ->doPluginPrefix( 'verify_site_can_handshake' ), false );
 			$this->setOpt( 'can_handshake', $canHandshake ? 'Y' : 'N' );
 		}
 		return $this->getOptIs( 'can_handshake', 'Y' );
@@ -133,7 +133,7 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 			return;
 		}
 		$this->doAddAdminFeedback( sprintf( ( '%s Plugin options updated successfully.' ), self::con()
-																								->getHumanName() ) );
+																							   ->getHumanName() ) );
 	}
 
 	/**
@@ -195,53 +195,33 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 		return $aPluginFeatures;
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function getAssigned() {
+	public function getAssigned() :bool {
 		return $this->getOptIs( 'assigned', 'Y' );
 	}
 
-	/**
-	 * @return string (email)
-	 */
-	public function getAssignedTo() {
-		return $this->getOpt( 'assigned_to', '' );
+	public function getAssignedTo() :string {
+		return (string)$this->getOpt( 'assigned_to', '' );
 	}
 
-	/**
-	 * @return string (URL)
-	 */
-	public function getHelpdeskSsoUrl() {
-		return $this->getOpt( 'helpdesk_sso_url', '' );
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getIcwpPublicKey() {
-		$sKey = $this->getDefinition( 'icwp_public_key' );
-		return empty( $sKey ) ? '' : base64_decode( $sKey );
+	public function getIcwpPublicKey() :string {
+		$key = $this->getDefinition( 'icwp_public_key' );
+		return empty( $key ) ? '' : (string)\base64_decode( $key );
 	}
 
 	/**
 	 * @return string
 	 */
 	public function getPluginAuthKey() {
-		$sOptionKey = 'key';
-		$sAuthKey = $this->getOpt( $sOptionKey );
-		if ( empty( $sAuthKey ) ) {
-			$sAuthKey = $this->loadDP()->GenerateRandomString( 24, 7 );
-			$this->setOpt( $sOptionKey, $sAuthKey );
+		$auth = $this->getOpt( 'key' );
+		if ( empty( $auth ) ) {
+			$auth = $this->loadDP()->GenerateRandomString( 24 );
+			$this->setOpt( 'key', $auth );
 		}
-		return $sAuthKey;
+		return $auth;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getPluginPin() {
-		return $this->getOpt( 'pin' );
+	public function getPluginPin() :string {
+		return (string)$this->getOpt( 'pin' );
 	}
 
 	public function getPermittedApiChannels() :array {
@@ -303,13 +283,6 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 		$trimmed = \trim( (string)$rawPin );
 		$this->setOpt( 'pin', empty( $trimmed ) ? '' : \md5( $trimmed ) );
 		return $this;
-	}
-
-	public function getRequestParams() :LegacyApi\RequestParameters {
-		return $this->reqParams ?? $this->reqParams = new LegacyApi\RequestParameters(
-			$this->loadDP()->FetchGet( 'reqpars', [] ),
-			$this->loadDP()->FetchPost( 'reqpars', [] )
-		);
 	}
 
 	/**

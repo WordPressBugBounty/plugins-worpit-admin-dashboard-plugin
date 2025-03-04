@@ -149,7 +149,12 @@
       "user_list",
       "user_login",
       "user_logout",
-      "worpdrive_filesystem_map"
+      "worpdrive_checks",
+      "worpdrive_clean",
+      "worpdrive_filesystem_map",
+      "worpdrive_filesystem_zip",
+      "worpdrive_db_schema",
+      "worpdrive_db_data"
     ],
     "supported_modules":              [
       "security",

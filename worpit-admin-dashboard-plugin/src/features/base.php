@@ -236,7 +236,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	}
 
 	protected function getMainFeatureName() :string {
-		return $this->name ?? $this->name = $this->opts()->getFeatureProperty( 'name' );
+		return $this->name ?? $this->name = (string)$this->opts()->getFeatureProperty( 'name' );
 	}
 
 	/**

@@ -4,10 +4,7 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Handlers;
 
 class FileSystem {
 
-	/**
-	 * @var self
-	 */
-	protected static $instance = null;
+	protected static FileSystem $instance;
 
 	/**
 	 * @var \WP_Filesystem_Base
@@ -15,7 +12,7 @@ class FileSystem {
 	protected $wpfs = null;
 
 	public static function Instance() :self {
-		return self::$instance ?? self::$instance = new self();
+		return self::$instance ??= new self();
 	}
 
 	/**
@@ -25,8 +22,8 @@ class FileSystem {
 		return $this->fs() ? $this->fs()->get_contents( $pathname ) : \file_get_contents( $pathname );
 	}
 
-	public function deleteDir( string $dir ) :bool {
-		return $this->fs() && $this->fs()->delete( $dir, true );
+	public function delete( string $path ) :bool {
+		return $this->fs() && $this->fs()->delete( $path, true );
 	}
 
 	public function isDir( string $pathname ) :bool {
@@ -49,6 +46,29 @@ class FileSystem {
 		return $this->fs() && $this->fs()->touch( $pathname, $ts );
 	}
 
+	public function putFileContents( string $path, string $contents ) :bool {
+		return ( $this->fs() && $this->fs()->put_contents( $path, $contents, FS_CHMOD_FILE ) )
+			   || ( \function_exists( '\file_put_contents' ) && \file_put_contents( $path, $contents ) !== false );
+	}
+
+	/**
+	 * @return string[]
+	 */
+	public function enumItemsInDir( string $dir ) :array {
+		$files = [];
+		try {
+			if ( \is_dir( $dir ) ) {
+				foreach ( new \FilesystemIterator( $dir ) as $file ) {
+					/** @var \FilesystemIterator $file */
+					$files[] = $file->getPathname();
+				}
+			}
+		}
+		catch ( \Exception $e ) {
+		}
+		return $files;
+	}
+
 	/**
 	 * @return \WP_Filesystem_Base|mixed|false
 	 */
@@ -64,5 +84,12 @@ class FileSystem {
 			}
 		}
 		return $this->wpfs;
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public function deleteDir( string $dir ) :bool {
+		return $this->fs() && $this->fs()->delete( $dir, true );
 	}
 }

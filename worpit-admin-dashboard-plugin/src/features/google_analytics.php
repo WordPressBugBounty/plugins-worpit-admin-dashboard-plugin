@@ -2,10 +2,6 @@
 
 class ICWP_APP_FeatureHandler_GoogleAnalytics extends \ICWP_APP_FeatureHandler_BaseApp {
 
-
-	/**
-	 * @return mixed
-	 */
 	public function getIsMainFeatureEnabled() {
 		return true;
 	}

@@ -3,12 +3,12 @@
  * Plugin Name: iControlWP
  * Plugin URI: https://icwp.io/home
  * Description: All-In-One Multiple WordPress Site Management - Backups, Security, Updates, and Uptime Monitoring
- * Version: 4.5.3
+ * Version: 5.0.2
  * Author: iControlWP
  * Author URI: https://www.icontrolwp.com/
  * License: GPLv2 or later
- * Requires at least: 4.0
- * Requires PHP: 7.0
+ * Requires at least: 4.9
+ * Requires PHP: 7.4
  */
 
 /**
@@ -31,9 +31,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-if ( version_compare( PHP_VERSION, '7.0', '<' ) ) {
+if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 	add_action( 'admin_notices', function () {
-		echo sprintf( '<div class="notice notice warning"><p>%s</p></div>', 'iControlWP v4.5+ requires PHP 7.0 or later. Please upgrade your PHP version.' );
+		echo sprintf( '<div class="notice notice warning"><p>%s</p></div>', 'iControlWP v5.0+ requires PHP 7.4 or later. Please upgrade your PHP version.' );
 	} );
 	return;
 }

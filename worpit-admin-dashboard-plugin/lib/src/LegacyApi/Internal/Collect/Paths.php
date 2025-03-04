@@ -66,7 +66,7 @@ class Paths extends Base {
 			'wordpress_url'          => $urlHome, // get_bloginfo( 'url' ),
 			'wordpress_wpurl'        => get_bloginfo( 'wpurl' ),
 			'wordpress_home_url'     => $urlHome, //network_home_url()
-			'wordpress_site_url'     => network_site_url(),
+			'wordpress_site_url'     => network_home_url(),
 			'wordpress_admin_url'    => network_admin_url(),
 			'admin_url'              => network_admin_url(),
 			'wordpress_includes_url' => includes_url(),
@@ -76,7 +76,7 @@ class Paths extends Base {
 			'wordpress_home_dir'           => $dirHome,
 			'wordpress_site_dir'           => $dirSite,
 			'wordpress_abs_home_dir'       => $dirAbsHome,
-			'wordpress_abs_home_dir_r'     => rtrim( realpath( $dirAbsHome ), '/' ),
+			'wordpress_abs_home_dir_r'     => rtrim( \realpath( $dirAbsHome ), '/' ),
 			'wordpress_abs_site_dir'       => $dirAbsSite,
 			'wordpress_abs_site_dir_r'     => rtrim( realpath( $dirAbsSite ), '/' ),
 			'wordpress_abspath'            => rtrim( ABSPATH, '/' ),

@@ -91,7 +91,7 @@ class ICWP_APP_Encrypt extends ICWP_APP_Foundation {
 		$passwordKeys = [];
 
 		if ( $isPHP8 ) {
-			$nResult = openssl_seal(
+			$nResult = \openssl_seal(
 				$mDataToEncrypt,
 				$encryptedData,
 				$passwordKeys,
@@ -102,7 +102,7 @@ class ICWP_APP_Encrypt extends ICWP_APP_Foundation {
 		else {
 			// PHP <8.0 doesn't require the Cipher parameter so for now we don't specify it (rc4) until we're sure
 			// we can handle it if it's not available. We just leave default action.
-			$nResult = openssl_seal(
+			$nResult = \openssl_seal(
 				$mDataToEncrypt,
 				$encryptedData,
 				$passwordKeys,

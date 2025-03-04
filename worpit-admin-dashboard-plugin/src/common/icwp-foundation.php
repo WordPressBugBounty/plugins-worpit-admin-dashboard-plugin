@@ -15,10 +15,10 @@ class ICWP_APP_Foundation {
 	private static $oWpComments;
 
 	/**
-	 * @return ICWP_APP_DataProcessor
+	 * @return \ICWP_APP_DataProcessor
 	 */
 	public static function loadDP() {
-		return ICWP_APP_DataProcessor::GetInstance();
+		return \ICWP_APP_DataProcessor::GetInstance();
 	}
 
 	/**
@@ -32,7 +32,7 @@ class ICWP_APP_Foundation {
 	 * @return ICWP_APP_WpFunctions
 	 */
 	public static function loadWP() {
-		return ICWP_APP_WpFunctions::GetInstance();
+		return \ICWP_APP_WpFunctions::GetInstance();
 	}
 
 	public function loadWpPlugins() :\ICWP_APP_WpFunctions_Plugins {

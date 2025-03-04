@@ -2,6 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\Request;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\StdClassAdapter;
 
 /**
@@ -60,46 +61,53 @@ class RequestParameters {
 	 */
 	public function __get( $sProperty ) {
 
-		$mVal = $this->__adapterGet( $sProperty );
+		$value = $this->__adapterGet( $sProperty );
 
 		switch ( $sProperty ) {
-
 			case 'action_params':
-				if ( !\is_array( $mVal ) ) {
-					$mVal = [];
+				if ( !\is_array( $value ) ) {
+					$value = $this->parseActionParams();
 				}
 				break;
-
 			case 'm':
-				$mVal = empty( $mVal ) ? 'index' : $mVal;
+				$value = empty( $value ) ? 'index' : $value;
 				break;
-
 			case 'accname':
-				$mVal = \urldecode( $mVal );
+				$value = \urldecode( $value );
 				break;
-
 			case 'opensig':
-				$mVal = \base64_decode( $mVal );
+				$value = \base64_decode( $value );
 				break;
-
 			case 'timeout':
-				if ( \is_null( $mVal ) ) {
-					$mVal = 60;
+				if ( \is_null( $value ) ) {
+					$value = 60;
 				}
-				$mVal = (int)$mVal;
+				$value = (int)$value;
 				break;
-
 			case 'verification_code':
-				if ( \is_null( $mVal ) ) {
-					$mVal = 'no code';
+				if ( \is_null( $value ) ) {
+					$value = 'no code';
 				}
 				break;
-
 			default:
 				break;
 		}
 
-		return $mVal;
+		return $value;
+	}
+
+	protected function parseActionParams() :array {
+		$actionParams = [];
+		foreach ( \is_array( \getallheaders() ) ? \getallheaders() : [] as $key => $value ) {
+			if ( \trim( \strtolower( $key ) ) === 'content-type' && \strtolower( $value ) === 'application/json' ) {
+				$input = Request::Instance()->input();
+				if ( !empty( $input ) ) {
+					$actionParams = @\json_decode( $input, true )[ 'action_params' ] ?? [];
+				}
+				break;
+			}
+		}
+		return \is_array( $actionParams ) ? $actionParams : [];
 	}
 
 	/**

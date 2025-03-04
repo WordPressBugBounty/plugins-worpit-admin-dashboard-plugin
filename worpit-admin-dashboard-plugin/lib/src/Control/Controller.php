@@ -514,7 +514,7 @@ class Controller extends \ICWP_APP_Foundation {
 	 * @param string $key
 	 * @return mixed|null
 	 */
-	protected function getPluginSpec_Path( $key ) {
+	public function getPluginSpec_Path( $key ) {
 		return $this->conOpts()->plugin_spec[ 'paths' ][ $key ] ?? null;
 	}
 
@@ -770,11 +770,8 @@ class Controller extends \ICWP_APP_Foundation {
 		return $this->getPluginSpec_Property( 'text_domain' );
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getVersion() {
-		return $this->getPluginSpec_Property( 'version' );
+	public function getVersion() :string {
+		return (string)$this->getPluginSpec_Property( 'version' );
 	}
 
 	protected function conOpts() :\stdClass {
