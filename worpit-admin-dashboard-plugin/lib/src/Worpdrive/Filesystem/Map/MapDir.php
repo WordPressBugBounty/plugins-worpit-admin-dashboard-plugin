@@ -9,11 +9,13 @@ class MapDir {
 
 	private SqliteFileListing $map;
 
-	private MapProgressTracker $progressTracker;
+	private MapProgressTracker $tracker;
 
 	private FileExclude $excluder;
 
 	private string $dir;
+
+	private string $hashAlgo;
 
 	private \FilesystemIterator $it;
 
@@ -29,7 +31,14 @@ class MapDir {
 	/**
 	 * @throws Exc\MapDirCannotBeOpenedException
 	 */
-	public function __construct( SqliteFileListing $map, MapProgressTracker $progressTracker, FileExclude $excluder, string $dirToMap, int $stopAtTS ) {
+	public function __construct(
+		SqliteFileListing $map,
+		MapProgressTracker $tracker,
+		FileExclude $excluder,
+		string $dirToMap,
+		string $hashAlgo,
+		int $stopAtTS
+	) {
 		try {
 			$this->it = new \FilesystemIterator( $dirToMap );
 		}
@@ -37,10 +46,12 @@ class MapDir {
 			throw new Exc\MapDirCannotBeOpenedException( $e->getMessage() );
 		}
 		$this->dir = $dirToMap;
-		$this->progressTracker = $progressTracker;
+		$this->hashAlgo = $hashAlgo;
+		$this->tracker = $tracker;
 		$this->map = $map;
 		$this->stopAtTS = $stopAtTS;
 		$this->excluder = $excluder;
+
 		$this->dirs = $this->files = [];
 	}
 
@@ -51,7 +62,7 @@ class MapDir {
 		$this->enum();
 		foreach ( $this->dirs as $dir ) {
 			try {
-				( new MapDir( $this->map, $this->progressTracker, $this->excluder, $dir, $this->stopAtTS ) )->run();
+				( new MapDir( $this->map, $this->tracker, $this->excluder, $dir, $this->hashAlgo, $this->stopAtTS ) )->run();
 			}
 			catch ( Exc\MapDirCannotBeOpenedException $e ) {
 //				error_log( $e->getMessage() );
@@ -61,13 +72,13 @@ class MapDir {
 			$this->map->addRaw(
 				$attr[ 'p' ],
 				'',
-				\hash_file( 'adler32', path_join( ABSPATH, $attr[ 'p' ] ) ),
+				empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, path_join( ABSPATH, $attr[ 'p' ] ) ),
 				$attr[ 'm' ],
 				$attr[ 's' ],
 			);
 		}
 
-		$this->progressTracker->markCompleted( $this->dir );
+		$this->tracker->markCompleted( $this->dir );
 
 		if ( \time() >= $this->stopAtTS ) {
 			throw new TimeLimitReachedException();
@@ -77,18 +88,20 @@ class MapDir {
 	private function enum() :void {
 		foreach ( $this->it as $item ) {
 			/** @var \SplFileInfo $item */
-			if ( $item->isDir() && !$this->progressTracker->isCompleted( $item->getPathname() ) ) {
+			if ( $item->isDir() && !$this->tracker->isCompleted( $item->getPathname() ) ) {
 				$path = $this->normalisePath( $item->getPathname() );
 				if ( !$this->excluder->isExcluded( $path ) ) {
 					$this->dirs[] = $path;
 				}
 			}
-			elseif ( $item->isFile() && !$item->isLink() && $item->getSize() > 0 ) {
+			elseif ( $item->isFile() && !$item->isLink() && !empty( $item->getSize() ) ) {
 				$path = $this->normalisePath( $item->getPathname() );
-				if ( !$this->excluder->isExcluded( $path ) ) {
+				if ( $this->excluder->isFileWithinTimeRange( (int)$item->getMTime() )
+					 && $this->excluder->isFileSizeAllowed( $item->getSize() )
+					 && !$this->excluder->isExcluded( $path ) ) {
 					$this->files[ $item->getPathname() ] = [
 						'p' => $this->normalisePath( $item->getPathname() ),
-						'm' => $item->getMTime(),
+						'm' => (int)$item->getMTime(),
 						's' => $item->getSize(),
 					];
 				}

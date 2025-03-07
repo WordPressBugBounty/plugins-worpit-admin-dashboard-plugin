@@ -4,7 +4,9 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Data;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Operators\{
 	Config,
-	Exporter
+	Exporter,
+	Table\TableDataExport,
+	Table\TableHelper
 };
 
 class ChunkedExporter {
@@ -31,8 +33,8 @@ class ChunkedExporter {
 		}
 		$this->dumpFile = $dumpFile;
 		$this->table = $table;
-		$this->startingOffset = $startingOffset;
 		$this->maxRows = $maxRows;
+		$this->startingOffset = $startingOffset;
 		$this->chunkSize = $chunkSize;
 	}
 
@@ -46,23 +48,44 @@ class ChunkedExporter {
 		$cfg->set( 'tables', [ $this->table ] );
 		$exporter = new Exporter( $cfg );
 
+		$tableDataExp = new TableDataExport( $this->table, $cfg );
+		$primaryOrderColumn = ( new TableHelper( $this->table ) )->getAppropriatePrimaryKeyForOrdering();
+		$orderBy = empty( $primaryOrderColumn ) ? '' : sprintf( 'ORDER BY `%s` ASC', $primaryOrderColumn );
+
 		$pageExportComplete = false;
 		$offset = $this->startingOffset;
 		$isFirstLoop = true;
 		$tableExportComplete = false;
 		do {
-			$cfg->set( 'where', sprintf( '1 LIMIT %s, %s', $this->chunkSize*$offset++, $this->chunkSize ) );
 			if ( $isFirstLoop ) {
 				$exporter->buildHeader()
 						 ->buildPreDataExport()
 						 ->buildTableDataStructureStart( $this->table );
+				$this->writeDump( $exporter->getContent( true ) );
+				$isFirstLoop = false;
 			}
 
-			$exporter->buildTableDataStructureRows( $this->table );
+			// Default behaviour is to just get the next chunk of data.`
+			if ( empty( $primaryOrderColumn ) ) {
+				$tableDataExp->buildDataRows( [], $orderBy, $this->chunkSize, $this->chunkSize*$offset++ );
+			}
+			else {
+				// if we can order by primary key, then we don't need offset, we can use the final row of the previous results...
+				if ( !empty( $tableDataExp->getMostRecentRow() ) ) {
+					$offset = (int)( $tableDataExp->getMostRecentRow()[ $primaryOrderColumn ] );
+				}
+				$tableDataExp->buildDataRows(
+					[
+						sprintf( '`%s` %s %s', $primaryOrderColumn, $offset == 0 ? '>=' : '>', $offset )
+					],
+					$orderBy,
+					$this->chunkSize
+				);
+			}
 
-			if ( $exporter->getPreviousDataRowsCount() === 0 || $exporter->getTotalDataRowsCount() === $this->maxRows ) {
+			if ( $tableDataExp->getPreviousDataRowsCount() === 0 || $tableDataExp->getTotalDataRowsCount() === $this->maxRows ) {
 				$pageExportComplete = true;
-				$tableExportComplete = $exporter->getPreviousDataRowsCount() === 0;
+				$tableExportComplete = $tableDataExp->getPreviousDataRowsCount() === 0;
 				$this->writeDump(
 					$exporter->buildTableDataStructureEnd( $this->table )
 							 ->buildFooter()
@@ -70,15 +93,14 @@ class ChunkedExporter {
 				);
 			}
 			else {
-				$this->writeDump( $exporter->getContent( true ) );
+				$this->writeDump( $tableDataExp->getContent( true ) );
 			}
-
-			$isFirstLoop = false;
 		} while ( !$pageExportComplete && $exporter->getTotalDataRowsCount() < $this->maxRows );
 
 		return [
 			'table_export_complete' => $tableExportComplete,
 			'current_offset'        => $offset,
+			'exported_rows'         => $tableDataExp->getTotalDataRowsCount(),
 		];
 	}
 

@@ -16,16 +16,6 @@ class ZipHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	public function __construct( string $uuid, int $stopAtTS, string $dir, array $filePaths ) {
 		parent::__construct( $uuid, $stopAtTS, $dir );
 		$this->paths = $filePaths;
-
-		$allPresent = true;
-		foreach ( $filePaths as $filePath ) {
-			if ( !\is_file( path_join( $this->dir, $filePath ) ) ) {
-				$allPresent = false;
-			}
-		}
-		if ( !$allPresent ) {
-			throw new \Exception( 'Some files in the list do not exist.' );
-		}
 	}
 
 	/**
@@ -55,10 +45,9 @@ class ZipHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 
 		foreach ( $this->paths as $path ) {
 			$full = path_join( $this->dir, $path );
-			if ( !\is_file( $full ) ) {
-				throw new \Exception( sprintf( 'File does not exist: %s', $full ) );
+			if ( \is_file( $full ) ) {
+				$zip->addFile( $full, \ltrim( $path, '/' ) );
 			}
-			$zip->addFile( $full, \ltrim( $path, '/' ) );
 		}
 
 		if ( !$zip->close() ) {

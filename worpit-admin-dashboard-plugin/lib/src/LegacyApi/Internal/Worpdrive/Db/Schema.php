@@ -15,12 +15,8 @@ class Schema extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Inte
 			if ( empty( $this->getActionParam( 'uuid' ) ) ) {
 				throw new \Exception( 'uuid param is empty' );
 			}
-			if ( empty( $this->getActionParam( 'table_exclusions' ) ) || !\is_array( $this->getActionParam( 'table_exclusions' ) ) ) {
-				throw new \Exception( "There's no scenario where there are no table exclusions." );
-			}
 
 			$status = ( new SchemaHandler(
-				$this->getActionParam( 'table_exclusions' ),
 				$this->getActionParam( 'uuid' ),
 				$this->getTimeLimit(),
 			) )->run();

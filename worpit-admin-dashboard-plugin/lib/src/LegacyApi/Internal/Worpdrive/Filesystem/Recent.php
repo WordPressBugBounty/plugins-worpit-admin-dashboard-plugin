@@ -4,11 +4,11 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdri
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\{
-	MapHandler,
-	MapVO
+	MapVO,
+	RecentMapHandler
 };
 
-class Map extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\BaseWorpdrive {
+class Recent extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\BaseWorpdrive {
 
 	public function process() :ApiResponse {
 		$err = '';
@@ -24,12 +24,16 @@ class Map extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Interna
 			if ( empty( $this->getActionParam( 'file_exclusions' ) ) || !\is_array( $this->getActionParam( 'file_exclusions' ) ) ) {
 				throw new \Exception( "There's no scenario where there are no exclusions." );
 			}
+			if ( $this->getActionParam( 'newer_than_ts' ) === null ) {
+				throw new \Exception( "newer_than_ts param isn't provided." );
+			}
 
 			$mapVO = new MapVO();
 			$mapVO->dir = $this->getActionParam( 'dir' );
 			$mapVO->exclusions = $this->getActionParam( 'file_exclusions' );
+			$mapVO->newerThanTS = (int)$this->getActionParam( 'newer_than_ts' );
 
-			$status = ( new MapHandler(
+			$status = ( new RecentMapHandler(
 				$mapVO,
 				$this->getActionParam( 'uuid' ),
 				$this->getTimeLimit(),

@@ -10,23 +10,13 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Operators\{
 
 class SchemaHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\BaseDbHandler {
 
-	private array $exclusions;
-
 	private array $tables;
 
 	/**
 	 * @throws \Exception
 	 */
-	public function __construct( array $exclusions, string $uuid, int $stopAtTS ) {
-		parent::__construct( $uuid, $stopAtTS );
-		$this->exclusions = $exclusions;
-	}
-
-	/**
-	 * @throws \Exception
-	 */
 	public function run() :array {
-		$this->tables = ( new TableEnum() )->enum( $this->exclusions );
+		$this->tables = ( new TableEnum() )->enum();
 		return [
 			'tables'      => $this->tables,
 			'schema_dump' => $this->dumpSchema(),

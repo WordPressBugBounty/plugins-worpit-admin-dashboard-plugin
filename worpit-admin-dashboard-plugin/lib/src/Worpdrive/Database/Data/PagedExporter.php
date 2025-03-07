@@ -17,9 +17,9 @@ class PagedExporter {
 
 	public function __construct( string $dumpFileDir, int $pageRowsLimit, ExportTracker $progressTracker, int $stopAtTS ) {
 		$this->dumpFileDir = $dumpFileDir;
+		$this->pageRowsLimit = $pageRowsLimit;
 		$this->exportMap = $progressTracker;
 		$this->stopAtTS = $stopAtTS;
-		$this->pageRowsLimit = $pageRowsLimit;
 	}
 
 	/**
@@ -29,8 +29,7 @@ class PagedExporter {
 	public function run() :void {
 		foreach ( \array_filter( $this->exportMap->status(), fn( array $s ) => empty( $s[ 'completed_at' ] ) ) as $table => $status ) {
 			do {
-				$currentPage = (int)\floor( ( $status[ 'offset' ]*$status[ 'chunk_size' ] )/$this->pageRowsLimit ) + 1;
-				$dumpFile = \fopen( $this->dumpFileFor( $table, $currentPage ), 'w' );
+				$dumpFile = \fopen( $this->dumpFileFor( $table, $status[ 'page' ] ), 'w' );
 				try {
 					$chunkExportStatus = ( new ChunkedExporter(
 						$dumpFile,
@@ -41,7 +40,9 @@ class PagedExporter {
 					) )->run();
 
 					$status[ 'offset' ] = $chunkExportStatus[ 'current_offset' ];
+					$status[ 'page' ]++;
 					$status[ 'completed_at' ] = $chunkExportStatus[ 'table_export_complete' ] ? \time() : 0;
+					$status[ 'exported_rows' ] += $chunkExportStatus[ 'exported_rows' ];
 					$this->exportMap->updateStatus( $table, $status );
 
 					if ( \time() >= $this->stopAtTS ) {

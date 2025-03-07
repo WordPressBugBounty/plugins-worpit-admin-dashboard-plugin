@@ -152,6 +152,8 @@
       "worpdrive_checks",
       "worpdrive_clean",
       "worpdrive_filesystem_map",
+      "worpdrive_filesystem_hashless",
+      "worpdrive_filesystem_recent",
       "worpdrive_filesystem_zip",
       "worpdrive_db_schema",
       "worpdrive_db_data"

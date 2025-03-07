@@ -2,6 +2,8 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Operators;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Operators\Table\TableHelper;
+
 class Exporter {
 
 	private Config $cfg;
@@ -58,23 +60,18 @@ class Exporter {
 	 * This can be skipped altogether if we're previously exported a schema.sql for use in imports later.
 	 * @throws \Exception
 	 */
-	public function buildForTable( string $tableName ) :self {
-		$tableCreateSQL = \ICWP_APP_WpDb::GetInstance()->getResults( sprintf( 'SHOW CREATE TABLE `%s`', $tableName ) );
-		if ( !\is_array( $tableCreateSQL ) || \count( $tableCreateSQL ) !== 1 ) {
-			throw new \Exception( sprintf( 'show create table failed for %s', $tableName ) );
-		}
-
-		$tableCreateSQL = \current( $tableCreateSQL );
+	public function buildForTable( string $table ) :self {
+		$tableCreateSQL = ( new TableHelper( $table ) )->showCreate();
 		$type = \key( $tableCreateSQL ) === 'Create View' ? 'view' : 'table'; // Create Table
 
 		if ( !$this->cfg->has( 'no-create-info' ) ) {
 			( $type === 'table' ) ?
-				$this->buildTableStructure( $tableName, $tableCreateSQL[ 'Create Table' ] )
-				: $this->buildViewStructure( $tableName, $tableCreateSQL[ 'Create View' ] );
+				$this->buildTableStructure( $table, $tableCreateSQL[ 'Create Table' ] )
+				: $this->buildViewStructure( $table, $tableCreateSQL[ 'Create View' ] );
 		}
 
 		if ( !$this->cfg->has( 'no-data' ) && $type === 'table' ) {
-			$this->buildTableDataStructureFull( $tableName );
+			$this->buildTableDataStructureFull( $table );
 		}
 
 		return $this;
@@ -108,6 +105,7 @@ class Exporter {
 			$this->addLine( "/*!40000 ALTER TABLE `$table` DISABLE KEYS */;" );
 			//"SET FOREIGN_KEY_CHECKS = 0;";
 		}
+		$this->addLine( '' );
 		return $this;
 	}
 

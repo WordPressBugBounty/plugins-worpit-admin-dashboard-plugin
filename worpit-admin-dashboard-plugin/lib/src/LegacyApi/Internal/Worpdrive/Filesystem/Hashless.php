@@ -4,11 +4,11 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdri
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\{
-	MapHandler,
+	HashlessMapHandler,
 	MapVO
 };
 
-class Map extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\BaseWorpdrive {
+class Hashless extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\BaseWorpdrive {
 
 	public function process() :ApiResponse {
 		$err = '';
@@ -28,8 +28,9 @@ class Map extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Interna
 			$mapVO = new MapVO();
 			$mapVO->dir = $this->getActionParam( 'dir' );
 			$mapVO->exclusions = $this->getActionParam( 'file_exclusions' );
+			$mapVO->hashAlgo = '';
 
-			$status = ( new MapHandler(
+			$status = ( new HashlessMapHandler(
 				$mapVO,
 				$this->getActionParam( 'uuid' ),
 				$this->getTimeLimit(),
