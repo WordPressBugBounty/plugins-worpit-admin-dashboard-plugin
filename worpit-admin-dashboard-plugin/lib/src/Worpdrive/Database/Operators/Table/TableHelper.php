@@ -86,6 +86,10 @@ class TableHelper {
 		}
 		else {
 			$key = ( new EnumTablePrimaryKeys() )->all()[ $unPrefixed ] ?? null;
+			if ( empty( $key ) && \function_exists( 'is_multisite' ) && is_multisite()
+				 && \preg_match( '#^\d+_(.+)#', $unPrefixed, $matches ) ) {
+				$key = ( new EnumTablePrimaryKeys() )->wordpressStd()[ $matches[ 1 ] ] ?? null;
+			}
 		}
 		return $key;
 	}

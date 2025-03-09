@@ -36,7 +36,7 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 		);
 
 		$map = new Listing\SqliteFileListing( $this->pathToDB() );
-		$track = new MapProgressTracker( $this->loadProgress() );
+		$track = $this->loadProgress();
 		$mapper = new MapDir( $map, $track, $this->excluder, $this->mapVO->dir, $this->mapVO->hashAlgo, $this->stopAtTS );
 		try {
 			$map->startLargeListing();
@@ -46,9 +46,13 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 		}
 		catch ( TimeLimitReachedException $e ) {
 			$map->finishLargeListing( true );
-			// we "save" our state
-			FileSystem::Instance()
-					  ->putFileContents( path_join( $this->workingDir(), 'dir_tracker.json' ), wp_json_encode( $track->completed() ) );
+			FileSystem::Instance()->putFileContents(
+				$this->pathToProgress(),
+				wp_json_encode( [
+					'completed_dirs'       => $track->completed(),
+					'total_completed_dirs' => $track->total(),
+				] )
+			);
 		}
 		catch ( \Exception $e ) {
 			$map->finishLargeListing( false );
@@ -56,30 +60,41 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 		}
 
 		return [
-			'href'           => $completed ? $this->mapURL() : '',
-			'completed_dirs' => \count( $track->completed() ),
-			'map_count'      => $map->count(),
+			'href'                 => $completed ? $this->mapURL() : '',
+			'completed_dirs'       => \count( $track->completed() ),
+			'total_completed_dirs' => $track->total(),
+			'map_count'            => $map->count(),
 		];
-	}
-
-	protected function pathToDB() :string {
-		return path_join( $this->workingDir(), $this->dbFile() );
 	}
 
 	protected function dbFile() :string {
 		return 'map.sqlite';
 	}
 
-	private function loadProgress() :array {
-		$tracker = path_join( $this->workingDir(), $this->dbFile().'_tracker.json' );
+	protected function pathToDB() :string {
+		return path_join( $this->workingDir(), $this->dbFile() );
+	}
+
+	protected function pathToProgress() :string {
+		return path_join( $this->workingDir(), $this->dbFile().'_progress.json' );
+	}
+
+	/**
+	 * @throws \Exception
+	 */
+	private function loadProgress() :MapProgressTracker {
 		$progress = [];
-		if ( \is_file( $tracker ) ) {
-			$raw = FileSystem::Instance()->getContents( $tracker );
+		$total = 0;
+		if ( \is_file( $this->pathToProgress() ) ) {
+			$raw = FileSystem::Instance()->getContents( $this->pathToProgress() );
 			if ( !empty( $raw ) ) {
-				$progress = \json_decode( $raw, true );
+				$rawProgress = \json_decode( $raw, true );
+				if ( !empty( $rawProgress ) && \is_array( $rawProgress ) ) {
+					[ 'completed_dirs' => $progress, 'total_completed_dirs' => $total ] = $rawProgress;
+				}
 			}
 		}
-		return \is_array( $progress ) ? $progress : [];
+		return new MapProgressTracker( $progress, $total );
 	}
 
 	private function mapURL() :string {

@@ -6,10 +6,12 @@ class EnumTablePrimaryKeys {
 
 	public function all() :array {
 		return \array_merge(
-			$this->wordpress(),
+			$this->wordpressStd(),
+			$this->wordpressMS(),
 			$this->woocommerce(),
 			$this->gravityForms(),
 			$this->edd(),
+			$this->wpml(),
 		);
 	}
 
@@ -51,10 +53,8 @@ class EnumTablePrimaryKeys {
 		];
 	}
 
-	private function wordpress() :array {
+	public function wordpressStd() :array {
 		return [
-			'blogs'         => 'blog_id',
-			'blogmeta'      => 'meta_id',
 			'comments'      => 'comment_ID',
 			'commentsmeta'  => 'meta_id',
 			'links'         => 'link_id',
@@ -67,11 +67,36 @@ class EnumTablePrimaryKeys {
 			'terms'         => 'term_id',
 			'usermeta'      => 'umeta_id',
 			'users'         => 'ID',
+		];
+	}
 
+	public function wordpressMS() :array {
+		return [
+			'blogs'            => 'blog_id',
+			'blogmeta'         => 'meta_id',
 			'registration_log' => 'ID',
 			'site'             => 'id',
 			'sitemeta'         => 'meta_id',
 			'signups'          => 'signup_id',
+		];
+	}
+
+	/**
+	 * https://github.com/woocommerce/woocommerce/wiki/Database-Description
+	 */
+	private function wpml() :array {
+		return [
+			'icl_background_task'        => 'task_id',
+			'icl_core_status'            => 'id',
+			'icl_flags'                  => 'id',
+			'icl_languages_translations' => 'id',
+			'icl_node'                   => 'nid',
+			'icl_string_batches'         => 'id',
+			'icl_string_status'          => 'id',
+			'icl_string_translations'    => 'id',
+			'icl_translate'              => 'tid',
+			'icl_translate_job'          => 'job_id',
+			'icl_translation_status'     => 'rid',
 		];
 	}
 

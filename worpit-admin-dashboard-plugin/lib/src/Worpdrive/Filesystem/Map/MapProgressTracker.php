@@ -6,15 +6,19 @@ class MapProgressTracker {
 
 	private array $completedDirs;
 
-	/**
-	 * @throws \Exception
-	 */
-	public function __construct( array $completedDirs = [] ) {
+	private int $totalDirsComplete;
+
+	public function __construct( array $completedDirs = [], int $totalDirsComplete = 0 ) {
 		$this->completedDirs = $completedDirs;
+		$this->totalDirsComplete = $totalDirsComplete;
 	}
 
 	public function completed() :array {
 		return $this->completedDirs;
+	}
+
+	public function total() :int {
+		return $this->totalDirsComplete;
 	}
 
 	public function isCompleted( string $dir ) :bool {
@@ -42,5 +46,6 @@ class MapProgressTracker {
 
 		$this->completedDirs = \array_filter( $this->completedDirs );
 		$this->completedDirs[ $dir ] = true;
+		$this->totalDirsComplete++;
 	}
 }
