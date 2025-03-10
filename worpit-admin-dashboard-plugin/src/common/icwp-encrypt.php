@@ -126,15 +126,15 @@ class ICWP_APP_Encrypt extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @param string $sVerificationCode
-	 * @param string $sSignature
-	 * @param string $sPublicKey
+	 * @param string $verificationCode
+	 * @param string $signature
+	 * @param string $publicKey
 	 * @return int                    1: Success; 0: Failure; -1: Error; -2: Not supported
 	 */
-	public function verifySslSignature( $sVerificationCode, $sSignature, $sPublicKey ) {
+	public function verifySslSignature( $verificationCode, $signature, $publicKey ) {
 		$nResult = -2;
 		if ( $this->getSupportsOpenSslSign() ) {
-			$nResult = openssl_verify( $sVerificationCode, $sSignature, $sPublicKey );
+			$nResult = openssl_verify( $verificationCode, $signature, $publicKey );
 		}
 		return $nResult;
 	}

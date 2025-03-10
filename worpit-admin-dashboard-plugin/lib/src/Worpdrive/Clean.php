@@ -9,9 +9,10 @@ class Clean extends BaseHandler {
 	/**
 	 * @throws \Exception
 	 */
-	public function all() {
+	public function run() :array {
 		$this->deleteOtherArchivesFromWorkingDirContainer();
 		$this->cleanWorkingDir();
+		return [];
 	}
 
 	public function deleteOtherArchivesFromWorkingDirContainer() {
@@ -24,7 +25,6 @@ class Clean extends BaseHandler {
 				$FS->delete( $path );
 			}
 		}
-		FileSystem::Instance()->delete( \dirname( $this->workingDir() ) );
 	}
 
 	/**

@@ -3,6 +3,7 @@
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Zip;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Utility\FileNameFor;
 
 class ZipHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\BaseFsHandler {
 
@@ -13,8 +14,8 @@ class ZipHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	/**
 	 * @throws \Exception
 	 */
-	public function __construct( string $uuid, int $stopAtTS, string $dir, array $filePaths ) {
-		parent::__construct( $uuid, $stopAtTS, $dir );
+	public function __construct( array $filePaths, string $dir, string $uuid, int $stopAtTS ) {
+		parent::__construct( $dir, $uuid, $stopAtTS );
 		$this->paths = $filePaths;
 	}
 
@@ -57,7 +58,7 @@ class ZipHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 
 	private function targetZip() :string {
 		if ( empty( $this->targetZIP ) ) {
-			$this->targetZIP = path_join( $this->workingDir(), 'archive.zip' );
+			$this->targetZIP = path_join( $this->workingDir(), FileNameFor::For( 'files_zip' ) );
 			if ( \is_file( $this->targetZIP ) ) {
 				FileSystem::Instance()->delete( $this->targetZIP );
 			}

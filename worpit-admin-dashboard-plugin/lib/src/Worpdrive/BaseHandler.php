@@ -5,7 +5,7 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Control\PluginControllerConsumer;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
 
-class BaseHandler {
+abstract class BaseHandler {
 
 	use PluginControllerConsumer;
 
@@ -20,12 +20,16 @@ class BaseHandler {
 		$this->stopAtTS = $stopAtTS;
 	}
 
+	/**
+	 * @throws \Exception
+	 */
+	abstract public function run() :array;
+
 	protected function workingDir() :string {
 		if ( empty( $this->pathWorkingDir ) ) {
 			$this->pathWorkingDir = trailingslashit( wp_normalize_path(
 				path_join( self::con()->getRootDir(), $this->baseArchivePath() )
 			) );
-//			( new Clean( $this->uuid, $this->stopAtTS ) )->deleteOtherArchivesFromWorkingDirContainer();
 			FileSystem::Instance()->mkdir( $this->pathWorkingDir );
 		}
 		return $this->pathWorkingDir;

@@ -22,6 +22,7 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\StdClassAdapter;
  * @property string $package_name
  * @property string $verification_code
  * @property string $opensig
+ * @property int    $verify_ts
  * @property int    $timeout
  * @property bool   $icwpapi
  * @property int    $silent_login
@@ -88,6 +89,9 @@ class RequestParameters {
 				if ( \is_null( $value ) ) {
 					$value = 'no code';
 				}
+				break;
+			case 'verify_ts':
+				$value = (int)$value;
 				break;
 			default:
 				break;

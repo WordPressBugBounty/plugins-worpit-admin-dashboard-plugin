@@ -62,7 +62,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 	 */
 	protected function getApiChannel() {
 		$oParams = $this->getRequestParams();
-		return in_array( $oParams->m, $this->mod->getPermittedApiChannels() ) ? $oParams->m : 'index';
+		return \in_array( $oParams->m, $this->mod->getPermittedApiChannels() ) ? $oParams->m : 'index';
 	}
 
 	/**
@@ -197,16 +197,11 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 		}
 		$response->handshake = 'failed';
 
-		$publicKey = $this->mod->getIcwpPublicKey();
-		if ( !empty( $publicKey ) && !empty( $req->verification_code ) && !empty( $req->opensig ) ) {
-			$enc = $this->loadEncryptProcessor();
-			if ( $enc->getSupportsOpenSslSign() ) {
-				$response->openssl_verify = $enc->verifySslSignature( $req->verification_code, $req->opensig, $publicKey );
-				if ( $response->openssl_verify === 1 ) {
-					$response->handshake = 'openssl';
-					return $this->setSuccessResponse(); // just to be sure we proceed thereafter
-				}
-			}
+		try {
+			$this->publicKeyVerify();
+			return $this->setSuccessResponse();
+		}
+		catch ( \Exception $e ) {
 		}
 
 		if ( empty( $req->package_name ) || empty( $req->pin ) ) {
@@ -240,6 +235,41 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 
 		$response->handshake = 'url';
 		return $this->setSuccessResponse(); //just to be sure we proceed thereafter
+	}
+
+	/**
+	 * @throws \Exception
+	 */
+	protected function publicKeyVerify() :void {
+		$req = $this->getRequestParams();
+		$publicKey = $this->mod->getIcwpPublicKey();
+		if ( empty( $publicKey ) || empty( $req->verification_code ) || empty( $req->opensig ) /* TODO: || empty( $req->verification_ts ) */ ) {
+			throw new \Exception( 'Necessary components for public key-based verification are missing' );
+		}
+
+		if ( $this->isVerificationWindowRequired() ) {
+			if ( empty( $req->verify_ts ) ) {
+				throw new \Exception( 'Verification window check required, but verification_ts is missing.' );
+			}
+			if ( \time() - $req->verify_ts > 30 ) {
+				throw new \Exception( 'Verification signature window has closed.' );
+			}
+		}
+
+		if ( !$this->loadEncryptProcessor()->getSupportsOpenSslSign() ) {
+			throw new \Exception( 'OpenSSL Sign is not supported.' );
+		}
+
+		$response = $this->getStandardResponse();
+		$response->openssl_verify = $this->loadEncryptProcessor()->verifySslSignature(
+			$req->verification_code.( empty( $req->verify_ts ) ? '' : $req->verify_ts ),
+			$req->opensig,
+			$publicKey
+		);
+		if ( $response->openssl_verify !== 1 ) {
+			throw new \Exception( 'OpenSSL Signature verification failed: '.$response->openssl_verify );
+		}
+		$response->handshake = 'openssl';
 	}
 
 	protected function preActionEnvironmentSetup() {
@@ -398,5 +428,12 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 
 	protected function isLoggedInUser() :bool {
 		return !empty( $this->getLoggedInUser() );
+	}
+
+	/**
+	 * TODO: expand to all actions.
+	 */
+	protected function isVerificationWindowRequired() :bool {
+		return \str_starts_with( $this->reqParams->action, 'worpdrive_' );
 	}
 }

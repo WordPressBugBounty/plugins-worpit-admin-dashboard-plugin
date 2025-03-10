@@ -4,6 +4,7 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Data;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Exc\TimeLimitReachedException;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Utility\FileNameFor;
 
 class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\BaseDbHandler {
 
@@ -84,7 +85,7 @@ class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Wor
 
 	private function targetZip() :string {
 		if ( empty( $this->targetZIP ) ) {
-			$this->targetZIP = path_join( $this->workingDir(), 'db_dump.zip' );
+			$this->targetZIP = path_join( $this->workingDir(), FileNameFor::For( 'db_exports_zip' ) );
 			if ( \is_file( $this->targetZIP ) ) {
 				FileSystem::Instance()->delete( $this->targetZIP );
 			}

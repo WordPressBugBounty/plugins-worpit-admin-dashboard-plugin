@@ -151,6 +151,7 @@
       "user_logout",
       "worpdrive_checks",
       "worpdrive_clean",
+      "worpdrive_download",
       "worpdrive_filesystem_map",
       "worpdrive_filesystem_hashless",
       "worpdrive_filesystem_recent",

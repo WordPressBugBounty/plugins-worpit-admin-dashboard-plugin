@@ -4,19 +4,19 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Exc\TimeLimitReachedException;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Utility\FileNameFor;
 
 class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\BaseFsHandler {
 
 	protected MapVO $mapVO;
 
-	protected FileExclude $excluder;
+	protected FileFilter $filter;
 
 	/**
 	 * @throws \Exception
 	 */
 	public function __construct( MapVO $mapVO, string $uuid, int $stopAtTS ) {
-		parent::__construct( $uuid, $stopAtTS, $mapVO->dir );
-
+		parent::__construct( $mapVO->dir, $uuid, $stopAtTS );
 		$this->mapVO = $mapVO;
 	}
 
@@ -26,7 +26,7 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	public function run() :array {
 		$completed = false;
 
-		$this->excluder = new FileExclude(
+		$this->filter = new FileFilter(
 			\array_map( fn( $ex ) => path_join( ABSPATH, \base64_decode( $ex ) ), $this->mapVO->exclusions[ 'abs' ] ?? [] ),
 			\array_map( '\base64_decode', $this->mapVO->exclusions[ 'contains' ] ?? [] ),
 			\array_map( '\base64_decode', $this->mapVO->exclusions[ 'regex' ] ?? [] ),
@@ -35,9 +35,9 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 			$this->mapVO->olderThanTS
 		);
 
-		$map = new Listing\SqliteFileListing( $this->pathToDB() );
+		$map = new Listing\SqliteFileListing( path_join( $this->workingDir(), $this->dbFile() ) );
 		$track = $this->loadProgress();
-		$mapper = new MapDir( $map, $track, $this->excluder, $this->mapVO->dir, $this->mapVO->hashAlgo, $this->stopAtTS );
+		$mapper = new MapDir( $map, $track, $this->filter, $this->mapVO->dir, $this->mapVO->hashAlgo, $this->stopAtTS );
 		try {
 			$map->startLargeListing();
 			$mapper->run();
@@ -68,15 +68,15 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	}
 
 	protected function dbFile() :string {
-		return 'map.sqlite';
+		return sprintf( '%s.sqlite', FileNameFor::For( $this->mapType().'_map' ) );
 	}
 
-	protected function pathToDB() :string {
-		return path_join( $this->workingDir(), $this->dbFile() );
+	protected function mapType() :string {
+		return $this->mapVO->type;
 	}
 
 	protected function pathToProgress() :string {
-		return path_join( $this->workingDir(), $this->dbFile().'_progress.json' );
+		return path_join( $this->workingDir(), FileNameFor::For( $this->mapType().'_map_progress' ) );
 	}
 
 	/**

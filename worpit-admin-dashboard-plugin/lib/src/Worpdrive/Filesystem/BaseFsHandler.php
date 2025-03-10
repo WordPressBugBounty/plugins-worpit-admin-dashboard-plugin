@@ -2,14 +2,14 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem;
 
-class BaseFsHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\BaseHandler {
+abstract class BaseFsHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\BaseHandler {
 
 	protected string $dir;
 
 	/**
 	 * @throws \Exception
 	 */
-	public function __construct( string $uuid, int $stopAtTS, string $dir ) {
+	public function __construct( string $dir, string $uuid, int $stopAtTS ) {
 		parent::__construct( $uuid, $stopAtTS );
 		$this->dir = trailingslashit( wp_normalize_path( $dir ) );
 		$this->validate();

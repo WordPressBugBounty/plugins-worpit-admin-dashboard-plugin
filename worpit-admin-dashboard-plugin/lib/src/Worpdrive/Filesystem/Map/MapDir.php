@@ -11,7 +11,7 @@ class MapDir {
 
 	private MapProgressTracker $tracker;
 
-	private FileExclude $excluder;
+	private FileFilter $excluder;
 
 	private string $dir;
 
@@ -34,7 +34,7 @@ class MapDir {
 	public function __construct(
 		SqliteFileListing $map,
 		MapProgressTracker $tracker,
-		FileExclude $excluder,
+		FileFilter $excluder,
 		string $dirToMap,
 		string $hashAlgo,
 		int $stopAtTS

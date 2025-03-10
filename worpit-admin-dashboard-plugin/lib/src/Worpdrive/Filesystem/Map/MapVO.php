@@ -4,6 +4,8 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map;
 
 class MapVO {
 
+	public string $type;
+
 	public string $dir;
 
 	public array $exclusions = [];
