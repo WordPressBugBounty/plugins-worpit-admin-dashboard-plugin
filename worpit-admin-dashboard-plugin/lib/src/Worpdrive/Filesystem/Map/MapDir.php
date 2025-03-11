@@ -11,7 +11,7 @@ class MapDir {
 
 	private MapProgressTracker $tracker;
 
-	private FileFilter $excluder;
+	private FileFilter $filter;
 
 	private string $dir;
 
@@ -34,7 +34,7 @@ class MapDir {
 	public function __construct(
 		SqliteFileListing $map,
 		MapProgressTracker $tracker,
-		FileFilter $excluder,
+		FileFilter $filter,
 		string $dirToMap,
 		string $hashAlgo,
 		int $stopAtTS
@@ -45,12 +45,12 @@ class MapDir {
 		catch ( \Exception $e ) {
 			throw new Exc\MapDirCannotBeOpenedException( $e->getMessage() );
 		}
+		$this->map = $map;
+		$this->tracker = $tracker;
+		$this->filter = $filter;
 		$this->dir = $dirToMap;
 		$this->hashAlgo = $hashAlgo;
-		$this->tracker = $tracker;
-		$this->map = $map;
 		$this->stopAtTS = $stopAtTS;
-		$this->excluder = $excluder;
 
 		$this->dirs = $this->files = [];
 	}
@@ -62,7 +62,7 @@ class MapDir {
 		$this->enum();
 		foreach ( $this->dirs as $dir ) {
 			try {
-				( new MapDir( $this->map, $this->tracker, $this->excluder, $dir, $this->hashAlgo, $this->stopAtTS ) )->run();
+				( new MapDir( $this->map, $this->tracker, $this->filter, $dir, $this->hashAlgo, $this->stopAtTS ) )->run();
 			}
 			catch ( Exc\MapDirCannotBeOpenedException $e ) {
 //				error_log( $e->getMessage() );
@@ -70,15 +70,18 @@ class MapDir {
 		}
 		foreach ( $this->files as $attr ) {
 			$this->map->addRaw(
-				$attr[ 'p' ],
+				$this->normalisePath( $attr[ 'p' ] ),
 				'',
-				empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, path_join( ABSPATH, $attr[ 'p' ] ) ),
+				empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $attr[ 'p' ] ),
 				$attr[ 'm' ],
 				$attr[ 's' ],
 			);
+			if ( \time() >= $this->stopAtTS ) {
+				throw new TimeLimitReachedException();
+			}
 		}
 
-		$this->tracker->markCompleted( $this->dir );
+		$this->tracker->markDirCompleted( $this->normalisePath( $this->dir ) );
 
 		if ( \time() >= $this->stopAtTS ) {
 			throw new TimeLimitReachedException();
@@ -87,20 +90,22 @@ class MapDir {
 
 	private function enum() :void {
 		foreach ( $this->it as $item ) {
+			$absPath = $item->getPathname();
+			$normalisedPath = $this->normalisePath( $absPath );
 			/** @var \SplFileInfo $item */
-			if ( $item->isDir() && !$this->tracker->isCompleted( $item->getPathname() ) ) {
-				$path = $this->normalisePath( $item->getPathname() );
-				if ( !$this->excluder->isExcluded( $path ) ) {
-					$this->dirs[] = $path;
+			if ( $item->isDir() ) {
+				if ( !$this->tracker->isCompleted( $normalisedPath ) && !$this->filter->isExcluded( $normalisedPath ) ) {
+					$this->dirs[] = $absPath;
 				}
 			}
 			elseif ( $item->isFile() && !$item->isLink() && !empty( $item->getSize() ) ) {
-				$path = $this->normalisePath( $item->getPathname() );
-				if ( $this->excluder->isFileWithinTimeRange( (int)$item->getMTime() )
-					 && $this->excluder->isFileSizeAllowed( $item->getSize() )
-					 && !$this->excluder->isExcluded( $path ) ) {
-					$this->files[ $item->getPathname() ] = [
-						'p' => $this->normalisePath( $item->getPathname() ),
+				if ( $this->filter->isFileWithinTimeRange( (int)$item->getMTime() )
+					 && $this->filter->isFileSizeAllowed( $item->getSize() )
+					 && !$this->filter->isExcluded( $normalisedPath )
+					 && !$this->map->exists( $normalisedPath ) ) {
+
+					$this->files[ $absPath ] = [
+						'p' => $absPath,
 						'm' => (int)$item->getMTime(),
 						's' => $item->getSize(),
 					];

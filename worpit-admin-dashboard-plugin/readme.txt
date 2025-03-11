@@ -7,7 +7,7 @@ Requires at least: 4.9
 Requires PHP: 7.4
 Recommended PHP: 7.4
 Tested up to: 6.7
-Stable tag: 5.2.0
+Stable tag: 5.2.1
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -120,6 +120,8 @@ No. WorpDrive is available for a small monthly fee.
 = 5.2 Series =
 *Released: March 2025*
 
+* **(.1)  IMPROVED**:	Filesystem Mapping more reliable for larger directories with large files.
+* **(.1)  IMPROVED**:	Improved support for large SearchWP databases.
 * **(.0)  IMPROVED**:	Added support for streaming data exports where hosts prevent direct requests for ZIP files.
 * **(.0)  IMPROVED**:	Add further security around action requests.
 * **(.0)  IMPROVED**:	Code cleaning and optimisations.

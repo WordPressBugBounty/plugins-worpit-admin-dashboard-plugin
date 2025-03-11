@@ -8,6 +8,8 @@ class MapProgressTracker {
 
 	private int $totalDirsComplete;
 
+	private array $dirsThisRound = [];
+
 	public function __construct( array $completedDirs = [], int $totalDirsComplete = 0 ) {
 		$this->completedDirs = $completedDirs;
 		$this->totalDirsComplete = $totalDirsComplete;
@@ -25,8 +27,8 @@ class MapProgressTracker {
 		$dir = trailingslashit( $dir );
 		$completed = isset( $this->completedDirs[ $dir ] );
 		if ( !$completed ) {
-			foreach ( \array_keys( $this->completedDirs ) as $completedDir ) {
-				if ( \str_starts_with( $dir, $completedDir ) ) {
+			foreach ( \array_keys( $this->completedDirs ) as $previouslyCompletedDir ) {
+				if ( \str_starts_with( $dir, $previouslyCompletedDir ) ) {
 					$completed = true;
 					break;
 				}
@@ -35,15 +37,20 @@ class MapProgressTracker {
 		return $completed;
 	}
 
-	public function markCompleted( string $dir ) :void {
+	public function getDirsThisRound() :array {
+		return $this->dirsThisRound;
+	}
+
+	public function markDirCompleted( string $dir ) :void {
 		$dir = trailingslashit( $dir );
 
-		foreach ( \array_keys( $this->completedDirs ) as $completedDir ) {
-			if ( \str_starts_with( $completedDir, $dir ) ) {
-				$this->completedDirs[ $completedDir ] = false;
+		foreach ( \array_keys( $this->completedDirs ) as $previouslyCompletedDir ) {
+			if ( \str_starts_with( $previouslyCompletedDir, $dir ) ) {
+				$this->completedDirs[ $previouslyCompletedDir ] = false;
 			}
 		}
 
+		$this->dirsThisRound[] = $dir;
 		$this->completedDirs = \array_filter( $this->completedDirs );
 		$this->completedDirs[ $dir ] = true;
 		$this->totalDirsComplete++;

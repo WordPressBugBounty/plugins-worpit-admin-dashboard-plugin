@@ -64,6 +64,7 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 			'completed_dirs'       => \count( $track->completed() ),
 			'total_completed_dirs' => $track->total(),
 			'map_count'            => $map->count(),
+			/* 'dirs_this_round'      => $track->getDirsThisRound(), */
 		];
 	}
 

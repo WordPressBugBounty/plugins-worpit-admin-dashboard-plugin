@@ -11,6 +11,7 @@ class EnumTablePrimaryKeys {
 			$this->woocommerce(),
 			$this->gravityForms(),
 			$this->edd(),
+			$this->searchwp(),
 			$this->wpml(),
 		);
 	}
@@ -96,7 +97,17 @@ class EnumTablePrimaryKeys {
 			'icl_string_translations'    => 'id',
 			'icl_translate'              => 'tid',
 			'icl_translate_job'          => 'job_id',
+			'icl_translations'           => 'translation_id',
 			'icl_translation_status'     => 'rid',
+		];
+	}
+
+	private function searchwp() :array {
+		return [
+			'searchwp_index'  => 'indexid',
+			'searchwp_log'    => 'logid',
+			'searchwp_status' => 'statusid',
+			'searchwp_tokens' => 'id',
 		];
 	}
 
