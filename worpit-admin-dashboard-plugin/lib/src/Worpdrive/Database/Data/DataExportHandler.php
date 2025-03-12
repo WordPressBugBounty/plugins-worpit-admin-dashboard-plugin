@@ -24,14 +24,10 @@ class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Wor
 	 * @throws \Exception
 	 */
 	public function run() :array {
-		$track = new ExportTracker( $this->tableExportMap );
+		$map = new ExportMap( $this->tableExportMap );
 		try {
-			( new PagedExporter(
-				$this->dumpDir(),
-				1000,
-				$track,
-				$this->stopAtTS - 2 // Allow 2s for ZIP.
-			) )->run();
+			// Allow 2s for ZIP.
+			( new PagedExporter( $this->dumpDir(), $map, $this->stopAtTS - 2 ) )->run();
 			$exportSuccess = true;
 		}
 		catch ( TimeLimitReachedException $e ) {
@@ -42,7 +38,7 @@ class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Wor
 		}
 		finally {
 			FileSystem::Instance()
-					  ->putFileContents( path_join( $this->workingDir(), 'db_tracker.json' ), wp_json_encode( $track->status() ) );
+					  ->putFileContents( path_join( $this->workingDir(), 'db_tracker.json' ), wp_json_encode( $map->status() ) );
 		}
 
 		if ( $exportSuccess ) {
@@ -51,7 +47,7 @@ class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Wor
 
 		return [
 			'href'             => $exportSuccess ? $this->zipURL() : '',
-			'table_export_map' => $track->status(),
+			'table_export_map' => $map->status(),
 		];
 	}
 

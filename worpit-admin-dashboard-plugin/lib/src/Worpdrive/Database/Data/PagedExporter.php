@@ -9,16 +9,13 @@ class PagedExporter {
 
 	private string $dumpFileDir;
 
-	private ExportTracker $exportMap;
-
-	private int $pageRowsLimit;
+	private ExportMap $exportMap;
 
 	private int $stopAtTS;
 
-	public function __construct( string $dumpFileDir, int $pageRowsLimit, ExportTracker $progressTracker, int $stopAtTS ) {
+	public function __construct( string $dumpFileDir, ExportMap $exportMap, int $stopAtTS ) {
 		$this->dumpFileDir = $dumpFileDir;
-		$this->pageRowsLimit = $pageRowsLimit;
-		$this->exportMap = $progressTracker;
+		$this->exportMap = $exportMap;
 		$this->stopAtTS = $stopAtTS;
 	}
 
@@ -34,8 +31,8 @@ class PagedExporter {
 					$chunkExportStatus = ( new ChunkedExporter(
 						$dumpFile,
 						$table,
-						$this->pageRowsLimit,
 						$status[ 'offset' ],
+						$status[ 'max_page_rows' ] ?? 1000,
 						$status[ 'chunk_size' ]
 					) )->run();
 

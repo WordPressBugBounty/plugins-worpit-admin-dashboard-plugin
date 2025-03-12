@@ -20,20 +20,20 @@ class ChunkedExporter {
 
 	private int $startingOffset;
 
-	private int $maxRows;
+	private int $maxPageRows;
 
 	private int $chunkSize;
 
 	/**
 	 * @throws \Exception
 	 */
-	public function __construct( $dumpFile, string $table, int $maxRows, int $startingOffset, int $chunkSize = 50 ) {
+	public function __construct( $dumpFile, string $table, int $startingOffset, int $maxPageRows = 1000, int $chunkSize = 50 ) {
 		if ( !\is_resource( $dumpFile ) ) {
 			throw new \Exception( 'Dump file is not a valid resource' );
 		}
 		$this->dumpFile = $dumpFile;
 		$this->table = $table;
-		$this->maxRows = $maxRows;
+		$this->maxPageRows = $maxPageRows;
 		$this->startingOffset = $startingOffset;
 		$this->chunkSize = $chunkSize;
 	}
@@ -83,7 +83,7 @@ class ChunkedExporter {
 				);
 			}
 
-			if ( $tableDataExp->getPreviousDataRowsCount() === 0 || $tableDataExp->getTotalDataRowsCount() === $this->maxRows ) {
+			if ( $tableDataExp->getPreviousDataRowsCount() === 0 || $tableDataExp->getTotalDataRowsCount() >= $this->maxPageRows ) {
 				$pageExportComplete = true;
 				$tableExportComplete = $tableDataExp->getPreviousDataRowsCount() === 0;
 				$this->writeDump(
@@ -95,7 +95,7 @@ class ChunkedExporter {
 			else {
 				$this->writeDump( $tableDataExp->getContent( true ) );
 			}
-		} while ( !$pageExportComplete && $exporter->getTotalDataRowsCount() < $this->maxRows );
+		} while ( !$pageExportComplete && $exporter->getTotalDataRowsCount() < $this->maxPageRows );
 
 		return [
 			'table_export_complete' => $tableExportComplete,

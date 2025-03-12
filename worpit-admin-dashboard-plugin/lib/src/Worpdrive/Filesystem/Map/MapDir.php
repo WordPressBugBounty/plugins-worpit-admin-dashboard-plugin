@@ -17,20 +17,8 @@ class MapDir {
 
 	private string $hashAlgo;
 
-	private \FilesystemIterator $it;
-
-	private array $dirs;
-
 	private int $stopAtTS;
 
-	/**
-	 * @var array[]
-	 */
-	private array $files;
-
-	/**
-	 * @throws Exc\MapDirCannotBeOpenedException
-	 */
 	public function __construct(
 		SqliteFileListing $map,
 		MapProgressTracker $tracker,
@@ -39,28 +27,20 @@ class MapDir {
 		string $hashAlgo,
 		int $stopAtTS
 	) {
-		try {
-			$this->it = new \FilesystemIterator( $dirToMap );
-		}
-		catch ( \Exception $e ) {
-			throw new Exc\MapDirCannotBeOpenedException( $e->getMessage() );
-		}
 		$this->map = $map;
 		$this->tracker = $tracker;
 		$this->filter = $filter;
 		$this->dir = $dirToMap;
 		$this->hashAlgo = $hashAlgo;
 		$this->stopAtTS = $stopAtTS;
-
-		$this->dirs = $this->files = [];
 	}
 
 	/**
 	 * @throws TimeLimitReachedException
+	 * @throws Exc\MapDirCannotBeOpenedException
 	 */
 	public function run() :void {
-		$this->enum();
-		foreach ( $this->dirs as $dir ) {
+		foreach ( $this->enumDirs() as $dir ) {
 			try {
 				( new MapDir( $this->map, $this->tracker, $this->filter, $dir, $this->hashAlgo, $this->stopAtTS ) )->run();
 			}
@@ -68,14 +48,16 @@ class MapDir {
 //				error_log( $e->getMessage() );
 			}
 		}
-		foreach ( $this->files as $attr ) {
+
+		foreach ( $this->enumFiles() as $attr ) {
 			$this->map->addRaw(
-				$this->normalisePath( $attr[ 'p' ] ),
+				$normal = $this->normalisePath( $attr[ 'p' ] ),
 				'',
 				empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $attr[ 'p' ] ),
 				$attr[ 'm' ],
 				$attr[ 's' ],
 			);
+			$this->tracker->markFileCompleted( $normal );
 			if ( \time() >= $this->stopAtTS ) {
 				throw new TimeLimitReachedException();
 			}
@@ -88,33 +70,64 @@ class MapDir {
 		}
 	}
 
-	private function enum() :void {
-		foreach ( $this->it as $item ) {
-			$absPath = $item->getPathname();
-			$normalisedPath = $this->normalisePath( $absPath );
+	/**
+	 * @throws Exc\MapDirCannotBeOpenedException
+	 */
+	private function enumDirs() :array {
+		$dirs = [];
+		try {
+			$it = new \FilesystemIterator( $this->dir );
+		}
+		catch ( \Exception $e ) {
+			throw new Exc\MapDirCannotBeOpenedException( $e->getMessage() );
+		}
+		foreach ( $it as $item ) {
 			/** @var \SplFileInfo $item */
 			if ( $item->isDir() ) {
-				if ( !$this->tracker->isCompleted( $normalisedPath ) && !$this->filter->isExcluded( $normalisedPath ) ) {
-					$this->dirs[] = $absPath;
+				$normalisedPath = $this->normalisePath( $item->getPathname() );
+				if ( !$this->tracker->isDirCompleted( $normalisedPath ) && !$this->filter->isExcluded( $normalisedPath ) ) {
+					$dirs[] = $item->getPathname();
 				}
 			}
-			elseif ( $item->isFile() && !$item->isLink() && !empty( $item->getSize() ) ) {
-				if ( $this->filter->isFileWithinTimeRange( (int)$item->getMTime() )
+		}
+		\natsort( $dirs );
+		return $dirs;
+	}
+
+	/**
+	 * @throws Exc\MapDirCannotBeOpenedException
+	 */
+	private function enumFiles() :array {
+		$files = [];
+		try {
+			$it = new \FilesystemIterator( $this->dir );
+		}
+		catch ( \Exception $e ) {
+			throw new Exc\MapDirCannotBeOpenedException( $e->getMessage() );
+		}
+
+		foreach ( $it as $item ) {
+			/** @var \SplFileInfo $item */
+			if ( $item->isFile() && !$item->isLink() && !empty( $item->getSize() ) ) {
+				$normalisedPath = $this->normalisePath( $item->getPathname() );
+				if ( !$this->tracker->isFileCompleted( $normalisedPath )
+					 && $this->filter->isFileWithinTimeRange( (int)$item->getMTime() )
 					 && $this->filter->isFileSizeAllowed( $item->getSize() )
 					 && !$this->filter->isExcluded( $normalisedPath )
-					 && !$this->map->exists( $normalisedPath ) ) {
+				) {
 
-					$this->files[ $absPath ] = [
-						'p' => $absPath,
+					$files[ $normalisedPath ] = [
+						'p' => $item->getPathname(),
 						'm' => (int)$item->getMTime(),
 						's' => $item->getSize(),
 					];
 				}
 			}
 		}
-		\natsort( $this->dirs );
-		\ksort( $this->files, \SORT_NATURAL );
-		$this->files = \array_values( $this->files );
+
+		// Natural sort is required as we use this to pick-up our previous position in the file map.
+		\ksort( $files, \SORT_NATURAL );
+		return \array_values( $files );
 	}
 
 	private function normalisePath( string $path ) :string {

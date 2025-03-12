@@ -50,6 +50,7 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 				$this->pathToProgress(),
 				wp_json_encode( [
 					'completed_dirs'       => $track->completed(),
+					'most_recent_file'     => $track->getMostRecentFile(),
 					'total_completed_dirs' => $track->total(),
 				] )
 			);
@@ -64,7 +65,10 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 			'completed_dirs'       => \count( $track->completed() ),
 			'total_completed_dirs' => $track->total(),
 			'map_count'            => $map->count(),
-			/* 'dirs_this_round'      => $track->getDirsThisRound(), */
+			/*
+			'dirs_this_round'      => $track->getDirsThisRound(),
+			'latest_file'          => $track->getMostRecentFile(),
+			*/
 		];
 	}
 
@@ -84,18 +88,23 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	 * @throws \Exception
 	 */
 	private function loadProgress() :MapProgressTracker {
-		$progress = [];
+		$dirsCompleted = [];
+		$mostRecentFile = null;
 		$total = 0;
 		if ( \is_file( $this->pathToProgress() ) ) {
 			$raw = FileSystem::Instance()->getContents( $this->pathToProgress() );
 			if ( !empty( $raw ) ) {
 				$rawProgress = \json_decode( $raw, true );
 				if ( !empty( $rawProgress ) && \is_array( $rawProgress ) ) {
-					[ 'completed_dirs' => $progress, 'total_completed_dirs' => $total ] = $rawProgress;
+					[
+						'completed_dirs'       => $dirsCompleted,
+						'most_recent_file'     => $mostRecentFile,
+						'total_completed_dirs' => $total,
+					] = $rawProgress;
 				}
 			}
 		}
-		return new MapProgressTracker( $progress, $total );
+		return new MapProgressTracker( $dirsCompleted, $mostRecentFile, $total );
 	}
 
 	private function mapURL() :string {

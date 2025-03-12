@@ -8,10 +8,13 @@ class MapProgressTracker {
 
 	private int $totalDirsComplete;
 
+	private ?string $mostRecentFileInDir;
+
 	private array $dirsThisRound = [];
 
-	public function __construct( array $completedDirs = [], int $totalDirsComplete = 0 ) {
+	public function __construct( array $completedDirs = [], ?string $mostRecentFile = null, int $totalDirsComplete = 0 ) {
 		$this->completedDirs = $completedDirs;
+		$this->mostRecentFileInDir = $mostRecentFile;
 		$this->totalDirsComplete = $totalDirsComplete;
 	}
 
@@ -23,7 +26,7 @@ class MapProgressTracker {
 		return $this->totalDirsComplete;
 	}
 
-	public function isCompleted( string $dir ) :bool {
+	public function isDirCompleted( string $dir ) :bool {
 		$dir = trailingslashit( $dir );
 		$completed = isset( $this->completedDirs[ $dir ] );
 		if ( !$completed ) {
@@ -37,8 +40,20 @@ class MapProgressTracker {
 		return $completed;
 	}
 
+	public function isFileCompleted( string $file ) :bool {
+		return !empty( $this->mostRecentFileInDir ) && \strnatcmp( $this->mostRecentFileInDir, $file ) >= 0;
+	}
+
 	public function getDirsThisRound() :array {
 		return $this->dirsThisRound;
+	}
+
+	public function getMostRecentFile() :?string {
+		return $this->mostRecentFileInDir;
+	}
+
+	public function markFileCompleted( string $file ) :void {
+		$this->mostRecentFileInDir = $file;
 	}
 
 	public function markDirCompleted( string $dir ) :void {
@@ -54,5 +69,6 @@ class MapProgressTracker {
 		$this->completedDirs = \array_filter( $this->completedDirs );
 		$this->completedDirs[ $dir ] = true;
 		$this->totalDirsComplete++;
+		$this->mostRecentFileInDir = null;
 	}
 }
