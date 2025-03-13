@@ -99,9 +99,14 @@ class CompatibilityChecks extends BaseHandler {
 	}
 
 	private function ini() :array {
-		return [
-			'max_execution_time' => \ini_get( 'max_execution_time' ),
-		];
+		$result = [];
+		foreach ([
+			'error_log',
+			'max_execution_time',
+		] as $ini ) {
+			$result[ $ini ] = \ini_get( $ini );
+		}
+		return $result;
 	}
 
 	private function paths() :array {

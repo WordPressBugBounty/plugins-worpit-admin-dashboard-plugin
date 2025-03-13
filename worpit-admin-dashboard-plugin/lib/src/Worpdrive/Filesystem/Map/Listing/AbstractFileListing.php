@@ -2,9 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing;
 
-use Elliotchance\Iterator\AbstractPagedIterator;
-
-abstract class AbstractFileListing extends AbstractPagedIterator implements FileListing {
+abstract class AbstractFileListing extends \FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\AbstractPagedIterator\AbstractPagedIterator implements FileListing {
 
 	public function add( FileListItem $item ) :void {
 		$this->addRaw( $item->path, $item->hash, $item->hash_alt, $item->mtime, $item->size );

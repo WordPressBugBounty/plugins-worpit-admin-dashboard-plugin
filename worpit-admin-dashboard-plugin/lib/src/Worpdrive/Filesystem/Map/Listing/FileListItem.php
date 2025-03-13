@@ -2,8 +2,6 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing;
 
-use FernleafSystems\Utilities\Data\Adapter\DynPropertiesClass;
-
 /**
  * @property string $path
  * @property string $type
@@ -12,7 +10,7 @@ use FernleafSystems\Utilities\Data\Adapter\DynPropertiesClass;
  * @property int    $mtime
  * @property int    $size
  */
-class FileListItem extends DynPropertiesClass {
+class FileListItem extends \FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\DynProperties\DynPropertiesClass {
 
 	public function __get( string $key ) {
 		$value = parent::__get( $key );

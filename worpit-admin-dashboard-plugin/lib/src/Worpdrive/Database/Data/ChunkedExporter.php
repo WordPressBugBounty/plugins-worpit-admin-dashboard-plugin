@@ -50,7 +50,15 @@ class ChunkedExporter {
 
 		$tableDataExp = new TableDataExport( $this->table, $cfg );
 		$primaryOrderColumn = ( new TableHelper( $this->table ) )->getAppropriatePrimaryKeyForOrdering();
-		$orderBy = empty( $primaryOrderColumn ) ? '' : sprintf( 'ORDER BY `%s` ASC', $primaryOrderColumn );
+		if ( empty( $primaryOrderColumn ) ) {
+			// when the query isn't optimised offset queries are slower, we reduce the page size
+			// to reduce likelihood that the export request exceeds the server request timeout.
+			$orderBy = '';
+			$this->maxPageRows = (int)\max( 1, \round( 2*$this->maxPageRows/3 ) );
+		}
+		else {
+			$orderBy = sprintf( 'ORDER BY `%s` ASC', $primaryOrderColumn );
+		}
 
 		$pageExportComplete = false;
 		$offset = $this->startingOffset;
