@@ -4,6 +4,7 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Data;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Exc\TimeLimitReachedException;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\ZipCreate\Zipper;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Utility\FileNameFor;
 
 class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\BaseDbHandler {
@@ -55,16 +56,14 @@ class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Wor
 	 * @throws \Exception
 	 */
 	private function createZip() :void {
-		$zip = new \ZipArchive();
-		if ( !$zip->open( $this->targetZip(), \ZIPARCHIVE::CREATE ) ) {
-			throw new \Exception( 'Failed to create new Zip file' );
-		}
 		$items = FileSystem::Instance()->enumItemsInDir( $this->dumpDir() );
 		\natsort( $items );
-		\array_map( fn( string $dbFile ) => $zip->addFile( $dbFile, \basename( $dbFile ) ), $items );
-		if ( !$zip->close() ) {
-			throw new \Exception( 'Failed to write the new DB Export ZIP file' );
-		}
+		( new Zipper(
+			$this->dumpDir(),
+			$items,
+			$this->targetZip()
+		) )->create();
+
 		FileSystem::Instance()->delete( $this->dumpDir );
 	}
 

@@ -208,6 +208,10 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			return $this->setErrorResponse( 'Package Name or PIN were empty. Could not Handshake.', 9990 );
 		}
 
+		if ( \str_starts_with( $req->package_name, 'worpdrive_' ) ) {
+			return $this->setErrorResponse( "Package verification isn't supported for worpdrive actions.", 9993 );
+		}
+
 		// We can do this because we've assumed at this point we've validated the communication with iControlWP
 		$verifyURL = sprintf(
 			'%s/%s/%s/%s',

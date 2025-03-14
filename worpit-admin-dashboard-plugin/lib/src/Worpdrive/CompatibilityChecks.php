@@ -22,7 +22,7 @@ class CompatibilityChecks extends BaseHandler {
 				'ip' => $this->ip(),
 			],
 			'wp'       => [
-				'wp_version'   => \get_bloginfo( 'version' ),
+				'wp_version'   => \function_exists( 'wp_get_wp_version' ) ? wp_get_wp_version() : \get_bloginfo( 'version' ),
 				'url_site'     => $WP->getHomeUrl(),
 				'url_wp'       => $WP->getSiteUrl(),
 				'locale'       => get_locale(),
@@ -32,8 +32,11 @@ class CompatibilityChecks extends BaseHandler {
 				'themes'       => $this->themes(),
 			],
 			'versions' => [
-				'php'  => \phpversion(),
-				'icwp' => $con->getVersion(),
+				'php'    => \phpversion(),
+				'driver' => $con->getVersion(),
+				'wp'     => \function_exists( 'wp_get_wp_version' ) ? wp_get_wp_version() : \get_bloginfo( 'version' ),
+				/** To delete: */
+				'icwp'   => $con->getVersion(),
 			],
 			'paths'    => $this->paths(),
 			'ini'      => $this->ini(),
@@ -94,16 +97,29 @@ class CompatibilityChecks extends BaseHandler {
 			'can_memory_limit'  => \function_exists( 'wp_is_ini_value_changeable' ) ? (int)wp_is_ini_value_changeable( 'memory_limit' ) : -1,
 			'can_write_dir_tmp' => (int)$canWrite,
 			'can_zip_archive'   => \class_exists( '\ZipArchive' ),
+			'can_zip_pcl'       => $this->canPclZip(),
 			'can_app_passwords' => \function_exists( 'wp_is_application_passwords_supported' ) ? (int)wp_is_application_passwords_supported() : -1,
 		];
 	}
 
+	private function canPclZip() :bool {
+		if ( !\class_exists( '\PclZip' ) ) {
+			$lib = path_join( ABSPATH, 'wp-admin/includes/class-pclzip.php' );
+			if ( \is_file( $lib ) ) {
+				require_once( $lib );
+			}
+		}
+		return \class_exists( '\PclZip' );
+	}
+
 	private function ini() :array {
 		$result = [];
-		foreach ([
-			'error_log',
-			'max_execution_time',
-		] as $ini ) {
+		foreach (
+			[
+				'error_log',
+				'max_execution_time',
+			] as $ini
+		) {
 			$result[ $ini ] = \ini_get( $ini );
 		}
 		return $result;

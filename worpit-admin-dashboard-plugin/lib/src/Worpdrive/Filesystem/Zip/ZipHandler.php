@@ -3,6 +3,7 @@
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Zip;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\ZipCreate\Zipper;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Utility\FileNameFor;
 
 class ZipHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\BaseFsHandler {
@@ -39,21 +40,11 @@ class ZipHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	 * @throws \Exception
 	 */
 	private function createZip() :void {
-		$zip = new \ZipArchive();
-		if ( !$zip->open( $this->targetZip(), \ZIPARCHIVE::CREATE ) ) {
-			throw new \Exception( 'Failed to create new Zip file' );
-		}
-
-		foreach ( $this->paths as $path ) {
-			$full = path_join( $this->dir, $path );
-			if ( \is_file( $full ) ) {
-				$zip->addFile( $full, \ltrim( $path, '/' ) );
-			}
-		}
-
-		if ( !$zip->close() ) {
-			throw new \Exception( 'Failed to write the new ZIP file' );
-		}
+		( new Zipper(
+			$this->dir,
+			$this->paths,
+			$this->targetZip()
+		) )->create();
 	}
 
 	private function targetZip() :string {

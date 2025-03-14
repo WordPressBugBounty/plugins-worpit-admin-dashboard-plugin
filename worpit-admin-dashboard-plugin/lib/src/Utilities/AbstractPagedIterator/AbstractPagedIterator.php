@@ -25,28 +25,28 @@ abstract class AbstractPagedIterator implements \Countable, \ArrayAccess, \Itera
     protected $useCache = true;
 
     /**
-     * @var integer
+     * @var int
      */
     protected $index = 0;
 
     /**
-     * @return integer
+     * @return int
      */
     abstract public function getPageSize();
 
     /**
-     * @return integer
+     * @return int
      */
     abstract public function getTotalSize();
 
     /**
-     * @param integer $pageNumber
+     * @param int $pageNumber
      * @return array
      */
     abstract public function getPage($pageNumber);
 
     /**
-     * @return integer
+     * @return int
      */
 	#[\ReturnTypeWillChange]
     public function count()
@@ -55,7 +55,7 @@ abstract class AbstractPagedIterator implements \Countable, \ArrayAccess, \Itera
     }
 
     /**
-     * @param integer $offset
+     * @param int $offset
      * @return bool
      */
 	#[\ReturnTypeWillChange]
@@ -65,7 +65,7 @@ abstract class AbstractPagedIterator implements \Countable, \ArrayAccess, \Itera
     }
 
     /**
-     * @param integer $offset
+     * @param int $offset
      * @return mixed
      * @throws \InvalidArgumentException
      * @throws \OutOfBoundsException
@@ -96,7 +96,7 @@ abstract class AbstractPagedIterator implements \Countable, \ArrayAccess, \Itera
     }
 
     /**
-     * @param integer $offset
+     * @param int $offset
      * @param mixed $value
      * @throws \LogicException
      */
@@ -107,7 +107,7 @@ abstract class AbstractPagedIterator implements \Countable, \ArrayAccess, \Itera
     }
 
     /**
-     * @param integer $offset
+     * @param int $offset
      */
 	#[\ReturnTypeWillChange]
     public function offsetUnset($offset)
@@ -121,21 +121,25 @@ abstract class AbstractPagedIterator implements \Countable, \ArrayAccess, \Itera
         return $this->offsetGet($this->index);
     }
 
+	#[\ReturnTypeWillChange]
     public function key()
     {
         return $this->index;
     }
 
+	#[\ReturnTypeWillChange]
     public function next()
     {
         ++$this->index;
     }
 
+	#[\ReturnTypeWillChange]
     public function rewind()
     {
         $this->index = 0;
     }
 
+	#[\ReturnTypeWillChange]
     public function valid()
     {
         return $this->offsetExists($this->index);

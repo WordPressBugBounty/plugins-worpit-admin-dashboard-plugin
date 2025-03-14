@@ -50,13 +50,11 @@ class MapDir {
 		}
 
 		foreach ( $this->enumFiles() as $attr ) {
-			$this->map->addRaw(
-				$normal = $this->normalisePath( $attr[ 'p' ] ),
-				'',
-				empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $attr[ 'p' ] ),
-				$attr[ 'm' ],
-				$attr[ 's' ],
-			);
+			$hash = empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $attr[ 'p' ] );
+			$normal = $this->normalisePath( $attr[ 'p' ] );
+			if ( \is_string( $hash ) ) {
+				$this->map->addRaw( $normal, '', $hash, $attr[ 'm' ], $attr[ 's' ] );
+			}
 			$this->tracker->markFileCompleted( $normal );
 			if ( \time() >= $this->stopAtTS ) {
 				throw new TimeLimitReachedException();
