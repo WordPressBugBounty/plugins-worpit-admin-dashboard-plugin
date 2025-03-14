@@ -7,7 +7,7 @@ Requires at least: 4.9
 Requires PHP: 7.4
 Recommended PHP: 7.4
 Tested up to: 6.7
-Stable tag: 5.2.4
+Stable tag: 5.2.5
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 

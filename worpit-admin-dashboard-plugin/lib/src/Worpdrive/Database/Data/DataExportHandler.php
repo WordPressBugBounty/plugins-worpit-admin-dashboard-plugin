@@ -60,10 +60,9 @@ class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Wor
 		\natsort( $items );
 		( new Zipper(
 			$this->dumpDir(),
-			$items,
+			\array_map( '\basename', $items ),
 			$this->targetZip()
 		) )->create();
-
 		FileSystem::Instance()->delete( $this->dumpDir );
 	}
 
