@@ -35,7 +35,9 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 			$this->mapVO->olderThanTS
 		);
 
-		$map = new Listing\SqliteFileListing( path_join( $this->workingDir(), $this->dbFile() ) );
+		$map = $this->useSqlite() ?
+			new Listing\SqliteFileListing( path_join( $this->workingDir(), $this->dbFile() ) )
+			: new Listing\FlatFileListing( path_join( $this->workingDir(), $this->dbFile() ) );
 		$track = $this->loadProgress();
 		$mapper = new MapDir( $map, $track, $this->filter, $this->mapVO->dir, $this->mapVO->hashAlgo, $this->stopAtTS );
 		try {
@@ -49,9 +51,10 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 			FileSystem::Instance()->putFileContents(
 				$this->pathToProgress(),
 				wp_json_encode( [
-					'completed_dirs'       => $track->completed(),
-					'most_recent_file'     => $track->getMostRecentFile(),
-					'total_completed_dirs' => $track->total(),
+					'completed_dirs'        => $track->completed(),
+					'most_recent_file'      => $track->getMostRecentFile(),
+					'total_completed_dirs'  => $track->totalDirsComplete(),
+					'total_completed_files' => $track->totalFilesComplete(),
 				] )
 			);
 		}
@@ -63,8 +66,8 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 		return [
 			'href'                 => $completed ? $this->mapURL() : '',
 			'completed_dirs'       => \count( $track->completed() ),
-			'total_completed_dirs' => $track->total(),
-			'map_count'            => $map->count(),
+			'total_completed_dirs' => $track->totalDirsComplete(),
+			'map_count'            => $track->totalFilesComplete(),
 			/*
 			'dirs_this_round'      => $track->getDirsThisRound(),
 			'latest_file'          => $track->getMostRecentFile(),
@@ -73,7 +76,11 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	}
 
 	protected function dbFile() :string {
-		return sprintf( '%s.sqlite', FileNameFor::For( $this->mapType().'_map' ) );
+		return FileNameFor::For( $this->mapType().'_map_db' );
+	}
+
+	protected function useSqlite() :bool {
+		return \in_array( 'sqlite3', \get_loaded_extensions() );
 	}
 
 	protected function mapType() :string {
@@ -90,21 +97,22 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	private function loadProgress() :MapProgressTracker {
 		$dirsCompleted = [];
 		$mostRecentFile = null;
-		$total = 0;
+		$totalDirs = $totalFiles = 0;
 		if ( \is_file( $this->pathToProgress() ) ) {
 			$raw = FileSystem::Instance()->getContents( $this->pathToProgress() );
 			if ( !empty( $raw ) ) {
 				$rawProgress = \json_decode( $raw, true );
 				if ( !empty( $rawProgress ) && \is_array( $rawProgress ) ) {
 					[
-						'completed_dirs'       => $dirsCompleted,
-						'most_recent_file'     => $mostRecentFile,
-						'total_completed_dirs' => $total,
+						'completed_dirs'        => $dirsCompleted,
+						'most_recent_file'      => $mostRecentFile,
+						'total_completed_dirs'  => $totalDirs,
+						'total_completed_files' => $totalFiles,
 					] = $rawProgress;
 				}
 			}
 		}
-		return new MapProgressTracker( $dirsCompleted, $mostRecentFile, $total );
+		return new MapProgressTracker( $dirsCompleted, $mostRecentFile, $totalDirs, $totalFiles );
 	}
 
 	private function mapURL() :string {

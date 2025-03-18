@@ -3,11 +3,11 @@
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Exc\TimeLimitReachedException;
-use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing\SqliteFileListing;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing\AbstractFileListing;
 
 class MapDir {
 
-	private SqliteFileListing $map;
+	private AbstractFileListing $map;
 
 	private MapProgressTracker $tracker;
 
@@ -20,7 +20,7 @@ class MapDir {
 	private int $stopAtTS;
 
 	public function __construct(
-		SqliteFileListing $map,
+		AbstractFileListing $map,
 		MapProgressTracker $tracker,
 		FileFilter $filter,
 		string $dirToMap,
@@ -129,6 +129,6 @@ class MapDir {
 	}
 
 	private function normalisePath( string $path ) :string {
-		return wp_normalize_path( \ltrim( \preg_replace( '#^'.\preg_quote( ABSPATH, '#' ).'#', '', $path, 1 ), '/' ) );
+		return \ltrim( wp_normalize_path( \preg_replace( '#^'.\preg_quote( ABSPATH, '#' ).'#', '', $path, 1 ) ), '/' );
 	}
 }

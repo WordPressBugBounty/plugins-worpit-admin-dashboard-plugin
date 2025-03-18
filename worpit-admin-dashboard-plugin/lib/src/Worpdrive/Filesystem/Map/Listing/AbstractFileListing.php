@@ -2,31 +2,17 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing;
 
-abstract class AbstractFileListing extends \FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\AbstractPagedIterator\AbstractPagedIterator implements FileListing {
+abstract class AbstractFileListing implements FileListing {
 
-	public function add( FileListItem $item ) :void {
-		$this->addRaw( $item->path, $item->hash, $item->hash_alt, $item->mtime, $item->size );
+	protected string $listingPath;
+
+	public function __construct( string $listingPath ) {
+		$this->listingPath = $listingPath;
 	}
 
-	public function startLargeListing() :void {
-	}
+	abstract public function startLargeListing() :void;
 
-	public function finishLargeListing( bool $successfulCreation ) :void {
-	}
-
-	public function current() :FileListItem {
-		return parent::current();
-	}
-
-	abstract public function getNewestItem() :?FileListItem;
-
-	public function getTotalSize() :int {
-		return $this->total();
-	}
-
-	public function createClone( bool $transientClone = true ) :AbstractFileListing {
-		return clone $this;
-	}
+	abstract public function finishLargeListing( bool $successfulCreation ) :void;
 
 	protected function normalisePath( string $path ) :string {
 		return \ltrim( $path, '/' );

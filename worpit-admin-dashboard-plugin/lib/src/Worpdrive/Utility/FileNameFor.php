@@ -9,12 +9,12 @@ class FileNameFor {
 			case 'hashless_map_progress':
 			case 'recent_map_progress':
 			case 'full_map_progress':
-				$name =	\sprintf( '%s.json', $category );
+				$name = \sprintf( '%s.json', $category );
 				break;
 			case 'hashless_map_db':
 			case 'recent_map_db':
 			case 'full_map_db':
-				$name =	\sprintf( '%s.sqlite', $category );
+				$name = \sprintf( '%s.%s', $category, \in_array( 'sqlite3', \get_loaded_extensions() ) ? 'sqlite3' : 'flat' );
 				break;
 			case 'files_zip':
 				$name = 'zipped_files.archive';

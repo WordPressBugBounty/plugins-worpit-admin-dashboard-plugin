@@ -10,6 +10,7 @@ class EnumTablePrimaryKeys {
 			$this->wordpressMS(),
 			$this->woocommerce(),
 			$this->gravityForms(),
+			$this->prettyLinks(),
 			$this->edd(),
 			$this->searchwp(),
 			$this->wpml(),
@@ -51,6 +52,15 @@ class EnumTablePrimaryKeys {
 			'gf_form'              => 'id',
 			'gf_form_revisions'    => 'id',
 			'gf_form_view'         => 'id',
+		];
+	}
+
+	private function prettyLinks() :array {
+		return [
+			'prli_clicks'     => 'id',
+			'prli_groups'     => 'id',
+			'prli_link_metas' => 'id',
+			'prli_links'      => 'id',
 		];
 	}
 

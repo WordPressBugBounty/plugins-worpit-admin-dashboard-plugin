@@ -23,8 +23,11 @@ class CompatibilityChecks extends BaseHandler {
 			],
 			'wp'       => [
 				'wp_version'   => \function_exists( 'wp_get_wp_version' ) ? wp_get_wp_version() : \get_bloginfo( 'version' ),
+				'url_home'     => $WP->getHomeUrl(),
+				/** TODO: Delete url_site */
 				'url_site'     => $WP->getHomeUrl(),
 				'url_wp'       => $WP->getSiteUrl(),
+				'url_content'  => content_url(),
 				'locale'       => get_locale(),
 				'wplang'       => \defined( 'WPLANG' ) ? WPLANG : '',
 				'is_multisite' => is_multisite(),
@@ -133,6 +136,7 @@ class CompatibilityChecks extends BaseHandler {
 			'dir_content'     => (string)$wpContent,
 			'dir_plugins'     => \defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : null,
 			'dir_includes'    => path_join( $wpContent, \defined( 'WPINC' ) ? WPINC : '' ),
+			'url_content'     => \defined( 'WP_CONTENT_URL' ) ? WP_CONTENT_URL : null,
 			'WPINC'           => \defined( 'WPINC' ) ? WPINC : null,
 			'icwp_plugin_dir' => self::con()->getRootDir(),
 		];

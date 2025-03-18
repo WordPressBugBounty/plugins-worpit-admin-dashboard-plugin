@@ -7,7 +7,7 @@ Requires at least: 4.9
 Requires PHP: 7.4
 Recommended PHP: 7.4
 Tested up to: 6.7
-Stable tag: 5.2.5
+Stable tag: 5.3.2
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -116,6 +116,12 @@ No. WorpDrive is available for a small monthly fee.
 4. Get a view of all your plugins and how each one is distributed across each site.
 
 == Changelog ==
+
+= 5.3 Series =
+*Released: March 2025*
+
+* **(.2)  IMPROVED**:	Add primary key db indicators for Pretty Links DB.
+* **(.0)  IMPROVED**:	Expand support for sites that don't have PHP SQLite Extension enabled.
 
 = 5.2 Series =
 *Released: March 2025*
