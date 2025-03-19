@@ -4,6 +4,7 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Exc\TimeLimitReachedException;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing\AbstractFileListing;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Utility\FileNameFor;
 
 class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\BaseFsHandler {
@@ -11,6 +12,10 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	protected MapVO $mapVO;
 
 	protected FileFilter $filter;
+
+	private AbstractFileListing $map;
+
+	private bool $wpCfgRemapped = false;
 
 	/**
 	 * @throws \Exception
@@ -35,14 +40,16 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 			$this->mapVO->olderThanTS
 		);
 
-		$map = $this->useSqlite() ?
-			new Listing\SqliteFileListing( path_join( $this->workingDir(), $this->dbFile() ) )
-			: new Listing\FlatFileListing( path_join( $this->workingDir(), $this->dbFile() ) );
+		$map = $this->map();
 		$track = $this->loadProgress();
 		$mapper = new MapDir( $map, $track, $this->filter, $this->mapVO->dir, $this->mapVO->hashAlgo, $this->stopAtTS );
 		try {
 			$map->startLargeListing();
+
 			$mapper->run();
+			// WP Config mapping is done only after completion of the full map, since we don't want it duplicated
+			$this->mapForWpConfig();
+
 			$map->finishLargeListing( true );
 			$completed = true;
 		}
@@ -68,11 +75,38 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 			'completed_dirs'       => \count( $track->completed() ),
 			'total_completed_dirs' => $track->totalDirsComplete(),
 			'map_count'            => $track->totalFilesComplete(),
+			'latest_file'          => $track->getMostRecentFile(),
+			'wpcfg_remapped'       => (int)$this->wpCfgRemapped,
 			/*
 			'dirs_this_round'      => $track->getDirsThisRound(),
 			'latest_file'          => $track->getMostRecentFile(),
 			*/
 		];
+	}
+
+	protected function map() :AbstractFileListing {
+		return $this->map ??= $this->useSqlite() ?
+			new Listing\SqliteFileListing( path_join( $this->workingDir(), $this->dbFile() ) )
+			: new Listing\FlatFileListing( path_join( $this->workingDir(), $this->dbFile() ) );
+	}
+
+	protected function mapForWpConfig() :void {
+		$normalAbs = wp_normalize_path( ABSPATH );
+		$stdPath = path_join( $normalAbs, 'wp-config.php' );
+		if ( !\file_exists( $stdPath ) && !empty( \dirname( $normalAbs ) ) ) {
+			$levelUpPath = path_join( \dirname( $normalAbs ), 'wp-config.php' );
+			if ( \is_readable( $levelUpPath ) ) {
+				$FS = FileSystem::Instance()->fs();
+				$this->map()->addRaw(
+					'wp-config.php',
+					'',
+					empty( $this->mapVO->hashAlgo ) ? '' : (string)\hash_file( $this->mapVO->hashAlgo, $levelUpPath ),
+					(int)$FS->mtime( $levelUpPath ),
+					(int)$FS->size( $levelUpPath )
+				);
+				$this->wpCfgRemapped = true;
+			}
+		}
 	}
 
 	protected function dbFile() :string {

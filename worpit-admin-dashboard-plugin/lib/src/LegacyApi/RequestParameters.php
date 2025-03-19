@@ -20,6 +20,8 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\StdClassAdapter;
  * @property bool   $worpit_api    - deprecated
  * @property bool   $worpit_link
  * @property string $package_name
+ * @property string $hmac_hash
+ * @property string $hmac_algo
  * @property string $verification_code
  * @property string $opensig
  * @property int    $verify_ts

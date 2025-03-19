@@ -42,12 +42,29 @@ class Zipper {
 	 */
 	private function pclZip() :void {
 		$pclZip = new \PclZip( $this->targetZip );
-		$files = \array_filter(
-			\array_map( fn( $path ) => path_join( $this->baseDir, $path ), $this->filePaths ),
-			fn( $path ) => \is_file( $path )
-		);
-		if ( empty( $pclZip->create( $files, PCLZIP_OPT_REMOVE_PATH, trailingslashit( $this->baseDir ) ) ) ) {
+
+		$actualWpCfg = null;
+		if ( !empty( \dirname( $this->baseDir ) ) ) {
+			foreach ( $this->filePaths as $idx => $file ) {
+				if ( $file === 'wp-config.php' && !\file_exists( path_join( $this->baseDir, $file ) ) ) {
+					if ( \file_exists( path_join( \dirname( $this->baseDir ), 'wp-config.php' ) ) ) {
+						$actualWpCfg = path_join( \dirname( $this->baseDir ), 'wp-config.php' );
+						unset( $this->filePaths[ $idx ] );
+						break;
+					}
+				}
+			}
+		}
+
+		$full = \array_filter( \array_map( fn( $path ) => path_join( $this->baseDir, $path ), $this->filePaths ), '\is_file' );
+
+		if ( empty( $pclZip->create( $full, PCLZIP_OPT_REMOVE_PATH, trailingslashit( $this->baseDir ) ) ) ) {
 			throw new \Exception( 'Failed to create new Zip file with PclZip: '.$pclZip->errorInfo( true ) );
+		}
+
+		if ( !empty( $actualWpCfg ) ) {
+			$pclZip = new \PclZip( $this->targetZip );
+			$pclZip->add( [ $actualWpCfg ], '', \dirname( $actualWpCfg ) );
 		}
 	}
 
@@ -63,6 +80,12 @@ class Zipper {
 			$full = path_join( $this->baseDir, $path );
 			if ( \is_file( $full ) ) {
 				$zip->addFile( $full, \ltrim( $path, '/' ) );
+			}
+			elseif ( $path === 'wp-config.php' && !empty( \dirname( $this->baseDir ) ) ) {
+				$maybeWpCfg = path_join( \dirname( $this->baseDir ), 'wp-config.php' );
+				if ( \file_exists( $maybeWpCfg ) ) {
+					$zip->addFile( $maybeWpCfg, 'wp-config.php' );
+				}
 			}
 		}
 		if ( !$zip->close() ) {

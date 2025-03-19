@@ -195,11 +195,19 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			$response->handshake = 'unsupported';
 			return $response;
 		}
-		$response->handshake = 'failed';
 
+		$response->handshake = 'failed';
 		try {
 			$this->publicKeyVerify();
 			return $this->setSuccessResponse();
+		}
+		catch ( \Exception $e ) {
+		}
+
+		try {
+			if ( $this->verifyHmac() ) {
+				return $this->setSuccessResponse();
+			}
 		}
 		catch ( \Exception $e ) {
 		}
@@ -244,16 +252,53 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 	/**
 	 * @throws \Exception
 	 */
+	protected function verifyHmac() :bool {
+		$req = $this->getRequestParams();
+
+		if ( empty( $req->verify_ts ) ) {
+			throw new \Exception( 'Verification window check required, but verify_ts is missing.' );
+		}
+		if ( \time() - $req->verify_ts > 30 ) {
+			throw new \Exception( 'Verification window has closed.' );
+		}
+
+		$verified = false;
+		$hmac = $req->hmac_hash;
+		if ( !empty( $req->pin ) && !empty( $hmac ) && \hash_equals( $this->mod->getPluginPin(), \hash( 'md5', $req->pin ) ) ) {
+			$hashEquals = \hash_equals(
+				$hmac,
+				\hash_hmac(
+					$req->hmac_algo,
+					\implode( '', [
+						$req->action,
+						$req->verification_code,
+						$req->verify_ts,
+					] ),
+					$req->pin
+				)
+			);
+			if ( !$hashEquals ) {
+				throw new \Exception( 'HMAC verification failed' );
+			}
+			$this->getStandardResponse()->handshake = 'hmac';
+			$verified = true;
+		}
+		return $verified;
+	}
+
+	/**
+	 * @throws \Exception
+	 */
 	protected function publicKeyVerify() :void {
 		$req = $this->getRequestParams();
 		$publicKey = $this->mod->getIcwpPublicKey();
-		if ( empty( $publicKey ) || empty( $req->verification_code ) || empty( $req->opensig ) /* TODO: || empty( $req->verification_ts ) */ ) {
+		if ( empty( $publicKey ) || empty( $req->verification_code ) || empty( $req->opensig ) ) {
 			throw new \Exception( 'Necessary components for public key-based verification are missing' );
 		}
 
 		if ( $this->isVerificationWindowRequired() ) {
 			if ( empty( $req->verify_ts ) ) {
-				throw new \Exception( 'Verification window check required, but verification_ts is missing.' );
+				throw new \Exception( 'Verification window check required, but verify_ts is missing.' );
 			}
 			if ( \time() - $req->verify_ts > 30 ) {
 				throw new \Exception( 'Verification signature window has closed.' );
