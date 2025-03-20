@@ -2,6 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Exc\TimeLimitReachedException;
 use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing\AbstractFileListing;
 
@@ -49,11 +50,14 @@ class MapDir {
 			}
 		}
 
+		$FS = FileSystem::Instance()->fs();
 		foreach ( $this->enumFiles() as $attr ) {
-			$hash = empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $attr[ 'p' ] );
 			$normal = $this->normalisePath( $attr[ 'p' ] );
-			if ( \is_string( $hash ) ) {
-				$this->map->addRaw( $normal, '', $hash, $attr[ 'm' ], $attr[ 's' ] );
+			if ( $FS->is_readable( $attr[ 'p' ] ) ) {
+				$hash = empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $attr[ 'p' ] );
+				if ( \is_string( $hash ) ) {
+					$this->map->addRaw( $normal, '', $hash, $attr[ 'm' ], $attr[ 's' ] );
+				}
 			}
 			$this->tracker->markFileCompleted( $normal );
 			if ( \time() >= $this->stopAtTS ) {
@@ -113,7 +117,6 @@ class MapDir {
 					 && $this->filter->isFileSizeAllowed( $item->getSize() )
 					 && !$this->filter->isExcluded( $normalisedPath )
 				) {
-
 					$files[ $normalisedPath ] = [
 						'p' => $item->getPathname(),
 						'm' => (int)$item->getMTime(),

@@ -34,6 +34,10 @@ class FileSystem {
 		return \is_readable( $dir ) && \count( \scandir( $dir ) ) == 2;
 	}
 
+	public function isFile( string $pathname ) :bool {
+		return $this->fs() && $this->fs()->is_file( $pathname );
+	}
+
 	public function mkdir( string $pathname ) :bool {
 		return wp_mkdir_p( $pathname );
 	}

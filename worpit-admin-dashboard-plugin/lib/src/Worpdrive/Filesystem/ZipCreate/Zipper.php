@@ -2,6 +2,8 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\ZipCreate;
 
+use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\FileSystem;
+
 class Zipper {
 
 	private string $baseDir;
@@ -20,20 +22,21 @@ class Zipper {
 	 * @throws \Exception
 	 */
 	public function create() {
-		if ( \class_exists( '\ZipArchive' ) ) {
+		try {
+			if ( !\class_exists( '\ZipArchive' ) ) {
+				throw new \Exception( 'ZipArchive not supported, falling back to PclZip' );
+			}
 			$this->zipArchive();
 		}
-		else {
+		catch ( \Exception $e ) {
 			$lib = path_join( ABSPATH, 'wp-admin/includes/class-pclzip.php' );
 			if ( \is_file( $lib ) ) {
 				require_once( $lib );
 			}
-			if ( \class_exists( '\PclZip' ) ) {
-				$this->pclZip();
+			if ( !\class_exists( '\PclZip' ) ) {
+				throw new \Exception( sprintf( '"%s" is not available after previous \ZipArchive error "%s".', '\ZipArchive', $e->getMessage() ) );
 			}
-			else {
-				throw new \Exception( sprintf( 'Neither "%s" nor "%s" classes are available.', '\ZipArchive', 'PclZip' ) );
-			}
+			$this->pclZip();
 		}
 	}
 
@@ -41,6 +44,8 @@ class Zipper {
 	 * @throws \Exception
 	 */
 	private function pclZip() :void {
+		$this->preCreate();
+
 		$pclZip = new \PclZip( $this->targetZip );
 
 		$actualWpCfg = null;
@@ -72,9 +77,11 @@ class Zipper {
 	 * @throws \Exception
 	 */
 	private function zipArchive() :void {
+		$this->preCreate();
+
 		$zip = new \ZipArchive();
 		if ( !$zip->open( $this->targetZip, \ZIPARCHIVE::CREATE ) ) {
-			throw new \Exception( 'Failed to create new Zip file' );
+			throw new \Exception( sprintf( 'Failed to create new Zip file: %s', $zip->getStatusString() ) );
 		}
 		foreach ( $this->filePaths as $path ) {
 			$full = path_join( $this->baseDir, $path );
@@ -89,7 +96,13 @@ class Zipper {
 			}
 		}
 		if ( !$zip->close() ) {
-			throw new \Exception( 'Failed to create the new ZIP file' );
+			throw new \Exception( sprintf( 'Failed to write the new ZIP file: %s', $zip->getStatusString() ) );
+		}
+	}
+
+	private function preCreate() :void {
+		if ( FileSystem::Instance()->isFile( $this->targetZip ) ) {
+			FileSystem::Instance()->delete( $this->targetZip );
 		}
 	}
 }
