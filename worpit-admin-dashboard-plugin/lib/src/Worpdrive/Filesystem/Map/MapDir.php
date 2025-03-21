@@ -8,6 +8,8 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\Listing
 
 class MapDir {
 
+	private static ?string $rootDir = null;
+
 	private AbstractFileListing $map;
 
 	private MapProgressTracker $tracker;
@@ -26,7 +28,8 @@ class MapDir {
 		FileFilter $filter,
 		string $dirToMap,
 		string $hashAlgo,
-		int $stopAtTS
+		int $stopAtTS,
+		?string $rootDir = null
 	) {
 		$this->map = $map;
 		$this->tracker = $tracker;
@@ -34,6 +37,10 @@ class MapDir {
 		$this->dir = $dirToMap;
 		$this->hashAlgo = $hashAlgo;
 		$this->stopAtTS = $stopAtTS;
+
+		if ( $rootDir !== null ) {
+			self::$rootDir = $this->dir;
+		}
 	}
 
 	/**
@@ -132,6 +139,6 @@ class MapDir {
 	}
 
 	private function normalisePath( string $path ) :string {
-		return \ltrim( wp_normalize_path( \preg_replace( '#^'.\preg_quote( ABSPATH, '#' ).'#', '', $path, 1 ) ), '/' );
+		return \ltrim( wp_normalize_path( \preg_replace( '#^'.\preg_quote( self::$rootDir, '#' ).'#', '', $path, 1 ) ), '/' );
 	}
 }

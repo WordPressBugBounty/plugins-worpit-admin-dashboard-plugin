@@ -4,8 +4,6 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map;
 
 class FileFilter {
 
-	private array $abs;
-
 	private array $contains;
 
 	private array $regEx;
@@ -16,8 +14,7 @@ class FileFilter {
 
 	private int $maxFileSizeBytes;
 
-	public function __construct( array $abs, array $contains, array $regEx, int $maxFileSizeMB, int $newerThanTS = 0, int $olderThanTS = 0 ) {
-		$this->abs = $abs;
+	public function __construct( array $contains, array $regEx, int $maxFileSizeMB, int $newerThanTS = 0, int $olderThanTS = 0 ) {
 		$this->contains = $contains;
 		$this->regEx = $regEx;
 		$this->maxFileSizeBytes = $maxFileSizeMB*1024*1024;
@@ -36,22 +33,17 @@ class FileFilter {
 
 	public function isExcluded( string $path ) :bool {
 		$excluded = false;
-		foreach ( $this->abs as $a ) {
-			if ( \str_starts_with( $path, $a ) ) {
+		foreach ( $this->contains as $c ) {
+			if ( \str_contains( $path, $c ) ) {
 				$excluded = true;
-			}
-		}
-		if ( !$excluded ) {
-			foreach ( $this->contains as $c ) {
-				if ( \str_contains( $path, $c ) ) {
-					$excluded = true;
-				}
+				break;
 			}
 		}
 		if ( !$excluded ) {
 			foreach ( $this->regEx as $r ) {
 				if ( \preg_match( $r, $path ) ) {
 					$excluded = true;
+					break;
 				}
 			}
 		}

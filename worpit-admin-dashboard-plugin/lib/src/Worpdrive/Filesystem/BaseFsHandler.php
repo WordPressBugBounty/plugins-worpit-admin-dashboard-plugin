@@ -19,7 +19,8 @@ abstract class BaseFsHandler extends \FernleafSystems\Wordpress\Plugin\iControlW
 	 * @throws \Exception
 	 */
 	protected function validate() :void {
-		if ( $this->dir !== trailingslashit( wp_normalize_path( ABSPATH ) ) ) {
+		$normAbs = wp_normalize_path( ABSPATH );
+		if ( $this->dir !== trailingslashit( $normAbs ) && $this->dir !== trailingslashit( \dirname( $normAbs ) ) ) {
 			throw new \Exception( sprintf( "We don't currently support irregular paths (%s / %s)", $this->dir, trailingslashit( ABSPATH ) ) );
 		}
 	}

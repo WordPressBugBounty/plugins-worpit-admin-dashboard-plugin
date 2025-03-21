@@ -32,7 +32,6 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 		$completed = false;
 
 		$this->filter = new FileFilter(
-			\array_map( fn( $ex ) => path_join( ABSPATH, \base64_decode( $ex ) ), $this->mapVO->exclusions[ 'abs' ] ?? [] ),
 			\array_map( '\base64_decode', $this->mapVO->exclusions[ 'contains' ] ?? [] ),
 			\array_map( '\base64_decode', $this->mapVO->exclusions[ 'regex' ] ?? [] ),
 			$this->mapVO->maxFileSize,
@@ -42,7 +41,7 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 
 		$map = $this->map();
 		$track = $this->loadProgress();
-		$mapper = new MapDir( $map, $track, $this->filter, $this->mapVO->dir, $this->mapVO->hashAlgo, $this->stopAtTS );
+		$mapper = new MapDir( $map, $track, $this->filter, $this->mapVO->dir, $this->mapVO->hashAlgo, $this->stopAtTS, $this->mapVO->dir );
 		try {
 			$map->startLargeListing();
 
@@ -91,9 +90,25 @@ class MapHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\
 	}
 
 	protected function mapForWpConfig() :void {
+		$possibleDirs = \array_unique( \array_map(
+			fn( $path ) => trailingslashit( wp_normalize_path( $path ) ),
+			[
+				ABSPATH,
+				$this->mapVO->dir,
+			]
+		) );
+
+		$stdPathFound = null;
+		foreach ( $possibleDirs as $possibleDir ) {
+			$maybeStdPath = path_join( $possibleDir, 'wp-config.php' );
+			if ( \file_exists( $maybeStdPath ) ) {
+				$stdPathFound = $maybeStdPath;
+				break;
+			}
+		}
+
 		$normalAbs = wp_normalize_path( ABSPATH );
-		$stdPath = path_join( $normalAbs, 'wp-config.php' );
-		if ( !\file_exists( $stdPath ) && !empty( \dirname( $normalAbs ) ) ) {
+		if ( empty( $stdPathFound ) && !empty( \dirname( $normalAbs ) ) ) {
 			$levelUpPath = path_join( \dirname( $normalAbs ), 'wp-config.php' );
 			if ( \is_readable( $levelUpPath ) ) {
 				$FS = FileSystem::Instance()->fs();
