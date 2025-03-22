@@ -29,13 +29,13 @@ class TableEnum {
 						}
 					}
 				}
-				if ( !$excluded ) {
+				if ( !$excluded && !empty( $s[ 'Engine' ] ) ) {
 					$tables[ $s[ 'Name' ] ] = [
 						'name'               => $s[ 'Name' ],
-						'rows'               => $DB->getVar( sprintf( "SELECT COUNT(*) AS `total_records` FROM `%s`", $s[ 'Name' ] ) ),
-						'average_row_length' => $s[ 'Avg_row_length' ] ?? null,
-						'bytes'              => $s[ 'Data_length' ],
-						'size'               => \round( ( $s[ 'Data_length' ] + $s[ 'Index_length' ] )/1024/1024, 2 ),
+						'rows'               => $s[ 'Rows' ] ?? $DB->getVar( sprintf( "SELECT COUNT(*) AS `total_records` FROM `%s`", $s[ 'Name' ] ) ),
+						'average_row_length' => $s[ 'Avg_row_length' ] ?? 0,
+						'bytes'              => $s[ 'Data_length' ] ?? 0,
+						'size'               => \round( ( ( $s[ 'Data_length' ] ?? 0 ) + ( $s[ 'Index_length' ] ?? 0 ) )/1024/1024, 2 ),
 						'engine'             => \strtolower( $s[ 'Engine' ] )
 					];
 				}

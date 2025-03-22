@@ -19,7 +19,8 @@ class CompatibilityChecks extends BaseHandler {
 		$WP = \ICWP_APP_WpFunctions::GetInstance();
 		return [
 			'server'   => [
-				'ip' => $this->ip(),
+				'ip'              => $this->ip(),
+				'disk_free_space' => \function_exists( '\disk_free_space' ) ? \disk_free_space( ABSPATH ) : -1,
 			],
 			'wp'       => [
 				'wp_version'   => \function_exists( 'wp_get_wp_version' ) ? wp_get_wp_version() : \get_bloginfo( 'version' ),

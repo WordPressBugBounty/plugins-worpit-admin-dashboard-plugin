@@ -16,10 +16,10 @@ class SchemaHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdri
 	 * @throws \Exception
 	 */
 	public function run() :array {
-		$this->tables = ( new TableEnum() )->enum();
 		return [
-			'tables'      => $this->tables,
+			'tables'      => $this->tables(),
 			'schema_dump' => $this->dumpSchema(),
+			'db_prefix'   => \ICWP_APP_WpDb::GetInstance()->getPrefix(),
 		];
 	}
 
@@ -28,7 +28,14 @@ class SchemaHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdri
 	 */
 	private function dumpSchema() :array {
 		$cfg = ( new Config() )->applyDumpSchemaOptions();
-		$cfg->set( 'tables', \array_keys( $this->tables ) );
+		$cfg->set( 'tables', \array_keys( $this->tables() ) );
 		return ( new Exporter( $cfg ) )->export();
+	}
+
+	/**
+	 * @throws \Exception
+	 */
+	private function tables() :array {
+		return $this->tables ??= ( new TableEnum() )->enum();
 	}
 }
