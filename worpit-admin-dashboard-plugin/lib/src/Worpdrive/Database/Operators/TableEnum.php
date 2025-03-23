@@ -32,7 +32,7 @@ class TableEnum {
 				if ( !$excluded && !empty( $s[ 'Engine' ] ) ) {
 					$tables[ $s[ 'Name' ] ] = [
 						'name'               => $s[ 'Name' ],
-						'rows'               => $s[ 'Rows' ] ?? $DB->getVar( sprintf( "SELECT COUNT(*) AS `total_records` FROM `%s`", $s[ 'Name' ] ) ),
+						'rows'               => empty( $s[ 'Rows' ] ) ? (int)$DB->getVar( sprintf( "SELECT COUNT(*) AS `total_records` FROM `%s`", $s[ 'Name' ] ) ) : $s[ 'Rows' ],
 						'average_row_length' => $s[ 'Avg_row_length' ] ?? 0,
 						'bytes'              => $s[ 'Data_length' ] ?? 0,
 						'size'               => \round( ( ( $s[ 'Data_length' ] ?? 0 ) + ( $s[ 'Index_length' ] ?? 0 ) )/1024/1024, 2 ),

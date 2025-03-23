@@ -7,7 +7,7 @@ Requires at least: 4.9
 Requires PHP: 7.4
 Recommended PHP: 7.4
 Tested up to: 6.7
-Stable tag: 5.4.1
+Stable tag: 5.4.2
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -120,13 +120,13 @@ No. WorpDrive is available for a small monthly fee.
 = 5.4 Series =
 *Released: 21st March 2025*
 
+* **(.2)  IMPROVED**:	Force a manual check on DB table rows count when status reports 0 (status is sometimes incorrect).
 * **(.1)  IMPROVED**:	Don't trigger an error when assessing DB Views.
 * **(.0)  ADDED**:		Extend rapid backups support for sites with split WordPress Home & WP URLs.
 
 = 5.3 Series =
 *Released: March 2025*
 
-* **(.7)  ADDED**:		Extend rapid backups support for sites with split WordPress Home & WP URLs.
 * **(.6)  IMPROVED**:	File backups now attempt to only copy files that are actually "readable".
 * **(.4)  ADDED**:		Provide alternative to public/private key signature verification for sites that don't properly support it.
 * **(.3)  IMPROVED**:	Better handling for sites that store their `wp-config.php` files outside their WordPress directory.
