@@ -1,6 +1,7 @@
 <?php
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
+use FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\Time\WorldTimeApi;
 
 abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp {
 
@@ -255,12 +256,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 	protected function verifyHmac() :bool {
 		$req = $this->getRequestParams();
 
-		if ( empty( $req->verify_ts ) ) {
-			throw new \Exception( 'Verification window check required, but verify_ts is missing.' );
-		}
-		if ( \time() - $req->verify_ts > 30 ) {
-			throw new \Exception( 'Verification window has closed.' );
-		}
+		$this->verificationWindowCheck();
 
 		$verified = false;
 		$hmac = $req->hmac_hash;
@@ -297,12 +293,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 		}
 
 		if ( $this->isVerificationWindowRequired() ) {
-			if ( empty( $req->verify_ts ) ) {
-				throw new \Exception( 'Verification window check required, but verify_ts is missing.' );
-			}
-			if ( \time() - $req->verify_ts > 30 ) {
-				throw new \Exception( 'Verification signature window has closed.' );
-			}
+			$this->verificationWindowCheck();
 		}
 
 		if ( !$this->loadEncryptProcessor()->getSupportsOpenSslSign() ) {
@@ -477,6 +468,20 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 
 	protected function isLoggedInUser() :bool {
 		return !empty( $this->getLoggedInUser() );
+	}
+
+	/**
+	 * @throws Exception
+	 */
+	protected function verificationWindowCheck() :bool {
+		$req = $this->getRequestParams();
+		if ( empty( $req->verify_ts ) ) {
+			throw new \Exception( 'Verification window check required, but verify_ts is missing.' );
+		}
+		if ( \time() - $req->verify_ts > 30 && ( ( new WorldTimeApi() )->current() - $req->verify_ts > 30 ) ) {
+			throw new \Exception( 'Verification window has closed.' );
+		}
+		return true;
 	}
 
 	/**
