@@ -80,8 +80,12 @@ class ChunkedExporter {
 			else {
 				// if we can order by primary key, then we don't need offset, we can use the final row of the previous results...
 				if ( !empty( $tableDataExp->getMostRecentRow() ) ) {
-					$offset = (int)( $tableDataExp->getMostRecentRow()[ $primaryOrderColumn ] );
+					$offset = (int)\max(
+						$offset + 1,
+						$tableDataExp->getMostRecentRow()[ $primaryOrderColumn ]
+					);
 				}
+
 				$tableDataExp->buildDataRows(
 					[
 						sprintf( '`%s` %s %s', $primaryOrderColumn, $offset == 0 ? '>=' : '>', $offset )
