@@ -13,6 +13,8 @@ class DataExportHandler extends \FernleafSystems\Wordpress\Plugin\iControlWP\Wor
 
 	private ?string $dumpDir = null;
 
+	private ?string $targetZIP = null;
+
 	/**
 	 * @throws \Exception
 	 */

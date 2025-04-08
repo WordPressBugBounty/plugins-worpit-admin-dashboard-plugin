@@ -70,8 +70,8 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 	 * @return LegacyApi\ApiResponse
 	 */
 	protected function preApiCheck() {
-		$oReqParams = $this->getRequestParams();
-		$oResponse = $this->getStandardResponse();
+		$reqParams = $this->getRequestParams();
+		$response = $this->getStandardResponse();
 
 		if ( !$this->mod->getIsSiteLinked() ) {
 			$sErrorMessage = 'NotAssigned';
@@ -81,7 +81,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			);
 		}
 
-		if ( empty( $oReqParams->key ) ) {
+		if ( empty( $reqParams->key ) ) {
 			$sErrorMessage = 'EmptyRequestKey';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -89,7 +89,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			);
 		}
 
-		if ( $oReqParams->key != $this->mod->getPluginAuthKey() ) {
+		if ( $reqParams->key != $this->mod->getPluginAuthKey() ) {
 			$sErrorMessage = 'InvalidKey';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -97,7 +97,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			);
 		}
 
-		if ( empty( $oReqParams->pin ) ) {
+		if ( empty( $reqParams->pin ) ) {
 			$sErrorMessage = 'EmptyRequestPin';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -105,7 +105,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			);
 		}
 		$sPin = $this->mod->getPluginPin();
-		if ( md5( $oReqParams->pin ) != $sPin ) {
+		if ( md5( $reqParams->pin ) != $sPin ) {
 			$sErrorMessage = 'InvalidPin';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -113,7 +113,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			);
 		}
 
-		return $oResponse;
+		return $response;
 	}
 
 	/**

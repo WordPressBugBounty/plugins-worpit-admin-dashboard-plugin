@@ -6,8 +6,8 @@ Tags: manage, backup, security, umbrella, dashboard
 Requires at least: 4.9
 Requires PHP: 7.4
 Recommended PHP: 7.4
-Tested up to: 6.7
-Stable tag: 5.4.4
+Tested up to: 6.8
+Stable tag: 5.5.0
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -116,6 +116,11 @@ No. WorpDrive is available for a small monthly fee.
 4. Get a view of all your plugins and how each one is distributed across each site.
 
 == Changelog ==
+
+= 5.5 Series =
+*Released: 8th April 2025*
+
+* **(.0)  IMPROVED**:	Added workaround for DB exports on particular hosts that err when the request response data is too large.
 
 = 5.4 Series =
 *Released: 21st March 2025*

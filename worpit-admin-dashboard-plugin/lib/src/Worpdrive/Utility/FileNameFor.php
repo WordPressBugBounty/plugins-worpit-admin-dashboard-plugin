@@ -22,6 +22,9 @@ class FileNameFor {
 			case 'db_exports_zip':
 				$name = 'zipped_db_exp.archive';
 				break;
+			case 'db_schema_zip':
+				$name = 'zipped_db_schema.archive';
+				break;
 			default:
 				$name = $category;
 				break;

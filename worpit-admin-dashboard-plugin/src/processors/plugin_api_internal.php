@@ -1,8 +1,10 @@
 <?php
 
-use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\{
-	ApiResponse,
-	Internal
+use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
+use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\{
+	Base,
+	User,
+	Worpdrive
 };
 
 class ICWP_APP_Processor_Plugin_Api_Internal extends \ICWP_APP_Processor_Plugin_Api {
@@ -43,7 +45,7 @@ class ICWP_APP_Processor_Plugin_Api_Internal extends \ICWP_APP_Processor_Plugin_
 	protected function processActionHandler() :ApiResponse {
 		try {
 			$class = $this->findLegacyApiClass();
-			/** @var Internal\Base $API */
+			/** @var Base $API */
 			$API = new $class();
 			$API->setRequestParams( $this->getRequestParams() )
 				->setStandardResponse( $this->getStandardResponse() )
@@ -62,7 +64,13 @@ class ICWP_APP_Processor_Plugin_Api_Internal extends \ICWP_APP_Processor_Plugin_
 
 	protected function actionClassMap() :array {
 		return [
-			'user_list' => Internal\User\Enumerate::class,
+			'user_list'                     => User\Enumerate::class,
+			'worpdrive_db_data'             => Worpdrive\Db\Data::class,
+			'worpdrive_db_schema'           => Worpdrive\Db\Schema::class,
+			'worpdrive_filesystem_hashless' => Worpdrive\Filesystem\Hashless::class,
+			'worpdrive_filesystem_map'      => Worpdrive\Filesystem\Map::class,
+			'worpdrive_filesystem_recent'   => Worpdrive\Filesystem\Recent::class,
+			'worpdrive_filesystem_zip'      => Worpdrive\Filesystem\Zip::class,
 		];
 	}
 }
