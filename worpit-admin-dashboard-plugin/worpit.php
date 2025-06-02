@@ -3,7 +3,7 @@
  * Plugin Name: iControlWP
  * Plugin URI: https://icwp.io/home
  * Description: All-In-One Multiple WordPress Site Management - Backups, Security, Updates, and Uptime Monitoring
- * Version: 5.5.0
+ * Version: 5.5.1
  * Author: iControlWP
  * Author URI: https://www.icontrolwp.com/
  * License: GPLv2 or later

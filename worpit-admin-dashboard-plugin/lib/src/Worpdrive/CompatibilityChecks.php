@@ -3,6 +3,7 @@
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\Handlers\{
+	FileSystem,
 	Plugins,
 	Request
 };
@@ -53,11 +54,14 @@ class CompatibilityChecks extends BaseHandler {
 		$plugins = Plugins::Instance()->getPlugins();
 		$enum = [];
 		foreach ( $plugins as $file => $p ) {
-			$enum[ $file ] = [
-				'name'    => $p[ 'Name' ] ?? '',
-				'version' => $p[ 'Version' ] ?? '',
-				'active'  => (int)is_plugin_active( $file ),
-			];
+			if ( \is_string( $file ) ) {
+				$enum[ $file ] = [
+					'name'    => $p[ 'Name' ] ?? '',
+					'version' => $p[ 'Version' ] ?? '',
+					'dir'     => \dirname( $file ),
+					'active'  => (int)is_plugin_active( $file ),
+				];
+			}
 		}
 		\ksort( $enum );
 		return \array_values( $enum );
@@ -71,6 +75,7 @@ class CompatibilityChecks extends BaseHandler {
 			if ( $t instanceof \WP_Theme ) {
 				$enum[ $t->get_stylesheet() ] = [
 					'name'    => $t->get( 'Name' ),
+					'dir'     => $t->get_stylesheet(),
 					'version' => $t->get( 'Version' ),
 					'active'  => $active === $t->get_stylesheet() ? 1 : 0,
 				];
@@ -90,20 +95,40 @@ class CompatibilityChecks extends BaseHandler {
 	}
 
 	private function caps() :array {
+		$FS = FileSystem::Instance();
+		$tmpDir = self::con()->getPath_Temp( 'test_write_dir' );
 		try {
-			( new CanWriteToDir() )->run( self::con()->getPath_Temp( 'test_write_dir' ) );
+			( new CanWriteToDir() )->run( $tmpDir );
 			$canWrite = true;
 		}
 		catch ( \Exception $e ) {
 			$canWrite = false;
 		}
-		return [
+
+		$cans = [
 			'can_memory_limit'  => \function_exists( 'wp_is_ini_value_changeable' ) ? (int)wp_is_ini_value_changeable( 'memory_limit' ) : -1,
 			'can_write_dir_tmp' => (int)$canWrite,
 			'can_zip_archive'   => \class_exists( '\ZipArchive' ),
 			'can_zip_pcl'       => $this->canPclZip(),
 			'can_app_passwords' => \function_exists( 'wp_is_application_passwords_supported' ) ? (int)wp_is_application_passwords_supported() : -1,
 		];
+
+		foreach (
+			[
+				1024      => '1kb',
+				1048576   => '1mb',
+				10485760  => '10mb',
+				104857600 => '100mb',
+			] as $size => $tag
+		) {
+			$path = path_join( $tmpDir, sprintf( 'test_write_%s.txt', $tag ) );
+			$cans[ 'can_write_'.$tag ] = $canWrite && $FS->createDummyDataFileRandomBytes( $path, $size ) && $FS->delete( $path );
+		}
+		if ( $FS->isDir( $tmpDir ) ) {
+			$FS->delete( $tmpDir );
+		}
+
+		return $cans;
 	}
 
 	private function canPclZip() :bool {

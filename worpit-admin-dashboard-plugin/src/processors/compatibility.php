@@ -30,6 +30,7 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 	public function setupWhitelists() {
 		$this->addToWordfence();
 		$this->addToBadBehaviour();
+		$this->addToPlugin_IpLocationBlock();
 	}
 
 	protected function addToWordfence() {
@@ -44,6 +45,31 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 			}
 		}
 		catch ( \Exception $e ) {
+		}
+	}
+
+	private function addToPlugin_IpLocationBlock() {
+		if ( \class_exists( 'IP_Location_Block' ) && \method_exists( 'IP_Location_Block', 'get_instance' ) ) {
+			$iplb = IP_Location_Block::get_instance();
+			if ( \method_exists( $iplb, 'get_option' ) && \method_exists( $iplb, 'update_option' ) ) {
+				$opts = $iplb::get_option();
+				if ( !empty( $opts[ 'extra_ips' ] ) ) {
+					$extraIPs = $opts[ 'extra_ips' ];
+					$whitelist = $extraIPs[ 'white_list' ] ?? '';
+					$lines = \array_map( '\trim', \explode( "\n", $whitelist ) );
+					$added = false;
+					foreach ( \array_merge( $this->getServiceIps(), $this->getServiceIps( 6 ) ) as $ip ) {
+						if ( !\in_array( $ip, $lines ) ) {
+							$added = true;
+							$lines[] = $ip;
+						}
+					}
+					if ( $added ) {
+						$opts[ 'extra_ips' ][ 'white_list' ] = \implode( "\n", $lines );
+						$iplb::update_option( $opts );
+					}
+				}
+			}
 		}
 	}
 

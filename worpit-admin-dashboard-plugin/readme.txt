@@ -7,7 +7,7 @@ Requires at least: 4.9
 Requires PHP: 7.4
 Recommended PHP: 7.4
 Tested up to: 6.8
-Stable tag: 5.5.0
+Stable tag: 5.5.1
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -120,6 +120,8 @@ No. WorpDrive is available for a small monthly fee.
 = 5.5 Series =
 *Released: 8th April 2025*
 
+* **(.1)  IMPROVED**:	Added Worpdrive backups check for at least 100MB of available disk space.
+* **(.1)  IMPROVED**:	Automatic IP whitelisting in the IP Location Block plugin.
 * **(.0)  IMPROVED**:	Added workaround for DB exports on particular hosts that err when the request response data is too large.
 
 = 5.4 Series =

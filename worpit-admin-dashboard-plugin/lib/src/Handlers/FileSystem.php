@@ -90,6 +90,49 @@ class FileSystem {
 		return $this->wpfs;
 	}
 
+	public function createDummyDataFileRandomBytes( string $path, int $size = 1048576 /** Bytes */, $maxSegment = 1048576 ) :bool {
+		$success = false;
+		$dir = \dirname( $path );
+		if ( $size > 1 && $maxSegment > 1 && $this->mkdir( $dir ) && $this->isDir( $dir ) ) {
+			$maxSegment = \min( $maxSegment, $size );
+			try {
+				$h = \fopen( $path, 'w' );
+				if ( \is_resource( $h ) ) {
+					$remaining = $size;
+					do {
+						$length = \min( $maxSegment, $remaining );
+						\fwrite( $h, \random_bytes( $length ) );
+						$remaining -= $length;
+					} while ( $remaining > 0 );
+					$success = \fclose( $h ) && $remaining === 0;
+				}
+			}
+			catch ( \Exception|\Error $e ) {
+			}
+		}
+		return $success;
+	}
+
+	/**
+	 * https://stackoverflow.com/questions/3608383/php-create-file-with-given-size/3608405?r=Saves_UserSavesList#3608405
+	 */
+	public function createDummyDataFileWithSeek( string $path, int $size = 1024 /** Bytes */ ) :bool {
+		$success = false;
+		$this->mkdir( \dirname( $path ) );
+		if ( $this->isDir( \dirname( $path ) ) ) {
+			try {
+				$fp = \fopen( $path, 'w' );
+				$success = \is_resource( $fp )
+						   && \fseek( $fp, $size - 1, \SEEK_CUR ) === 0
+						   && @\fwrite( $fp, 'a' ) > 0
+						   && @\fclose( $fp );
+			}
+			catch ( \Exception|\Error $e ) {
+			}
+		}
+		return $success;
+	}
+
 	/**
 	 * @deprecated
 	 */
