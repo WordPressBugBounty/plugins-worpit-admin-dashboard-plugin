@@ -114,26 +114,6 @@ class FileSystem {
 	}
 
 	/**
-	 * https://stackoverflow.com/questions/3608383/php-create-file-with-given-size/3608405?r=Saves_UserSavesList#3608405
-	 */
-	public function createDummyDataFileWithSeek( string $path, int $size = 1024 /** Bytes */ ) :bool {
-		$success = false;
-		$this->mkdir( \dirname( $path ) );
-		if ( $this->isDir( \dirname( $path ) ) ) {
-			try {
-				$fp = \fopen( $path, 'w' );
-				$success = \is_resource( $fp )
-						   && \fseek( $fp, $size - 1, \SEEK_CUR ) === 0
-						   && @\fwrite( $fp, 'a' ) > 0
-						   && @\fclose( $fp );
-			}
-			catch ( \Exception|\Error $e ) {
-			}
-		}
-		return $success;
-	}
-
-	/**
 	 * @deprecated
 	 */
 	public function deleteDir( string $dir ) :bool {

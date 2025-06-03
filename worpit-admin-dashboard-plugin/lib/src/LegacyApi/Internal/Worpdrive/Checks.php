@@ -6,6 +6,7 @@ class Checks extends BaseWorpdrive {
 
 	protected function execHandler() :?array {
 		return ( new \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\CompatibilityChecks(
+			\is_array( $this->getActionParam( 'check_params', [] ) ) ? $this->getActionParam( 'check_params', [] ) : [],
 			$this->getActionParam( 'uuid' ),
 			0
 		) )->run();

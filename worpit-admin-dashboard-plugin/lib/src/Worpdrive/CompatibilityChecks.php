@@ -11,6 +11,16 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\Utilities\Filesystem\CanWriteToD
 
 class CompatibilityChecks extends BaseHandler {
 
+	private array $checkParams;
+
+	/**
+	 * @throws \Exception
+	 */
+	public function __construct( array $checkParams, string $uuid, int $stopAtTS ) {
+		parent::__construct( $uuid, $stopAtTS );
+		$this->checkParams = $checkParams;
+	}
+
 	/**
 	 * Many of these data point are stored in the archive meta, so changes here must consider how meta is gathered and
 	 * stored in the WD archive meta "snapshot"
@@ -95,40 +105,40 @@ class CompatibilityChecks extends BaseHandler {
 	}
 
 	private function caps() :array {
-		$FS = FileSystem::Instance();
-		$tmpDir = self::con()->getPath_Temp( 'test_write_dir' );
 		try {
-			( new CanWriteToDir() )->run( $tmpDir );
+			( new CanWriteToDir() )->run( self::con()->getPath_Temp( 'test_write_dir' ) );
 			$canWrite = true;
 		}
 		catch ( \Exception $e ) {
 			$canWrite = false;
 		}
 
-		$cans = [
-			'can_memory_limit'  => \function_exists( 'wp_is_ini_value_changeable' ) ? (int)wp_is_ini_value_changeable( 'memory_limit' ) : -1,
-			'can_write_dir_tmp' => (int)$canWrite,
-			'can_zip_archive'   => \class_exists( '\ZipArchive' ),
-			'can_zip_pcl'       => $this->canPclZip(),
-			'can_app_passwords' => \function_exists( 'wp_is_application_passwords_supported' ) ? (int)wp_is_application_passwords_supported() : -1,
-		];
-
-		foreach (
+		return \array_merge(
 			[
-				1024      => '1kb',
-				1048576   => '1mb',
-				10485760  => '10mb',
-				104857600 => '100mb',
-			] as $size => $tag
-		) {
+				'can_memory_limit'  => \function_exists( 'wp_is_ini_value_changeable' ) ? (int)wp_is_ini_value_changeable( 'memory_limit' ) : -1,
+				'can_write_dir_tmp' => (int)$canWrite,
+				'can_zip_archive'   => \class_exists( '\ZipArchive' ),
+				'can_zip_pcl'       => $this->canPclZip(),
+				'can_app_passwords' => \function_exists( 'wp_is_application_passwords_supported' ) ? (int)wp_is_application_passwords_supported() : -1,
+			],
+			$this->diskSpaceChecks( $canWrite )
+		);
+	}
+
+	private function diskSpaceChecks( bool $previousSuccess ) :array {
+		$FS = FileSystem::Instance();
+		$tmpDir = self::con()->getPath_Temp( 'test_write_dir' );
+
+		$checks = [];
+		foreach ( $this->checkParams[ 'disk_space_checks' ] ?? [ 1024 => '1kb', 1048576 => '1mb', ] as $size => $tag ) {
 			$path = path_join( $tmpDir, sprintf( 'test_write_%s.txt', $tag ) );
-			$cans[ 'can_write_'.$tag ] = $canWrite && $FS->createDummyDataFileRandomBytes( $path, $size ) && $FS->delete( $path );
+			$previousSuccess = $previousSuccess && $FS->createDummyDataFileRandomBytes( $path, $size ) && $FS->delete( $path );
+			$checks[ 'can_write_'.$tag ] = $previousSuccess;
 		}
 		if ( $FS->isDir( $tmpDir ) ) {
 			$FS->delete( $tmpDir );
 		}
-
-		return $cans;
+		return $checks;
 	}
 
 	private function canPclZip() :bool {
