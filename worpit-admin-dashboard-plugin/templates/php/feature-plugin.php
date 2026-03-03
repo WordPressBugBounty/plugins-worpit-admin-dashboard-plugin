@@ -37,6 +37,36 @@ $bWhitelabelled = ( $aPluginLabels[ 'Name' ] != 'iControlWP' );
 	}
 	</style>
 
+<?php if ( !$bIsLinked ) : ?>
+	<div class="row">
+		<div class="span12">
+			<div class="well<?php echo $bBootstrapWindowOpen ? ' card-pairing-open' : ''; ?>">
+				<h3>Site Linking/Pairing Window</h3>
+		  <?php if ( $bBootstrapWindowOpen ) : ?>
+						<div class="pairing-status">
+							<span class="status-label">Status:</span>
+							<span class="status-open">Open</span>
+							<span class="status-expires">Expires: <?php echo esc_html( $sBootstrapWindowExpiresAt ); ?></span>
+						</div>
+		  <?php else : ?>
+						<div class="pairing-status">
+							<span class="status-label">Status:</span>
+							<span class="status-closed">Closed</span>
+						</div>
+		  <?php endif; ?>
+				<p>Open a new pairing window to allow linking this site to iControlWP. The window will automatically close after 15 minutes or after a successful link.</p>
+				<form action="<?php echo esc_url( $form_action ); ?>" method="POST" name="form-open-pairing-window"
+							id="form-open-pairing-window">
+					<input type="hidden" id="_wpnonce" name="_wpnonce" value="<?php echo esc_attr( $nonce_field ); ?>">
+					<input type="hidden" name="<?php echo esc_attr( $var_prefix ); ?>plugin_form_submit" value="Y" />
+					<button class="btn btn-warning" name="<?php echo esc_attr( $var_prefix ); ?>open_pairing_window" value="Y"
+									type="submit">Open Pairing Window (15 mins)</button>
+				</form>
+			</div>
+		</div>
+	</div>
+<?php endif; ?>
+
 	<div class="row">
 		<div class="span12">
 			<div class="well">
@@ -55,11 +85,10 @@ $bWhitelabelled = ( $aPluginLabels[ 'Name' ] != 'iControlWP' );
 						</h3>
 
 		  <?php else: ?>
-						<h3>The unique <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> Access Key for this site is:
-							<div class="the-key"><?php echo esc_html( $sAuthKey ); ?></div>
-						</h3>
-						<h4 id="isNotAssigned">Currently waiting for connection from a <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?>
-																	 account.
+						<h3>Access Key</h3>
+						<p>The unique <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> access key for this site is:</p>
+						<div class="the-key"><?php echo esc_html( $sAuthKey ); ?></div>
+						<h4 id="isNotAssigned">Currently waiting for connection from a <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> account.
 							<br />[ <a href="<?php echo esc_url( $aPluginLabels[ 'PluginURI' ] ); ?>" id="signupLinkIcwp"
 												 target="_blank">Don't have a <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> account? Get it today!</a> ]</h4>
 						<p><strong>Important:</strong> if you don't plan to add this site now, disable this plugin to prevent this site from being added to another <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?>
@@ -70,7 +99,9 @@ $bWhitelabelled = ( $aPluginLabels[ 'Name' ] != 'iControlWP' );
 			</div>
 		</div>
 	</div>
+
 <?php if ( !$bIsLinked ) : ?>
+
 	<div class="row">
 		<div class="span12">
 			<div class="well">
@@ -83,7 +114,7 @@ $bWhitelabelled = ( $aPluginLabels[ 'Name' ] != 'iControlWP' );
 					<input type="hidden" id="_wpnonce" name="_wpnonce" value="<?php echo esc_attr( $nonce_field ); ?>">
 					<input type="hidden" name="<?php echo esc_html( $var_prefix ); ?>plugin_form_submit" value="Y" />
 					<fieldset>
-						<legend style="margin-bottom: 8px;">Remote Add Site</legend>
+						<legend>Remote Add Site</legend>
 						<label for="_account_auth_key"><?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> Unique Account Authentication Key:
 							<input name="account_auth_key" type="text" class="span6" id="_account_auth_key" />
 						</label>
@@ -101,7 +132,7 @@ $bWhitelabelled = ( $aPluginLabels[ 'Name' ] != 'iControlWP' );
 
 	<div class="row">
 		<div class="span12">
-			<div class="well">
+			<div class="well card-reset">
 				<div class="reset-authentication" name="">
 					<h3>Reset <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> Access Key</h3>
 					<p>You can break the connection with <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> and regenerate a new access key, using the button below</p>
@@ -117,7 +148,6 @@ $bWhitelabelled = ( $aPluginLabels[ 'Name' ] != 'iControlWP' );
 											 name="<?php echo esc_html( $var_prefix ); ?>reset_plugin"
 											 class="confirm-plugin-reset"
 											 value="Y"
-											 style="margin-right:10px;"
 								/>I'm sure I want to reset the <?php echo esc_html( $aPluginLabels[ 'Name' ] ); ?> plugin.
 							</label>
 							<button class="btn btn-danger" disabled="disabled" name="submit_reset" type="submit">Reset Plugin</button>

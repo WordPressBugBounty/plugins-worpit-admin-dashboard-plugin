@@ -11,10 +11,10 @@ class ICWP_APP_Render extends ICWP_APP_Foundation {
 	}
 
 	public static function GetInstance() :self {
-		return self::$I ?? self::$I = new self();
+		return self::$I ??= new self();
 	}
 
-	protected $aRenderVars = [];
+	protected array $renderVars = [];
 
 	/**
 	 * @var string
@@ -102,11 +102,11 @@ class ICWP_APP_Render extends ICWP_APP_Foundation {
 	}
 
 	public function getRenderVars() :array {
-		return $this->aRenderVars;
+		return $this->renderVars;
 	}
 
 	public function setRenderVars( array $vars ) :self {
-		$this->aRenderVars = $vars;
+		$this->renderVars = $vars;
 		return $this;
 	}
 

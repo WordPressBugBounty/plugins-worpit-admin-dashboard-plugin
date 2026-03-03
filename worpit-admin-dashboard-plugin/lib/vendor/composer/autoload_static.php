@@ -12,14 +12,14 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
     );
 
     public static $prefixLengthsPsr4 = array (
-        'F' => 
+        'F' =>
         array (
             'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\' => 44,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\' => 
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),

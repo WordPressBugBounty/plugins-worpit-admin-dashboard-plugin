@@ -3,19 +3,9 @@
 abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 
 	/**
-	 * @var \FernleafSystems\Wordpress\Plugin\iControlWP\Control\Controller
-	 */
-	protected $oPluginController;
-
-	/**
 	 * @var \ICWP_APP_OptionsVO
 	 */
 	protected $opts;
-
-	/**
-	 * @var \ICWP_APP_OptionsVO
-	 */
-	protected $oOptions;
 
 	/**
 	 * @var bool
@@ -140,23 +130,6 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 			   \str_replace( ' ', '', \ucwords( \str_replace( '_', ' ', $this->getFeatureSlug() ) ) );
 	}
 
-	/**
-	 * @return \ICWP_APP_OptionsVO
-	 * @deprecated 4.5
-	 */
-	public function getOptionsVo() {
-		if ( \method_exists( $this, 'opts' ) ) {
-			return $this->opts();
-		}
-		elseif ( !isset( $this->oOptions ) ) {
-			$this->oOptions = new ICWP_APP_OptionsVO( $this->getFeatureSlug() );
-			$this->oOptions->setRebuildFromFile( self::con()->getIsRebuildOptionsFromFile() );
-			$this->oOptions->setOptionsStorageKey( $this->getOptionsStorageKey() );
-			$this->oOptions->setIfLoadOptionsFromStorage( !self::con()->getIsResetPlugin() );
-		}
-		return $this->oOptions;
-	}
-
 	public function opts() :\ICWP_APP_OptionsVO {
 		if ( !isset( $this->opts ) ) {
 			$this->opts = new \ICWP_APP_OptionsVO( $this->getFeatureSlug() );
@@ -243,7 +216,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 * @return string
 	 */
 	public function getFeatureSlug() {
-		return $this->slug ?? $this->slug = $this->opts()->getFeatureProperty( 'slug' );
+		return $this->slug ??= $this->opts()->getFeatureProperty( 'slug' );
 	}
 
 	/**
@@ -701,41 +674,10 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return \FernleafSystems\Wordpress\Plugin\iControlWP\Control\Controller
-	 */
-	public function getController() {
-		return $this->oPluginController;
-	}
-
-	/**
-	 * @param array $aAdminNotices
-	 * @return array
+	 * @return \ICWP_APP_OptionsVO
 	 * @deprecated 4.5
 	 */
-	public function fRegisterAdminNotices( $aAdminNotices ) {
-		return $aAdminNotices;
-	}
-
-	/**
-	 * Will prefix and return any string with the unique plugin prefix.
-	 *
-	 * @param string $sSuffix
-	 * @param string $sGlue
-	 * @return string
-	 * @deprecated 4.5
-	 */
-	public function doPluginPrefix( $sSuffix = '', $sGlue = '-' ) {
-		return self::con()->doPluginPrefix( $sSuffix, $sGlue );
-	}
-
-	/**
-	 * Prefixes an option key only if it's needed
-	 *
-	 * @param $sKey
-	 * @return string
-	 * @deprecated 4.5
-	 */
-	public function prefixOptionKey( $sKey ) {
-		return self::con()->doPluginPrefix( $sKey, '_' );
+	public function getOptionsVo() {
+		return $this->opts();
 	}
 }

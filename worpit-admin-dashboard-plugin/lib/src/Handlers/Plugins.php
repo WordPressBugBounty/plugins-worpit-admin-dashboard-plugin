@@ -13,7 +13,7 @@ class Plugins {
 	}
 
 	public static function Instance() :Plugins {
-		return self::$i ?? self::$i = new self();
+		return self::$i ??= new self();
 	}
 
 	/**

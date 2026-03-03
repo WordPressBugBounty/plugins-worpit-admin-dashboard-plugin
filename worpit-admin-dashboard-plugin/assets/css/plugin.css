@@ -229,3 +229,210 @@ a#signupLinkIcwp {
 	margin-right: 4px !important;
 }
 .cant-handshake { opacity: 0.5; }
+
+/* ---- ADMIN PAGE CARD REDESIGN ---- */
+
+/* Cards — blue left accent on all by default */
+.icwp-options-page .well {
+    background-color: #fff;
+    border: 1px solid #dcdcde;
+    border-left: 3px solid #2271b1;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+
+/* Override accent colour for specific section types */
+.icwp-options-page .well.card-pairing-open {
+    border-left-color: #d97706;
+}
+.icwp-options-page .well.card-reset {
+    border-left-color: #d63638;
+}
+
+/* Section headings — small-caps label style */
+.icwp-options-page .well h3 {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #646970;
+    margin-top: 0;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+/* Pairing status row — sits inside a tinted strip */
+.icwp-options-page .pairing-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 9px 12px;
+    background: #f6f7f7;
+    border-radius: 3px;
+}
+.icwp-options-page .pairing-status .status-label {
+    font-weight: 600;
+    color: #646970;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.icwp-options-page .status-open {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 10px;
+    background-color: #f0b849;
+    color: #3d2800;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.icwp-options-page .status-closed {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 10px;
+    background-color: #dcdcde;
+    color: #50575e;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.icwp-options-page .status-expires {
+    color: #646970;
+    font-size: 12px;
+    margin-left: auto;
+}
+
+/* Access key display */
+.icwp-options-page .assigned-state .the-key {
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 16px;
+    letter-spacing: 3px;
+    margin: 8px 0 16px;
+    padding: 12px 16px;
+    display: block;
+    color: #1d2327;
+    word-break: break-all;
+}
+
+/* "Connected" h3 — undo generic h3 rules, render as WP success notice */
+.icwp-options-page .well .assigned-state #isAssigned {
+    text-transform: none;
+    letter-spacing: normal;
+    border-bottom: none;
+    border: 1px solid #8dba91;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #00a32a;
+    background: #edfaef;
+    border-radius: 3px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.icwp-options-page .well .assigned-state #isAssigned::before {
+    content: "✓";
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* "Waiting for connection" note */
+.icwp-options-page .well .assigned-state #isNotAssigned {
+    margin: 10px 0 0;
+    color: #50575e;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+/* Reset section */
+.icwp-options-page .reset-authentication p strong {
+    color: #d63638;
+}
+.icwp-options-page .reset-authentication label {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-weight: normal !important;
+    color: #50575e;
+    font-size: 13px;
+}
+.icwp-options-page .reset-authentication label input[type=checkbox] {
+    float: none !important;
+    margin: 2px 0 0 !important;
+    flex-shrink: 0;
+}
+
+/* Form labels */
+.icwp-options-page .well label {
+    display: block;
+    margin-bottom: 14px;
+    font-weight: 500;
+    color: #3c434a;
+    font-size: 13px;
+}
+.icwp-options-page .well label input[type=text] {
+    margin-top: 5px;
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    box-sizing: border-box;
+}
+
+/* Fieldset */
+.icwp-options-page .well fieldset {
+    border: none;
+    padding: 0;
+    margin: 0 0 16px;
+}
+.icwp-options-page .well fieldset legend {
+    font-weight: 600;
+    color: #3c434a;
+    font-size: 13px;
+    margin-bottom: 12px;
+    padding: 0;
+}
+
+/* About section */
+.icwp-options-page .well h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d2327;
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+.icwp-options-page .well ul {
+    padding-left: 18px;
+    color: #50575e;
+    line-height: 1.8;
+    margin-top: 0;
+}
+.icwp-options-page .well ul li {
+    margin-bottom: 2px;
+}
+
+/* Page header */
+.icwp-options-page .page-header {
+    margin-bottom: 20px;
+}
+.icwp-options-page .page-header h2 {
+    font-size: 23px;
+    font-weight: 400;
+    color: #1d2327;
+}
+.icwp-options-page .page-header .feature-tagline {
+    color: #50575e;
+    font-size: 14px;
+}

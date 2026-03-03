@@ -92,29 +92,11 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * Returns an array of all the transferable options and their values
-	 * @return array
-	 */
-	public function getTransferableOptions() {
-
-		$aOptions = $this->getAllOptionsValues();
-		$aRawOptions = $this->getRawData_AllOptions();
-		$aTransferable = [];
-		foreach ( $aRawOptions as $nKey => $aOptionData ) {
-			if ( isset( $aOptionData[ 'transferable' ] ) && $aOptionData[ 'transferable' ] === true ) {
-				$aTransferable[ $aOptionData[ 'key' ] ] = $aOptions[ $aOptionData[ 'key' ] ];
-			}
-		}
-		return $aTransferable;
-	}
-
-	/**
-	 * @param $sProperty
+	 * @param $property
 	 * @return null|mixed
 	 */
-	public function getFeatureProperty( $sProperty ) {
-		$aRawConfig = $this->getRawData_FullFeatureConfig();
-		return ( isset( $aRawConfig[ 'properties' ] ) && isset( $aRawConfig[ 'properties' ][ $sProperty ] ) ) ? $aRawConfig[ 'properties' ][ $sProperty ] : null;
+	public function getFeatureProperty( $property ) {
+		return $this->getRawData_FullFeatureConfig()[ 'properties' ][ $property ] ?? null;
 	}
 
 	/**
@@ -123,7 +105,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	 */
 	public function getFeatureDefinition( $sDefinition ) {
 		$aRawConfig = $this->getRawData_FullFeatureConfig();
-		return ( isset( $aRawConfig[ 'definitions' ] ) && isset( $aRawConfig[ 'definitions' ][ $sDefinition ] ) ) ? $aRawConfig[ 'definitions' ][ $sDefinition ] : null;
+		return $aRawConfig[ 'definitions' ][ $sDefinition ] ?? null;
 	}
 
 	/**
@@ -139,8 +121,8 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	 * @deprecated 4.5
 	 */
 	public function getAdminNotices() {
-		$aRawConfig = $this->getRawData_FullFeatureConfig();
-		return ( isset( $aRawConfig[ 'admin_notices' ] ) && is_array( $aRawConfig[ 'admin_notices' ] ) ) ? $aRawConfig[ 'admin_notices' ] : [];
+		$raw = $this->getRawData_FullFeatureConfig();
+		return ( isset( $raw[ 'admin_notices' ] ) && is_array( $raw[ 'admin_notices' ] ) ) ? $raw[ 'admin_notices' ] : [];
 	}
 
 	/**
@@ -606,26 +588,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 		return $this->loadFS()->getModifiedTime( $this->getPathToConfig() );
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getPathToConfig() {
-		return dirname( __FILE__ ).'/../'.sprintf( 'config/feature-%s.php', $this->getOptionsName() );
-	}
-
-	/**
-	 * @return string
-	 * @deprecated 3.7
-	 */
-	private function getSpecTransientStorageKey() {
-		return $this->getConfigStorageKey();
-	}
-
-	/**
-	 * @return string
-	 * @deprecated 3.7
-	 */
-	private function getConfigFilePath() {
-		return $this->getPathToConfig();
+	public function getPathToConfig() :string {
+		return path_join( \dirname( __FILE__, 3 ), sprintf( 'config/feature-%s.php', $this->getOptionsName() ) );
 	}
 }

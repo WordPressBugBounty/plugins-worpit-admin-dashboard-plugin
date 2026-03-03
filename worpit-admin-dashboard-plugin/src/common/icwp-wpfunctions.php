@@ -8,7 +8,7 @@ class ICWP_APP_WpFunctions extends ICWP_APP_Foundation {
 	protected static $I = null;
 
 	public static function GetInstance() :self {
-		return self::$I ?? self::$I = new self();
+		return self::$I ??= new self();
 	}
 
 	/**

@@ -11,7 +11,7 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	}
 
 	public static function GetInstance() :self {
-		return self::$I ?? self::$I = new self();
+		return self::$I ??= new self();
 	}
 
 	/**

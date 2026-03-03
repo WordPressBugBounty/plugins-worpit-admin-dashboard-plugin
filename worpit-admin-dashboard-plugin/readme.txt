@@ -6,8 +6,8 @@ Tags: manage, backup, security, umbrella, dashboard
 Requires at least: 4.9
 Requires PHP: 7.4
 Recommended PHP: 7.4
-Tested up to: 6.9
-Stable tag: 5.5.3
+Tested up to: 7.0
+Stable tag: 5.5.4
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -120,6 +120,7 @@ No. WorpDrive is available for a small monthly fee.
 = 5.5 Series =
 *Released: 8th April 2025*
 
+* **(.4)  SECURITY**:	Address security vulnerability by tightening the site-pairing process. A new "Start Pairing" step required.
 * **(.3)  IMPROVED**:	Disk space check limited to 1MB, by default.
 * **(.1)  IMPROVED**:	Added Worpdrive backups check for at least 100MB of available disk space.
 * **(.1)  IMPROVED**:	Automatic IP whitelisting in the IP Location Block plugin.

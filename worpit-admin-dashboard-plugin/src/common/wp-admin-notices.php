@@ -20,7 +20,7 @@ class ICWP_APP_WpAdminNotices extends ICWP_APP_Foundation {
 	protected $sActionPrefix = '';
 
 	public static function GetInstance() :self {
-		return self::$I ?? self::$I = new self();
+		return self::$I ??= new self();
 	}
 
 	protected function __construct() {

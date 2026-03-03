@@ -20,7 +20,7 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 
 	protected function getIsRequestFromServiceIp() :bool {
 		$ip = $this->loadDP()->getVisitorIpAddress();
-		return \in_array( $ip, $this->getServiceIps() ) || \in_array( $ip, $this->getServiceIps( 6 ) );
+		return !empty( $ip ) && ICWP_Plugin::getController()->loadCorePluginFeatureHandler()->isServiceIp( (string)$ip );
 	}
 
 	/**

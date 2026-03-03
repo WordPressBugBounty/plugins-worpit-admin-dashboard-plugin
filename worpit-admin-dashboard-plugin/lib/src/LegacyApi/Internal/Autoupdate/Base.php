@@ -25,7 +25,7 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 		}
 
 		return $this->success( [
-			'options' => $sys->getOptionsVo()->getStoredOptions()
+			'options' => $sys->opts()->getStoredOptions()
 		] );
 	}
 

@@ -4,6 +4,12 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
 
 class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 
+	public const PAIRING_WINDOW_MINUTES = 15;
+	public const API_STATUS_BOOTSTRAP_DENIED = 'BootstrapDenied';
+	public const API_MESSAGE_BOOTSTRAP_DENIED = 'BootstrapDenied';
+	public const API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS = 'InvalidBootstrapCredentials';
+	public const API_CODE_BOOTSTRAP_DENIED = 9811;
+
 	/**
 	 * @var LegacyApi\RequestParameters
 	 */
@@ -33,15 +39,20 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	}
 
 	public function displayFeatureConfigPage() {
+		$bootstrapWindowExpiresAt = $this->getBootstrapWindowExpiresAt();
 		$this->display(
 			[
-				'aPluginLabels' => self::con()->getPluginLabels(),
-				'sAuthKey'      => $this->getPluginAuthKey(),
-				'sAssignedTo'   => $this->getAssignedTo(),
-				'bAssigned'     => $this->getAssigned(),
-				'bIsLinked'     => $this->getIsSiteLinked(),
-				'bCanHandshake' => $this->getCanHandshake(),
-				'sExtraContent' => apply_filters( self::con()->doPluginPrefix( 'main_extracontent' ), '' ),
+				'aPluginLabels'             => self::con()->getPluginLabels(),
+				'sAuthKey'                  => $this->getPluginAuthKey(),
+				'sAssignedTo'               => $this->getAssignedTo(),
+				'bAssigned'                 => $this->getAssigned(),
+				'bIsLinked'                 => $this->getIsSiteLinked(),
+				'bCanHandshake'             => $this->getCanHandshake(),
+				'bBootstrapWindowOpen'      => $this->isBootstrapWindowOpen(),
+				'nBootstrapWindowExpiresAt' => $bootstrapWindowExpiresAt,
+				'sBootstrapWindowExpiresAt' => empty( $bootstrapWindowExpiresAt ) ? '' : $this->loadWP()
+																							  ->getTimeStringForDisplay( $bootstrapWindowExpiresAt ),
+				'sExtraContent'             => apply_filters( self::con()->doPluginPrefix( 'main_extracontent' ), '' ),
 			],
 			'feature-plugin'
 		);
@@ -101,6 +112,26 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 		return $this->getAssigned() && is_email( $this->getAssignedTo() );
 	}
 
+	public function getBootstrapWindowExpiresAt() :int {
+		return (int)$this->getOpt( 'bootstrap_window_expires_at', 0 );
+	}
+
+	public function isBootstrapWindowOpen() :bool {
+		return $this->getBootstrapWindowExpiresAt() > $this->loadDP()->time();
+	}
+
+	public function openBootstrapWindow() :self {
+		$this->setOpt( 'key', $this->loadDP()->GenerateRandomString( 24 ) );
+		$this->setOpt( 'bootstrap_window_expires_at', $this->loadDP()
+														   ->time() + ( self::PAIRING_WINDOW_MINUTES*MINUTE_IN_SECONDS ) );
+		return $this;
+	}
+
+	public function closeBootstrapWindow() :self {
+		$this->setOpt( 'bootstrap_window_expires_at', 0 );
+		return $this;
+	}
+
 	public function doExtraSubmitProcessing() {
 		$DP = $this->loadDP();
 
@@ -116,6 +147,14 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 			$this->setOpt( 'key', '' );
 			$this->setPluginPin( '' );
 			$this->setAssignedAccount( '' );
+			$this->closeBootstrapWindow();
+			return;
+		}
+
+		if ( $DP->FetchPost( self::con()->doPluginOptionPrefix( 'open_pairing_window' ) ) ) {
+			$this->openBootstrapWindow();
+			$this->doAddAdminFeedback( sprintf( '%s pairing window opened for 15 minutes.', self::con()
+																								->getHumanName() ) );
 			return;
 		}
 
@@ -147,6 +186,8 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 		$authKey = \trim( $authKey );
 		$email = \trim( $email );
 		if ( !$this->getIsSiteLinked() && \strlen( $authKey ) === 32 && is_email( $email ) ) {
+			$this->openBootstrapWindow();
+			$this->savePluginOptions();
 			return $this->loadFS()->postUrl( $this->getAppUrl( 'remote_add_site_url' ), [
 				'body' => [
 					'wordpress_url'         => home_url(),
@@ -208,16 +249,18 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 		return empty( $key ) ? '' : (string)\base64_decode( $key );
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getPluginAuthKey() {
+	public function getPluginAuthKey() :string {
 		$auth = $this->getOpt( 'key' );
 		if ( empty( $auth ) ) {
 			$auth = $this->loadDP()->GenerateRandomString( 24 );
 			$this->setOpt( 'key', $auth );
 		}
-		return $auth;
+		return (string)$auth;
+	}
+
+	public function isValidBootstrapRequestKey( string $requestKey ) :bool {
+		$requestKey = \trim( $requestKey );
+		return !empty( $requestKey ) && \hash_equals( $this->getPluginAuthKey(), $requestKey );
 	}
 
 	public function getPluginPin() :string {
@@ -226,6 +269,43 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 
 	public function getPermittedApiChannels() :array {
 		return $this->getDefinition( 'permitted_api_channels' );
+	}
+
+	public function getDefinedServiceIps( int $ipVersion = 4 ) :array {
+		$lists = $this->getDefinition( 'service_ip_addresses' );
+		$key = $ipVersion === 6 ? 'ipv6' : 'ipv4';
+		return isset( $lists[ $key ][ 'valid' ] ) && \is_array( $lists[ $key ][ 'valid' ] ) ? $lists[ $key ][ 'valid' ] : [];
+	}
+
+	public function getServiceIps( int $ipVersion = 4 ) :array {
+		$v = \in_array( $ipVersion, [ 4, 6 ], true ) ? $ipVersion : 4;
+		$result = apply_filters(
+			self::con()->doPluginPrefix( 'get_service_ips_v'.$v ),
+			$this->getDefinedServiceIps( $v )
+		);
+		return \is_array( $result ) ? $result : [];
+	}
+
+	public function isServiceIp( string $ip ) :bool {
+		$ip = \trim( $ip );
+		$version = (int)$this->loadDP()->getIpAddressVersion( $ip );
+		return !empty( $ip ) &&
+			   (
+				   ( $version === 6 && \in_array( $ip, $this->getServiceIps( 6 ), true ) )
+				   || ( $version === 4 && \in_array( $ip, $this->getServiceIps( 4 ), true ) )
+			   );
+	}
+
+	public function isUnlinkedBootstrapPermitted() :bool {
+		if ( $this->getIsSiteLinked() ) {
+			return true;
+		}
+		$ip = \trim( (string)$this->loadDP()->FetchServer( 'REMOTE_ADDR' ) );
+		return $this->isBootstrapWindowOpen() && $this->isServiceIp( $ip );
+	}
+
+	public function getBootstrapAuthKeyForResponse() :string {
+		return $this->getIsSiteLinked() || !$this->isUnlinkedBootstrapPermitted() ? '' : $this->getPluginAuthKey();
 	}
 
 	public function getSupportedInternalApiAction() :array {

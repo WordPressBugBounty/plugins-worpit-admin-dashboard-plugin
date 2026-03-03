@@ -70,43 +70,4 @@ abstract class ICWP_APP_Processor_Base extends ICWP_APP_Foundation {
 	public function getOption( $sOptionKey, $mDefault = false ) {
 		return $this->mod->getOpt( $sOptionKey, $mDefault );
 	}
-
-	/**
-	 * @param string $sKey
-	 * @param mixed  $mValueToTest
-	 * @param bool   $bStrict
-	 * @return bool
-	 * @deprecated 4.5
-	 */
-	public function getIsOption( $sKey, $mValueToTest, $bStrict = false ) {
-		$mOptionValue = $this->mod->getOpt( $sKey );
-		return $bStrict ? $mOptionValue === $mValueToTest : $mOptionValue == $mValueToTest;
-	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	protected function getFeatureOptions() {
-		return $this->mod;
-	}
-
-	/**
-	 * @return \FernleafSystems\Wordpress\Plugin\iControlWP\Control\Controller
-	 * @deprecated 4.5
-	 */
-	public function getController() {
-		return $this->mod->getController();
-	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	public function action_doFeatureProcessorShutdown() {
-	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	public function autoAddToAdminNotices() {
-	}
 }

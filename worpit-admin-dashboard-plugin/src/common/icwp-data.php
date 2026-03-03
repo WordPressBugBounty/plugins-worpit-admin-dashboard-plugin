@@ -26,7 +26,7 @@ class ICWP_APP_DataProcessor {
 	}
 
 	public static function GetInstance() :self {
-		return self::$I ?? self::$I = new self();
+		return self::$I ??= new self();
 	}
 
 	public static function GetRequestTime() :int {
@@ -309,7 +309,6 @@ class ICWP_APP_DataProcessor {
 	 * @return int|false
 	 */
 	public function getIpAddressVersion( $sIpAddress ) {
-
 		if ( filter_var( $sIpAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
 			return 4;
 		}

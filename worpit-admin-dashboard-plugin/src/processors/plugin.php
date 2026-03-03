@@ -40,19 +40,11 @@ class ICWP_APP_Processor_Plugin extends ICWP_APP_Processor_BaseApp {
 	}
 
 	public function getServiceIpAddressesV4() :array {
-		return $this->getValidServiceIps();
+		return $this->mod->getDefinedServiceIps( 4 );
 	}
 
 	public function getServiceIpAddressesV6() :array {
-		return $this->getValidServiceIps( 'ipv6' );
-	}
-
-	protected function getValidServiceIps( string $ips = 'ipv4' ) :array {
-		$lists = $this->mod->getDefinition( 'service_ip_addresses' );
-		if ( isset( $lists[ $ips ][ 'valid' ] ) && \is_array( $lists[ $ips ] ) && \is_array( $lists[ $ips ][ 'valid' ] ) ) {
-			return $lists[ $ips ][ 'valid' ];
-		}
-		return [];
+		return $this->mod->getDefinedServiceIps( 6 );
 	}
 
 	public function doVerifyCanHandshake() :bool {
@@ -80,8 +72,37 @@ class ICWP_APP_Processor_Plugin extends ICWP_APP_Processor_BaseApp {
 	 * @uses die()
 	 */
 	public function doApiLinkSite() {
-		require_once( ABSPATH.'wp-admin/includes/upgrade.php' );
-		$this->sendApiResponse( ( new \ICWP_APP_Processor_Plugin_SiteLink( $this->mod ) )->run() );
+		$shouldDispatch = false;
+
+		if ( $this->mod->getIsSiteLinked() ) {
+			$shouldDispatch = true;
+		}
+		elseif ( !$this->mod->isBootstrapWindowOpen() ) {
+			$this->sendBootstrapDeniedResponse();
+		}
+		else {
+			$requestKey = \trim( (string)$this->getRequestParams()->key );
+			if ( !empty( $requestKey ) ) {
+				if ( $this->mod->isValidBootstrapRequestKey( $requestKey ) ) {
+					$shouldDispatch = true;
+				}
+				else {
+					$this->sendInvalidBootstrapCredentialsResponse();
+				}
+			}
+			elseif ( $this->mod->isServiceIp( \trim( (string)$this->loadDP()->FetchServer( 'REMOTE_ADDR' ) ) ) ) {
+				$shouldDispatch = true;
+			}
+			else {
+				$this->sendBootstrapDeniedResponse();
+			}
+		}
+
+		if ( $shouldDispatch ) {
+			require_once( ABSPATH.'wp-admin/includes/upgrade.php' );
+			$this->sendApiResponse( ( new \ICWP_APP_Processor_Plugin_SiteLink( $this->mod ) )->run() );
+		}
+
 		die();
 	}
 
@@ -92,9 +113,14 @@ class ICWP_APP_Processor_Plugin extends ICWP_APP_Processor_BaseApp {
 	 * @uses die
 	 */
 	public function doApiAction() {
-		require_once( ABSPATH.'wp-admin/includes/upgrade.php' );
-		$class = $this->enum()[ $this->getApiChannel() ] ?? \ICWP_APP_Processor_Plugin_Api_Index::class;
-		$this->sendApiResponse( ( new $class( $this->mod ) )->run(), (bool)$this->getRequestParams()->icwpenc );
+		if ( !$this->mod->getIsSiteLinked() && !$this->mod->isUnlinkedBootstrapPermitted() ) {
+			$this->sendBootstrapDeniedResponse();
+		}
+		else {
+			require_once( ABSPATH.'wp-admin/includes/upgrade.php' );
+			$class = $this->enum()[ $this->getApiChannel() ] ?? \ICWP_APP_Processor_Plugin_Api_Index::class;
+			$this->sendApiResponse( ( new $class( $this->mod ) )->run(), (bool)$this->getRequestParams()->icwpenc );
+		}
 		die();
 	}
 
@@ -126,7 +152,7 @@ class ICWP_APP_Processor_Plugin extends ICWP_APP_Processor_BaseApp {
 				'content'  => self::con()->getPluginUrl(),
 				'encoding' => 'none',
 				'version'  => $this->mod->getVersion(),
-				'auth_key' => $this->mod->getIsSiteLinked() ? '' : $this->mod->getPluginAuthKey()
+				'auth_key' => $this->mod->getBootstrapAuthKeyForResponse()
 			],
 			false
 		);
@@ -157,9 +183,27 @@ class ICWP_APP_Processor_Plugin extends ICWP_APP_Processor_BaseApp {
 				'content'  => \base64_encode( $this->loadDP()->encodeJson( $toSend->getResponsePackage() ) ),
 				'encoding' => 'json',
 				'version'  => $this->mod->getVersion(),
-				'auth_key' => $this->mod->getIsSiteLinked() ? '' : $this->mod->getPluginAuthKey()
+				'auth_key' => $this->mod->getBootstrapAuthKeyForResponse()
 			],
 			false
 		);
+	}
+
+	private function sendBootstrapDeniedResponse() {
+		$r = ( new LegacyApi\ApiResponse() )
+			->setSuccess( false )
+			->setStatus( $this->mod::API_STATUS_BOOTSTRAP_DENIED )
+			->setMessage( $this->mod::API_MESSAGE_BOOTSTRAP_DENIED )
+			->setCode( $this->mod::API_CODE_BOOTSTRAP_DENIED );
+		$this->sendApiResponse( $r );
+	}
+
+	private function sendInvalidBootstrapCredentialsResponse() {
+		$r = ( new LegacyApi\ApiResponse() )
+			->setSuccess( false )
+			->setStatus( $this->mod::API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS )
+			->setMessage( $this->mod::API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS )
+			->setCode( 3 );
+		$this->sendApiResponse( $r );
 	}
 }

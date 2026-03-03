@@ -20,7 +20,7 @@ class ICWP_APP_WpFilesystem {
 	protected $sWpConfigPath = null;
 
 	public static function GetInstance() :self {
-		return self::$I ?? self::$I = new self();
+		return self::$I ??= new self();
 	}
 
 	/**

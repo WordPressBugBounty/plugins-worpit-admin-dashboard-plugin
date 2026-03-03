@@ -68,7 +68,7 @@ class Controller extends \ICWP_APP_Foundation {
 	/**
 	 * @var \ICWP_APP_FeatureHandler_Base[]
 	 */
-	public $modules = [];
+	public array $modules = [];
 
 	/**
 	 * @return Controller
@@ -174,9 +174,13 @@ class Controller extends \ICWP_APP_Foundation {
 	}
 
 	public function onWpDeactivatePlugin() {
+		$this->loadCorePluginFeatureHandler()
+			 ->closeBootstrapWindow()
+			 ->savePluginOptions();
+
 		$tmp = $this->getPath_PluginCache();
 		if ( FileSystem::Instance()->isDir( $tmp ) ) {
-			FileSystem::Instance()->deleteDir( $tmp );
+			FileSystem::Instance()->delete( $tmp );
 		}
 
 		if ( current_user_can( $this->getBasePermissions() ) && apply_filters( $this->doPluginPrefix( 'delete_on_deactivate' ), false ) ) {
@@ -612,33 +616,31 @@ class Controller extends \ICWP_APP_Foundation {
 	}
 
 	public function getIsRebuildOptionsFromFile() :bool {
-		if ( isset( $this->rebuildOpts ) ) {
-			return $this->rebuildOpts;
+		if ( !isset( $this->rebuildOpts ) ) {
+			// The first choice is to look for the file hash. If it's "always" empty, it means we could never
+			// hash the file in the first place so it's not ever effectively used and it falls back to the rebuild file
+			$conOptions = $this->conOpts();
+			$specPath = $this->getPathPluginSpec();
+			$currentHash = @\md5_file( $specPath );
+			$modTime = $this->loadFS()->getModifiedTime( $specPath );
+
+			$this->rebuildOpts = true;
+
+			if ( isset( $conOptions->hash ) && is_string( $conOptions->hash ) && ( $conOptions->hash == $currentHash ) ) {
+				$this->rebuildOpts = false;
+			}
+			elseif ( isset( $conOptions->mod_time ) && ( $modTime < $conOptions->mod_time ) ) {
+				$this->rebuildOpts = false;
+			}
+
+			$conOptions->hash = $currentHash;
+			$conOptions->mod_time = $modTime;
 		}
-
-		// The first choice is to look for the file hash. If it's "always" empty, it means we could never
-		// hash the file in the first place so it's not ever effectively used and it falls back to the rebuild file
-		$conOptions = $this->conOpts();
-		$specPath = $this->getPathPluginSpec();
-		$currentHash = @\md5_file( $specPath );
-		$modTime = $this->loadFS()->getModifiedTime( $specPath );
-
-		$this->rebuildOpts = true;
-
-		if ( isset( $conOptions->hash ) && is_string( $conOptions->hash ) && ( $conOptions->hash == $currentHash ) ) {
-			$this->rebuildOpts = false;
-		}
-		elseif ( isset( $conOptions->mod_time ) && ( $modTime < $conOptions->mod_time ) ) {
-			$this->rebuildOpts = false;
-		}
-
-		$conOptions->hash = $currentHash;
-		$conOptions->mod_time = $modTime;
 		return $this->rebuildOpts;
 	}
 
 	public function getIsResetPlugin() :bool {
-		return $this->reset ?? $this->reset = (bool)$this->loadFS()->isFile( $this->getPath_Flags( 'reset' ) );
+		return $this->reset ??= (bool)$this->loadFS()->isFile( $this->getPath_Flags( 'reset' ) );
 	}
 
 	/**
@@ -652,7 +654,7 @@ class Controller extends \ICWP_APP_Foundation {
 	 * This is the path to the main plugin file relative to the WordPress plugins directory.
 	 */
 	public function getPluginBaseFile() :string {
-		return $this->pluginBaseFile ?? $this->pluginBaseFile = plugin_basename( $this->getRootFile() );
+		return $this->pluginBaseFile ??= plugin_basename( $this->getRootFile() );
 	}
 
 	public function getPluginSlug() {
@@ -757,10 +759,7 @@ class Controller extends \ICWP_APP_Foundation {
 	}
 
 	public function getRootFile() :string {
-		if ( !isset( self::$sRootFile ) ) {
-			self::$sRootFile = __FILE__;
-		}
-		return self::$sRootFile;
+		return self::$sRootFile ??= __FILE__;
 	}
 
 	/**
@@ -778,7 +777,7 @@ class Controller extends \ICWP_APP_Foundation {
 		if ( !isset( self::$conOpts ) ) {
 
 			self::$conOpts = $this->loadWP()->getOption( $this->getPluginControllerOptionsKey() );
-			if ( !is_object( self::$conOpts ) ) {
+			if ( !\is_object( self::$conOpts ) ) {
 				self::$conOpts = new \stdClass();
 			}
 
@@ -863,20 +862,6 @@ class Controller extends \ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @deprecated 4.5
-	 */
-	public function filter_hidePluginFromTableList( $plugins ) {
-		return $plugins;
-	}
-
-	/**
-	 * @deprecated 4.5 - no longer autoupdate from within the plugin
-	 */
-	public function setUpdateFirstDetectedAt( $updateData ) {
-		return $updateData;
-	}
-
-	/**
 	 * This is a filter method designed to say whether WordPress plugin upgrades should be permitted,
 	 * based on the plugin settings.
 	 * @param bool          $doUpdate
@@ -886,18 +871,5 @@ class Controller extends \ICWP_APP_Foundation {
 	 */
 	public function onWpAutoUpdate( $doUpdate, $mItem ) {
 		return $doUpdate;
-	}
-
-	/**
-	 * @deprecated 4.5.1
-	 */
-	protected function doLoadTextDomain() {
-	}
-
-	/**
-	 * @deprecated 4.5.1
-	 */
-	protected function getPluginSpec_ActionLinks( string $key ) :array {
-		return $this->conOpts()->plugin_spec[ 'action_links' ][ $key ] ?? [];
 	}
 }
