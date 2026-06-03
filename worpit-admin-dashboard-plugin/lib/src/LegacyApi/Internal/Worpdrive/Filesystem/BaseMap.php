@@ -2,7 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\Filesystem;
 
-use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\{
+use FernleafSystems\WorpdriveClient\Filesystem\Map\{
 	MapHandler,
 	MapVO
 };
@@ -35,7 +35,8 @@ abstract class BaseMap extends \FernleafSystems\Wordpress\Plugin\iControlWP\Lega
 		if ( empty( $this->getActionParam( 'dir' ) ) ) {
 			throw new \Exception( 'Dir param is empty' );
 		}
-		if ( empty( $this->getActionParam( 'file_exclusions' ) ) || !\is_array( $this->getActionParam( 'file_exclusions' ) ) ) {
+		$fileExclusions = $this->getActionParam( 'file_exclusions' );
+		if ( empty( $fileExclusions ) || !\is_array( $fileExclusions ) ) {
 			throw new \Exception( "There's no scenario where there are no exclusions." );
 		}
 	}

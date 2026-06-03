@@ -4,21 +4,35 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
+class ComposerStaticInit31848360a50e3a1433a83c0aa550465d
 {
     public static $files = array (
+        'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
         'e25c14a5fe19c3bedb8e50dd39ae0d06' => __DIR__ . '/../..' . '/functions/functions.php',
         '38cfe7167fc3c2737612f8fbe0b5819c' => __DIR__ . '/../..' . '/src/Functions/functions.php',
     );
 
     public static $prefixLengthsPsr4 = array (
+        'S' =>
+        array (
+            'Symfony\\Polyfill\\Php80\\' => 23,
+        ),
         'F' =>
         array (
+            'FernleafSystems\\WorpdriveClient\\' => 32,
             'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\' => 44,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
+        'Symfony\\Polyfill\\Php80\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-php80',
+        ),
+        'FernleafSystems\\WorpdriveClient\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src',
+        ),
         'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
@@ -26,7 +40,151 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
     );
 
     public static $classMap = array (
+        'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Control\\Controller' => __DIR__ . '/../..' . '/src/Control/Controller.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Control\\PluginControllerConsumer' => __DIR__ . '/../..' . '/src/Control/PluginControllerConsumer.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Handlers\\FileSystem' => __DIR__ . '/../..' . '/src/Handlers/FileSystem.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Handlers\\Plugins' => __DIR__ . '/../..' . '/src/Handlers/Plugins.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Handlers\\Request' => __DIR__ . '/../..' . '/src/Handlers/Request.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Handlers\\Themes' => __DIR__ . '/../..' . '/src/Handlers/Themes.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\ApiResponse' => __DIR__ . '/../..' . '/src/LegacyApi/ApiResponse.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Channel\\Download' => __DIR__ . '/../..' . '/src/LegacyApi/Channel/Download.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Autoupdate\\Base' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Autoupdate/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Autoupdate\\Plugin' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Autoupdate/Plugin.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Autoupdate\\Theme' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Autoupdate/Theme.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Base' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Base' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Capabilities' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Capabilities.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Environment' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Environment.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Info' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Info.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Paths' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Paths.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Plugins' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Plugins.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Sync' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Sync.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\Themes' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/Themes.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Collect\\WordPress' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Collect/WordPress.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Comments\\Retrieve' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Comments/Retrieve.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Comments\\Status' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Comments/Status.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Common\\AutoOrLegacyUpdater' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Common/AutoOrLegacyUpdater.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Common\\Rollback' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Common/Rollback.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Common\\RunAutoupdates' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Common/RunAutoupdates.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Core\\Dbupgrade' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Core/Dbupgrade.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Core\\Reinstall' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Core/Reinstall.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Core\\Update' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Core/Update.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Db\\Base' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Db/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Db\\Optimise' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Db/Optimise.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Db\\Status' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Db/Status.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Download\\Plugin' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Download/Plugin.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Download\\Theme' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Download/Theme.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Plugin\\Activate' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Plugin/Activate.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Plugin\\Base' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Plugin/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Plugin\\Deactivate' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Plugin/Deactivate.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Plugin\\Delete' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Plugin/Delete.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Plugin\\Install' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Plugin/Install.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Plugin\\Rollback' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Plugin/Rollback.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Plugin\\Update' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Plugin/Update.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Shield\\Base' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Shield/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Shield\\Delete' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Shield/Delete.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Shield\\Options\\Export' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Shield/Options/Export.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Shield\\Options\\Update' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Shield/Options/Update.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Site\\Unlink' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Site/Unlink.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Subsystem\\Configure' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Subsystem/Configure.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Theme\\Activate' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Theme/Activate.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Theme\\Base' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Theme/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Theme\\Delete' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Theme/Delete.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Theme\\Install' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Theme/Install.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Theme\\Update' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Theme/Update.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\User\\Create' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/User/Create.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\User\\Delete' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/User/Delete.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\User\\Enumerate' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/User/Enumerate.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\User\\Login' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/User/Login.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\User\\Logout' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/User/Logout.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\BaseWorpdrive' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/BaseWorpdrive.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Checks' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Checks.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Clean' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Clean.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Db\\Data' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Db/Data.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Db\\Schema' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Db/Schema.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Download' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Download.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Filesystem\\BaseMap' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Filesystem/BaseMap.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Filesystem\\Hashless' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Filesystem/Hashless.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Filesystem\\Map' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Filesystem/Map.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Filesystem\\Recent' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Filesystem/Recent.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Filesystem\\Zip' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Filesystem/Zip.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Host\\IControlWorpdriveDatabase' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Host/IControlWorpdriveDatabase.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Host\\IControlWorpdriveFilesystem' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Host/IControlWorpdriveFilesystem.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Host\\IControlWorpdriveHost' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Host/IControlWorpdriveHost.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\Host\\IControlWorpdriveWordPress' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/Host/IControlWorpdriveWordPress.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Internal\\Worpdrive\\IControlWorpdriveCompatibilityChecks' => __DIR__ . '/../..' . '/src/LegacyApi/Internal/Worpdrive/IControlWorpdriveCompatibilityChecks.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\RequestParameters' => __DIR__ . '/../..' . '/src/LegacyApi/RequestParameters.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\LegacyApi\\Response\\SendAppApiResponse' => __DIR__ . '/../..' . '/src/LegacyApi/Response/SendAppApiResponse.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Ops\\Log\\ToFile' => __DIR__ . '/../..' . '/src/Ops/Log/ToFile.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Ops\\ZipDownload\\Base' => __DIR__ . '/../..' . '/src/Ops/ZipDownload/Base.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Ops\\ZipDownload\\Clean' => __DIR__ . '/../..' . '/src/Ops/ZipDownload/Clean.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Ops\\ZipDownload\\Create' => __DIR__ . '/../..' . '/src/Ops/ZipDownload/Create.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Ops\\ZipDownload\\Download' => __DIR__ . '/../..' . '/src/Ops/ZipDownload/Download.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Traits\\PluginControllerConsumer' => __DIR__ . '/../..' . '/src/Traits/PluginControllerConsumer.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\AbstractPagedIterator\\AbstractPagedIterator' => __DIR__ . '/../..' . '/src/Utilities/AbstractPagedIterator/AbstractPagedIterator.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\DynProperties\\DynProperties' => __DIR__ . '/../..' . '/src/Utilities/DynProperties/DynProperties.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\DynProperties\\DynPropertiesClass' => __DIR__ . '/../..' . '/src/Utilities/DynProperties/DynPropertiesClass.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\File\\ZipDir' => __DIR__ . '/../..' . '/src/Utilities/File/ZipDir.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\Filesystem\\CanWriteToDir' => __DIR__ . '/../..' . '/src/Utilities/Filesystem/CanWriteToDir.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\PasswordGenerator' => __DIR__ . '/../..' . '/src/Utilities/PasswordGenerator.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\StdClassAdapter' => __DIR__ . '/../..' . '/src/Utilities/StdClassAdapter.php',
+        'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\Utilities\\Time\\WorldTimeApi' => __DIR__ . '/../..' . '/src/Utilities/Time/WorldTimeApi.php',
+        'FernleafSystems\\WorpdriveClient\\BaseHandler' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/BaseHandler.php',
+        'FernleafSystems\\WorpdriveClient\\Clean' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Clean.php',
+        'FernleafSystems\\WorpdriveClient\\CompatibilityChecks' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/CompatibilityChecks.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\BaseDbHandler' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/BaseDbHandler.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\ChunkedExporter' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/ChunkedExporter.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\CompositePrimaryKeyCursor' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/CompositePrimaryKeyCursor.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\DataExportHandler' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/DataExportHandler.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\DatabaseExportErrorPayload' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/DatabaseExportErrorPayload.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\ExportMap' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/ExportMap.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\PagedExporter' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/PagedExporter.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\TupleCursor' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/TupleCursor.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Data\\UniqueIndexCursor' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Data/UniqueIndexCursor.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\Config' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/Config.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\Exporter' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/Exporter.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\SqlDumpBitValueFormatter' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/SqlDumpBitValueFormatter.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\SqlDumpIdentifierEscaper' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/SqlDumpIdentifierEscaper.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\SqlDumpValueEscaper' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/SqlDumpValueEscaper.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\SqlExportSession' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/SqlExportSession.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\TableEnum' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/TableEnum.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\Table\\EnumTablePrimaryKeys' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/Table/EnumTablePrimaryKeys.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\Table\\TableDataExport' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/Table/TableDataExport.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\Table\\TableHelper' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/Table/TableHelper.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Operators\\Table\\TableRowsSqlBuilder' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Operators/Table/TableRowsSqlBuilder.php',
+        'FernleafSystems\\WorpdriveClient\\Database\\Schema\\SchemaHandler' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Database/Schema/SchemaHandler.php',
+        'FernleafSystems\\WorpdriveClient\\Download' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Download.php',
+        'FernleafSystems\\WorpdriveClient\\Enum\\DownloadTypes' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Enum/DownloadTypes.php',
+        'FernleafSystems\\WorpdriveClient\\Exc\\TimeLimitReachedException' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Exc/TimeLimitReachedException.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\BaseFsHandler' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/BaseFsHandler.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\Exc\\MapDirCannotBeOpenedException' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/Exc/MapDirCannotBeOpenedException.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\FileFilter' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/FileFilter.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\Listing\\AbstractFileListing' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/Listing/AbstractFileListing.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\Listing\\FileListItem' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/Listing/FileListItem.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\Listing\\FileListing' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/Listing/FileListing.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\Listing\\FlatFileListing' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/Listing/FlatFileListing.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\Listing\\SqliteFileListing' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/Listing/SqliteFileListing.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\MapDir' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/MapDir.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\MapHandler' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/MapHandler.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\MapPathNormalizer' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/MapPathNormalizer.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\MapProgressTracker' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/MapProgressTracker.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Map\\MapVO' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Map/MapVO.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\ZipCreate\\RelativeZipPathGuard' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/ZipCreate/RelativeZipPathGuard.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\ZipCreate\\Zipper' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/ZipCreate/Zipper.php',
+        'FernleafSystems\\WorpdriveClient\\Filesystem\\Zip\\ZipHandler' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Filesystem/Zip/ZipHandler.php',
+        'FernleafSystems\\WorpdriveClient\\Host\\WorpdriveDatabase' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Host/WorpdriveDatabase.php',
+        'FernleafSystems\\WorpdriveClient\\Host\\WorpdriveFilesystem' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Host/WorpdriveFilesystem.php',
+        'FernleafSystems\\WorpdriveClient\\Host\\WorpdriveHost' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Host/WorpdriveHost.php',
+        'FernleafSystems\\WorpdriveClient\\Host\\WorpdriveRuntime' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Host/WorpdriveRuntime.php',
+        'FernleafSystems\\WorpdriveClient\\Host\\WorpdriveWordPress' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Host/WorpdriveWordPress.php',
+        'FernleafSystems\\WorpdriveClient\\Utility\\Base64PayloadDecoder' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Utility/Base64PayloadDecoder.php',
+        'FernleafSystems\\WorpdriveClient\\Utility\\DeletePreExistingFilesForType' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Utility/DeletePreExistingFilesForType.php',
+        'FernleafSystems\\WorpdriveClient\\Utility\\DynPropertiesClass' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Utility/DynPropertiesClass.php',
+        'FernleafSystems\\WorpdriveClient\\Utility\\EnumTypes' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Utility/EnumTypes.php',
+        'FernleafSystems\\WorpdriveClient\\Utility\\FileNameFor' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Utility/FileNameFor.php',
+        'FernleafSystems\\WorpdriveClient\\Utility\\LocateFilesForType' => __DIR__ . '/..' . '/fernleafsystems/worpdrive-client/src/Utility/LocateFilesForType.php',
         'ICWP_APP_DataProcessor' => __DIR__ . '/../..' . '/../src/common/icwp-data.php',
         'ICWP_APP_Encrypt' => __DIR__ . '/../..' . '/../src/common/icwp-encrypt.php',
         'ICWP_APP_FeatureHandler_Autoupdates' => __DIR__ . '/../..' . '/../src/features/autoupdates.php',
@@ -42,7 +200,6 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
         'ICWP_APP_Processor_Autoupdates' => __DIR__ . '/../..' . '/../src/processors/autoupdates.php',
         'ICWP_APP_Processor_Base' => __DIR__ . '/../..' . '/../src/processors/base.php',
         'ICWP_APP_Processor_BaseApp' => __DIR__ . '/../..' . '/../src/processors/base_app.php',
-        'ICWP_APP_Processor_BasePlugin' => __DIR__ . '/../..' . '/../src/processors/base_plugin.php',
         'ICWP_APP_Processor_Compatibility' => __DIR__ . '/../..' . '/../src/processors/compatibility.php',
         'ICWP_APP_Processor_GoogleAnalytics' => __DIR__ . '/../..' . '/../src/processors/google_analytics.php',
         'ICWP_APP_Processor_Plugin' => __DIR__ . '/../..' . '/../src/processors/plugin.php',
@@ -67,14 +224,20 @@ class ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d
         'ICWP_APP_WpUsers' => __DIR__ . '/../..' . '/../src/common/wp-users.php',
         'ICWP_Upgrader_Skin' => __DIR__ . '/../..' . '/../src/common/Upgrades/Icwp_Upgrader_Skin.php',
         'ICWP_Upgrader_Skin_Legacy' => __DIR__ . '/../..' . '/../src/common/Upgrades/ICWP_Upgrader_Skin_Legacy.php',
+        'PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/PhpToken.php',
+        'Stringable' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
+        'Symfony\\Polyfill\\Php80\\Php80' => __DIR__ . '/..' . '/symfony/polyfill-php80/Php80.php',
+        'Symfony\\Polyfill\\Php80\\PhpToken' => __DIR__ . '/..' . '/symfony/polyfill-php80/PhpToken.php',
+        'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
+        'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit087f4a15eb951e43b942d9d65f3f788d::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit31848360a50e3a1433a83c0aa550465d::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit31848360a50e3a1433a83c0aa550465d::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit31848360a50e3a1433a83c0aa550465d::$classMap;
 
         }, null, ClassLoader::class);
     }

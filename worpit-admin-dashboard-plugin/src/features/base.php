@@ -15,11 +15,11 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	/**
 	 * @var string
 	 */
-	const CollateSeparator = '--SEP--';
+	public const CollateSeparator = '--SEP--';
 	/**
 	 * @var string
 	 */
-	const PluginVersionKey = 'current_plugin_version';
+	public const PluginVersionKey = 'current_plugin_version';
 
 	/**
 	 * @var bool

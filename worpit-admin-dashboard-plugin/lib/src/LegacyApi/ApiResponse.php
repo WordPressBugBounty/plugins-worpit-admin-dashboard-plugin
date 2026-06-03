@@ -36,27 +36,9 @@ class ApiResponse {
 	}
 
 	/**
-	 * @param int $code
-	 * @return $this
-	 */
-	public function setCode( $code ) {
-		$this->code = (int)$code;
-		return $this;
-	}
-
-	/**
 	 * @param string $sMsg
 	 * @return $this
-	 */
-	public function setErrorMessage( $sMsg ) {
-		$this->error_message = (int)$sMsg;
-		return $this;
-	}
-
-	/**
-	 * @param string $sMsg
-	 * @return $this
-	 * @deprecated
+	 * @deprecated 5.6
 	 */
 	public function setMessage( $sMsg ) {
 		$this->message = $sMsg;
@@ -66,7 +48,7 @@ class ApiResponse {
 	/**
 	 * @param bool $bSuccess
 	 * @return $this
-	 * @deprecated
+	 * @deprecated 5.6
 	 */
 	public function setSuccess( $bSuccess = true ) {
 		$this->success = (bool)$bSuccess;
@@ -76,20 +58,10 @@ class ApiResponse {
 	/**
 	 * @param string $sStatus
 	 * @return $this
+	 * @deprecated 5.6
 	 */
 	public function setStatus( $sStatus ) {
 		$this->status = $sStatus;
-		return $this;
-	}
-
-	/**
-	 * @param string $sItem
-	 * @param mixed  $mValue
-	 * @return $this
-	 * @deprecated
-	 */
-	protected function setResponseItem( $sItem, $mValue ) {
-		$this->{$sItem} = $mValue;
 		return $this;
 	}
 
@@ -98,100 +70,5 @@ class ApiResponse {
 	 */
 	public function getResponsePackage() {
 		return (object)$this->getRawDataAsArray();
-	}
-
-	/**
-	 * @param int $nResult
-	 * @return $this
-	 * @deprecated
-	 */
-	public function setOpensslVerify( $nResult ) {
-		$this->openssl_verify = $nResult;
-		return $this;
-	}
-
-	/**
-	 * @param string $sMethod
-	 * @return $this
-	 * @deprecated
-	 */
-	public function setHandshakeMethod( $sMethod ) {
-		$this->handshake = $sMethod;
-		return $this;
-	}
-
-	/**
-	 * @var \stdClass
-	 */
-	protected $oResponsePackageData;
-
-	/**
-	 * @return string
-	 * @deprecated
-	 */
-	public function getErrorMessage() {
-		return $this->error_message;
-	}
-
-	/**
-	 * @return bool
-	 * @deprecated
-	 */
-	public function isSuccessful() {
-		return (bool)$this->success;
-	}
-
-	/**
-	 * @param bool $bAuthenticated
-	 * @return $this
-	 * @deprecated
-	 */
-	public function setAuthenticated( $bAuthenticated ) {
-		$this->authenticated = $bAuthenticated ? 1 : 0;
-		return $this;
-	}
-
-	/**
-	 * @param string $sItem
-	 * @param mixed  $mDefault
-	 * @return mixed
-	 * @deprecated
-	 */
-	protected function getResponseItem( $sItem, $mDefault = null ) {
-		return $this->{$sItem};
-	}
-
-	/**
-	 * @return array
-	 * @deprecated
-	 */
-	public function getData() :array {
-		return is_array( $this->data ) ? $this->data : [];
-	}
-
-	/**
-	 * @param string $sChannel
-	 * @return $this
-	 * @deprecated
-	 */
-	public function setChannel( $sChannel ) {
-		$this->channel = $sChannel;
-		return $this;
-	}
-
-	/**
-	 * @return int
-	 * @deprecated
-	 */
-	public function getCode() {
-		return $this->code;
-	}
-
-	/**
-	 * @return bool
-	 * @deprecated
-	 */
-	public function isDie() {
-		return (bool)$this->die;
 	}
 }

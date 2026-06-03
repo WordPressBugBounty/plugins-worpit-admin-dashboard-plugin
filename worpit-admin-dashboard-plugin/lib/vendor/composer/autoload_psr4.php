@@ -6,5 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Symfony\\Polyfill\\Php80\\' => array($vendorDir . '/symfony/polyfill-php80'),
+    'FernleafSystems\\WorpdriveClient\\' => array($vendorDir . '/fernleafsystems/worpdrive-client/src'),
     'FernleafSystems\\Wordpress\\Plugin\\iControlWP\\' => array($baseDir . '/src'),
 );

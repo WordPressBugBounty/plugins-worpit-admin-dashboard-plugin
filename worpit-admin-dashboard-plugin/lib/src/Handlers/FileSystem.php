@@ -93,21 +93,39 @@ class FileSystem {
 	public function createDummyDataFileRandomBytes( string $path, int $size = 1048576 /** Bytes */, $maxSegment = 1048576 ) :bool {
 		$success = false;
 		$dir = \dirname( $path );
-		if ( $size > 1 && $maxSegment > 1 && $this->mkdir( $dir ) && $this->isDir( $dir ) ) {
+		if ( \file_exists( $path ) ) {
+			return false;
+		}
+		if ( $size > 1 && $maxSegment > 1 && $this->mkdir( $dir ) && ( $this->isDir( $dir ) || \is_dir( $dir ) ) ) {
 			$maxSegment = \min( $maxSegment, $size );
+			$createdFile = false;
+			$h = false;
 			try {
-				$h = \fopen( $path, 'w' );
+				$h = @\fopen( $path, 'xb' );
 				if ( \is_resource( $h ) ) {
+					$createdFile = true;
 					$remaining = $size;
 					do {
 						$length = \min( $maxSegment, $remaining );
-						\fwrite( $h, \random_bytes( $length ) );
-						$remaining -= $length;
+						$written = \fwrite( $h, \random_bytes( $length ) );
+						if ( $written !== $length ) {
+							throw new \RuntimeException( 'Failed to write dummy data segment.' );
+						}
+						$remaining -= $written;
 					} while ( $remaining > 0 );
 					$success = \fclose( $h ) && $remaining === 0;
+					$h = false;
 				}
 			}
 			catch ( \Exception|\Error $e ) {
+			}
+			finally {
+				if ( \is_resource( $h ) ) {
+					@\fclose( $h );
+				}
+				if ( !$success && $createdFile && \is_file( $path ) ) {
+					$this->delete( $path ) || @\unlink( $path );
+				}
 			}
 		}
 		return $success;

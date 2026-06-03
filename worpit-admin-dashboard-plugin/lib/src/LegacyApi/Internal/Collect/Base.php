@@ -60,8 +60,7 @@ abstract class Base extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyA
 		}
 
 		if ( !$soFar ) {
-			$this->getStandardResponse()
-				 ->setErrorMessage( $outsMessage );
+			$this->getStandardResponse()->error_message = $outsMessage;
 			return false;
 		}
 

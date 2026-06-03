@@ -2,7 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\Db;
 
-use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Database\Schema\SchemaHandler;
+use FernleafSystems\WorpdriveClient\Database\Schema\SchemaHandler;
 
 class Schema extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\BaseWorpdrive {
 

@@ -190,20 +190,20 @@ class ICWP_APP_Processor_Plugin extends ICWP_APP_Processor_BaseApp {
 	}
 
 	private function sendBootstrapDeniedResponse() {
-		$r = ( new LegacyApi\ApiResponse() )
-			->setSuccess( false )
-			->setStatus( $this->mod::API_STATUS_BOOTSTRAP_DENIED )
-			->setMessage( $this->mod::API_MESSAGE_BOOTSTRAP_DENIED )
-			->setCode( $this->mod::API_CODE_BOOTSTRAP_DENIED );
+		$r = new LegacyApi\ApiResponse();
+		$r->success = false;
+		$r->status = \ICWP_APP_FeatureHandler_Plugin::API_STATUS_BOOTSTRAP_DENIED;
+		$r->message = \ICWP_APP_FeatureHandler_Plugin::API_MESSAGE_BOOTSTRAP_DENIED;
+		$r->code = \ICWP_APP_FeatureHandler_Plugin::API_CODE_BOOTSTRAP_DENIED;
 		$this->sendApiResponse( $r );
 	}
 
 	private function sendInvalidBootstrapCredentialsResponse() {
-		$r = ( new LegacyApi\ApiResponse() )
-			->setSuccess( false )
-			->setStatus( $this->mod::API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS )
-			->setMessage( $this->mod::API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS )
-			->setCode( 3 );
+		$r = new LegacyApi\ApiResponse();
+		$r->success = false;
+		$r->status = \ICWP_APP_FeatureHandler_Plugin::API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS;
+		$r->message = \ICWP_APP_FeatureHandler_Plugin::API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS;
+		$r->code = 3;
 		$this->sendApiResponse( $r );
 	}
 }

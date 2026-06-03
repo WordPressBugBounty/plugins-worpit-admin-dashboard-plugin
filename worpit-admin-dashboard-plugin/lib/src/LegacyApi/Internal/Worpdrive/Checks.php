@@ -5,8 +5,9 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdri
 class Checks extends BaseWorpdrive {
 
 	protected function execHandler() :?array {
-		return ( new \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\CompatibilityChecks(
-			\is_array( $this->getActionParam( 'check_params', [] ) ) ? $this->getActionParam( 'check_params', [] ) : [],
+		$checkParams = $this->getActionParam( 'check_params', [] );
+		return ( new IControlWorpdriveCompatibilityChecks(
+			\is_array( $checkParams ) ? $checkParams : [],
 			$this->getActionParam( 'uuid' ),
 			0
 		) )->run();

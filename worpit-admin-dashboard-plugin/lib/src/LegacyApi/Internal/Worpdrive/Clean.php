@@ -2,10 +2,12 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive;
 
+use FernleafSystems\WorpdriveClient\Clean as WorpdriveClean;
+
 class Clean extends BaseWorpdrive {
 
 	protected function execHandler() :?array {
-		return ( new \FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Clean(
+		return ( new WorpdriveClean(
 			$this->getActionParam( 'uuid' ),
 			$this->getTimeLimit()
 		) )->run();

@@ -3,6 +3,8 @@
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive;
 
 use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
+use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\Host\IControlWorpdriveHost;
+use FernleafSystems\WorpdriveClient\Host\WorpdriveRuntime;
 
 abstract class BaseWorpdrive extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Base {
 
@@ -18,6 +20,7 @@ abstract class BaseWorpdrive extends \FernleafSystems\Wordpress\Plugin\iControlW
 		$start = \time();
 		$startMem = \memory_get_usage( true );
 		try {
+			WorpdriveRuntime::setHost( new IControlWorpdriveHost() );
 			$this->verifyRequiredParams();
 			$status = $this->execHandler();
 		}
@@ -25,6 +28,9 @@ abstract class BaseWorpdrive extends \FernleafSystems\Wordpress\Plugin\iControlW
 			$status = null;
 			$err = $e->getMessage();
 			error_log( $err );
+		}
+		finally {
+			WorpdriveRuntime::resetHost();
 		}
 		return empty( $err ) ?
 			$this->success( [
@@ -39,7 +45,8 @@ abstract class BaseWorpdrive extends \FernleafSystems\Wordpress\Plugin\iControlW
 	}
 
 	protected function getTimeLimit() :int {
-		return \time() + ( empty( $this->getActionParam( 'time_limit' ) ) ? static::DEFAULT_TIME_LIMIT : $this->getActionParam( 'time_limit' ) );
+		$timeLimit = $this->getActionParam( 'time_limit' );
+		return \time() + ( empty( $timeLimit ) ? static::DEFAULT_TIME_LIMIT : $timeLimit );
 	}
 
 	/**

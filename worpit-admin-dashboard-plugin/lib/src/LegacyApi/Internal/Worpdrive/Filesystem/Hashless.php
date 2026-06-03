@@ -2,7 +2,7 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\Filesystem;
 
-use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Map\MapVO;
+use FernleafSystems\WorpdriveClient\Filesystem\Map\MapVO;
 
 class Hashless extends BaseMap {
 

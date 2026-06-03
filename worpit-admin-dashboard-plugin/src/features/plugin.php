@@ -336,24 +336,6 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	}
 
 	/**
-	 * @param string $sEmail
-	 * @return $this
-	 */
-	public function setAssignedTo( $sEmail ) {
-		$this->setOpt( 'assigned_to', $sEmail );
-		return $this;
-	}
-
-	/**
-	 * @param string $sUrl
-	 * @return $this
-	 */
-	public function setHelpdeskSsoUrl( $sUrl ) {
-		$this->setOpt( 'helpdesk_sso_url', $sUrl );
-		return $this;
-	}
-
-	/**
 	 * The PIN should be passed here without any pre-processing (such as MD5)
 	 *
 	 * @param $rawPin
@@ -393,14 +375,5 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	public function getAppUrl( $key ) {
 		$urls = $this->getDefinition( 'urls' );
 		return empty( $urls[ $key ] ) ? '' : $urls[ $key ];
-	}
-
-	/**
-	 * @param bool $bDoHidePlugin
-	 * @return bool
-	 * @deprecated 4.5
-	 */
-	public function getIfHidePlugin( $bDoHidePlugin ) {
-		return false;
 	}
 }

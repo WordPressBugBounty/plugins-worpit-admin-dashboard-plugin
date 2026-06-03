@@ -2,10 +2,7 @@
 
 class ICWP_APP_Processor_GoogleAnalytics extends ICWP_APP_Processor_BaseApp {
 
-	/**
-	 * @var array
-	 */
-	private $gaOpts = null;
+	private ?array $gaOpts = null;
 
 	public function run() {
 		add_action( 'wp', [ $this, 'onWp' ] );
@@ -55,7 +52,7 @@ class ICWP_APP_Processor_GoogleAnalytics extends ICWP_APP_Processor_BaseApp {
 	}
 
 	private function getGaOpts() :array {
-		return $this->gaOpts ?? $this->gaOpts = [
+		return $this->gaOpts ??= [
 			'tracking_id'            => $this->mod->getOpt( 'tracking_id' ),
 			'analytics_mode'         => \strtolower( $this->mod->getOpt( 'analytics_mode' ) ),
 			'ignore_logged_in_user'  => $this->mod->getOpt( 'ignore_logged_in_user' ),

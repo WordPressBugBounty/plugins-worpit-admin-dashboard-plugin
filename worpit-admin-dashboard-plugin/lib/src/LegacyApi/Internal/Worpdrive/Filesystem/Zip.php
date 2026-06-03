@@ -2,13 +2,14 @@
 
 namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\Filesystem;
 
-use FernleafSystems\Wordpress\Plugin\iControlWP\Worpdrive\Filesystem\Zip\ZipHandler;
+use FernleafSystems\WorpdriveClient\Filesystem\Zip\ZipHandler;
+use FernleafSystems\WorpdriveClient\Utility\Base64PayloadDecoder;
 
 class Zip extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Worpdrive\BaseWorpdrive {
 
 	protected function execHandler() :?array {
 		return ( new ZipHandler(
-			\array_map( '\base64_decode', $this->getActionParam( 'file_paths' ) ),
+			( new Base64PayloadDecoder() )->decodeRequiredList( $this->getActionParam( 'file_paths' ) ),
 			$this->getActionParam( 'dir' ),
 			$this->getActionParam( 'uuid' ),
 			$this->getTimeLimit(),
@@ -23,7 +24,8 @@ class Zip extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Interna
 		if ( empty( $this->getActionParam( 'dir' ) ) ) {
 			throw new \Exception( 'Dir param is empty' );
 		}
-		if ( empty( $this->getActionParam( 'file_paths' ) ) || !\is_array( $this->getActionParam( 'file_paths' ) ) ) {
+		$filePaths = $this->getActionParam( 'file_paths' );
+		if ( empty( $filePaths ) || !\is_array( $filePaths ) ) {
 			throw new \Exception( 'File paths to zip was empty.' );
 		}
 	}

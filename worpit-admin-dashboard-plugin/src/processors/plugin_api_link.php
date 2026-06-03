@@ -10,7 +10,9 @@ class ICWP_APP_Processor_Plugin_SiteLink extends ICWP_APP_Processor_Plugin_Api {
 	public function run() {
 		$this->preActionEnvironmentSetup();
 		if ( $this->getRequestParams()->a == 'check' ) {
-			return $this->getStandardResponse()->setSuccess( true );
+			$r = $this->getStandardResponse();
+			$r->success = true;
+			return $r;
 		}
 		return $this->processAction();
 	}
