@@ -1,1 +1,0 @@
-<p><?php echo $strings['plugin_update_available']; ?> <a href="<?php echo $hrefs['upgrade_link']; ?>"><?php echo $strings['click_update']; ?></a></p>
