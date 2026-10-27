@@ -55,7 +55,7 @@ class IControlWorpdriveWordPress implements WorpdriveWordPress {
 	}
 
 	public function restUrl() :string {
-		return \function_exists( 'rest_url' ) ? (string)rest_url() : '';
+		return (string)rest_url();
 	}
 
 	public function contentUrl() :string {
@@ -67,7 +67,7 @@ class IControlWorpdriveWordPress implements WorpdriveWordPress {
 	}
 
 	public function timezoneString() :string {
-		return \function_exists( 'wp_timezone_string' ) ? (string)wp_timezone_string() : '';
+		return (string)wp_timezone_string();
 	}
 
 	public function isMultisite() :bool {

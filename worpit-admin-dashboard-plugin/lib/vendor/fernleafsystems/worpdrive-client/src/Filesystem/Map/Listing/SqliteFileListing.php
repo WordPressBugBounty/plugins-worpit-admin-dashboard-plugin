@@ -26,25 +26,17 @@ class SqliteFileListing extends AbstractFileListing {
 		$this->db->exec( $successfulCreation ? 'COMMIT;' : 'ROLLBACK;' );
 	}
 
-	public function exists( string $path ) :bool {
-		return (bool)$this->db->querySingle(
-			sprintf( "SELECT exists(SELECT 1 FROM `%s` WHERE `path`='%s') AS `path_exists`;", self::TABLE_NAME_ITEMS, \base64_encode( $this->normalisePath( $path ) ) )
-		);
-	}
-
 	public function addRaw( string $path, string $hash = '', string $hashAlt = '', ?int $mtime = null, ?int $size = null ) :void {
-		if ( !$this->exists( $path ) ) {
-			$this->db->exec( sprintf( 'INSERT INTO `%s` VALUES (%s);',
-				self::TABLE_NAME_ITEMS,
-				sprintf( "'%s','%s','%s',%s,%s",
-					\base64_encode( $this->normalisePath( $path ) ),
-					$hash,
-					$hashAlt,
-					$mtime === null ? 0 : $mtime,
-					(int)$size
-				)
-			) );
-		}
+		$this->db->exec( sprintf( 'INSERT OR IGNORE INTO `%s` VALUES (%s);',
+			self::TABLE_NAME_ITEMS,
+			sprintf( "'%s','%s','%s',%s,%s",
+				\base64_encode( $this->normalisePath( $path ) ),
+				$hash,
+				$hashAlt,
+				$mtime === null ? 0 : $mtime,
+				(int)$size
+			)
+		) );
 	}
 
 	protected function createTables() :void {

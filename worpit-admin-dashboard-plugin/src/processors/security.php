@@ -10,7 +10,7 @@ class ICWP_APP_Processor_Security extends ICWP_APP_Processor_BaseApp {
 			add_filter( 'user_has_cap', [ $this, 'disallowFileEditing' ], 100, 3 );
 		}
 
-		if ( $this->mod->getOptIs( 'force_ssl_admin', 'Y' ) && function_exists( 'force_ssl_admin' ) ) {
+		if ( $this->mod->getOptIs( 'force_ssl_admin', 'Y' ) ) {
 			if ( !defined( 'FORCE_SSL_ADMIN' ) ) {
 				define( 'FORCE_SSL_ADMIN', true );
 			}

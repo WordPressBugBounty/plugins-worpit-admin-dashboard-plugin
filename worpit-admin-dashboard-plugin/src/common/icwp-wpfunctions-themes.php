@@ -14,19 +14,6 @@ class ICWP_APP_WpFunctions_Themes extends ICWP_APP_Foundation {
 		return self::$I ??= new self();
 	}
 
-	public function activate( string $stylesheet ) :bool {
-		if ( empty( $stylesheet )
-			 || empty( $this->getTheme( $stylesheet ) ) || !$this->getTheme( $stylesheet )->exists() ) {
-			return false;
-		}
-
-		switch_theme( $this->getTheme( $stylesheet )->get_stylesheet() );
-
-		// Now test currently active theme
-		$current = $this->getCurrent();
-		return !\is_null( $current ) && $stylesheet == $current->get_stylesheet();
-	}
-
 	/**
 	 * @param string $sFile
 	 * @return mixed[]
@@ -34,9 +21,7 @@ class ICWP_APP_WpFunctions_Themes extends ICWP_APP_Foundation {
 	public function update( $sFile ) {
 		$this->loadWpUpgrades();
 
-		$oSkin = $this->loadWP()->getWordpressIsAtLeastVersion( '3.7' ) ?
-			new \Automatic_Upgrader_Skin()
-			: new \ICWP_Upgrader_Skin_Legacy();
+		$oSkin = new \Automatic_Upgrader_Skin();
 		$mResult = ( new Theme_Upgrader( $oSkin ) )->bulk_upgrade( [ $sFile ] );
 
 		$aErrors = [];
@@ -46,15 +31,15 @@ class ICWP_APP_WpFunctions_Themes extends ICWP_APP_Foundation {
 			$aErrors[] = 'False - Filesystem Error';
 		}
 		elseif ( is_wp_error( $mDetails ) ) {
-			$mDetails = [];
 			$aErrors = $mDetails->get_error_messages();
+			$mDetails = [];
 		}
 
 		return [
 			'successful' => empty( $aErrors ),
 			'errors'     => $aErrors,
 			'details'    => $mDetails,
-			'feedback'   => method_exists( $oSkin, 'get_upgrade_messages' ) ? $oSkin->get_upgrade_messages() : [],
+			'feedback'   => $oSkin->get_upgrade_messages(),
 		];
 	}
 
@@ -70,17 +55,10 @@ class ICWP_APP_WpFunctions_Themes extends ICWP_APP_Foundation {
 	 * @return null|WP_Theme
 	 */
 	public function getTheme( $stylesheet = null ) {
-		if ( !\function_exists( 'wp_get_theme' ) ) {
-			require_once( ABSPATH.'wp-admin/includes/theme.php' );
-		}
-		$theme = \function_exists( 'wp_get_theme' ) ? wp_get_theme( $stylesheet ) : null;
-		return empty( $theme ) ? ( $this->getThemes()[ $stylesheet ] ?? null ) : $theme;
+		return wp_get_theme( $stylesheet );
 	}
 
 	public function getThemes() :array {
-		if ( !\function_exists( 'wp_get_themes' ) ) {
-			require_once( ABSPATH.'wp-admin/includes/theme.php' );
-		}
-		return \function_exists( 'wp_get_themes' ) ? wp_get_themes() : [];
+		return wp_get_themes();
 	}
 }

@@ -56,7 +56,7 @@ class ICWP_APP_DataProcessor {
 	 * @return false|string
 	 */
 	public function encodeJson( $mItem ) {
-		return \function_exists( 'wp_json_encode' ) ? wp_json_encode( $mItem ) : \json_encode( $mItem );
+		return wp_json_encode( $mItem );
 	}
 
 	/**
@@ -114,15 +114,6 @@ class ICWP_APP_DataProcessor {
 	}
 
 	/**
-	 * @param string $sPath
-	 * @return string
-	 */
-	public function getExtension( $sPath ) {
-		$nLastPeriod = \strrpos( $sPath, '.' );
-		return ( $nLastPeriod === false ) ? $sPath : str_replace( '.', '', substr( $sPath, $nLastPeriod ) );
-	}
-
-	/**
 	 * @return bool|int|string
 	 */
 	public function getVisitorIpVersion() {
@@ -130,13 +121,6 @@ class ICWP_APP_DataProcessor {
 			self::$nIpAddressVersion = $this->getIpAddressVersion( $this->getVisitorIpAddress( true ) );
 		}
 		return self::$nIpAddressVersion;
-	}
-
-	/**
-	 * @param string $sEmail
-	 */
-	public function validEmail( $sEmail ) :bool {
-		return !empty( $sEmail ) && is_email( $sEmail );
 	}
 
 	public function isUrlRewritten() :bool {
@@ -322,7 +306,7 @@ class ICWP_APP_DataProcessor {
 	 * @return string
 	 */
 	public function getPhpVersion() {
-		return \defined( 'PHP_VERSION' ) ? \PHP_VERSION : \phpversion();
+		return \PHP_VERSION;
 	}
 
 	/**
@@ -331,20 +315,6 @@ class ICWP_APP_DataProcessor {
 	 */
 	public function getPhpVersionIsAtLeast( $atLeast ) {
 		return \version_compare( $this->getPhpVersion(), $atLeast, '>=' );
-	}
-
-	/**
-	 * @param array $a
-	 * @return stdClass
-	 */
-	public function convertArrayToStdClass( $a ) {
-		$o = new \stdClass();
-		if ( !empty( $a ) && is_array( $a ) ) {
-			foreach ( $a as $sKey => $mValue ) {
-				$o->{$sKey} = $mValue;
-			}
-		}
-		return $o;
 	}
 
 	/**

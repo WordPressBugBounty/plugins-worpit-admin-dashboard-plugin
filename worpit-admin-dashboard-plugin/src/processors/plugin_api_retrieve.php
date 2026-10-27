@@ -13,17 +13,11 @@ class ICWP_APP_Processor_Plugin_Api_Retrieve extends ICWP_APP_Processor_Plugin_A
 
 		if ( !function_exists( 'download_url' ) ) {
 			return $this->setErrorResponse(
-				sprintf( 'Function "%s" does not exit.', 'download_url' )
-				- 1 //TODO: Set a code
-			);
-		}
-
-		if ( !function_exists( 'is_wp_error' ) ) {
-			return $this->setErrorResponse(
-				sprintf( 'Function "%s" does not exit.', 'is_wp_error' ),
+				sprintf( 'Function "%s" does not exist.', 'download_url' ),
 				-1 //TODO: Set a code
 			);
 		}
+
 
 		$sPackageId = $req->getStringParam( 'package_id' );
 		if ( empty( $sPackageId ) ) {
@@ -33,8 +27,8 @@ class ICWP_APP_Processor_Plugin_Api_Retrieve extends ICWP_APP_Processor_Plugin_A
 			);
 		}
 
-		// We can do this because we've assumed at this point we've validated the communication with iControlWP
-		$sRetrieveBaseUrl = $req->getStringParam( 'package_retrieve_url', $this->mod->getOpt( 'package_retrieve_url' ) );
+		// Only ever from the plugin's own iControlWP address, never one named in the request.
+		$sRetrieveBaseUrl = $this->mod->getAppUrl( 'package_retrieve_url' );
 		$sPackageRetrieveUrl = sprintf(
 			'%s/%s/%s/%s',
 			rtrim( $sRetrieveBaseUrl, '/' ),

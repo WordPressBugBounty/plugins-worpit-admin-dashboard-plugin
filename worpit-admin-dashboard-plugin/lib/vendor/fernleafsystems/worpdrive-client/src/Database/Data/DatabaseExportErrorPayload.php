@@ -7,23 +7,30 @@ class DatabaseExportErrorPayload {
 	private const CODE_FAILED = 'db_export_failed';
 
 	/**
-	 * @return array{error:array{code:string,message:string,stage:string,retryable:bool},error_context:array{table_export_map:array}}
+	 * A failed request makes no archive, so none of the progress it made reaches the caller, and no map is offered to
+	 * resume from: the caller resends the map it sent. `error_context.table` is the table being exported when the
+	 * request failed ('' when the failure isn't in a table) and `exception` the failure's class name. Neither carries
+	 * the failure's message.
+	 *
+	 * @return array{error:array{code:string,message:string,stage:string,retryable:bool},error_context:array{table:string,exception:string}}
 	 */
-	public function build( \Throwable $error, array $tableExportMap = [], ?string $codeHint = null ) :array {
+	public function build( \Throwable $error, string $table = '', ?string $codeHint = null ) :array {
 		try {
 			$classification = $this->classify( $error, $codeHint );
+			$classNameParts = \explode( '\\', \get_class( $error ) );
 			return $this->payload(
 				$classification[ 'code' ],
 				$classification[ 'message' ],
-				$this->safeTableExportMap( $tableExportMap )
+				$this->safeName( $table ) ?? '',
+				$this->safeName( (string)\end( $classNameParts ) ) ?? ''
 			);
 		}
 		catch ( \Throwable $e ) {
-			return $this->payload( self::CODE_FAILED, $this->messageForCode( self::CODE_FAILED ), [] );
+			return $this->payload( self::CODE_FAILED, $this->messageForCode( self::CODE_FAILED ), '', '' );
 		}
 	}
 
-	private function payload( string $code, string $message, array $tableExportMap ) :array {
+	private function payload( string $code, string $message, string $table, string $exception ) :array {
 		return [
 			'error'         => [
 				'code'      => $code,
@@ -32,7 +39,8 @@ class DatabaseExportErrorPayload {
 				'retryable' => true,
 			],
 			'error_context' => [
-				'table_export_map' => $tableExportMap,
+				'table'     => $table,
+				'exception' => $exception,
 			],
 		];
 	}
@@ -159,55 +167,5 @@ class DatabaseExportErrorPayload {
 			return null;
 		}
 		return \strlen( $value ) > 128 ? \substr( $value, 0, 128 ) : $value;
-	}
-
-	private function safeTableExportMap( array $tableExportMap ) :array {
-		$safe = [];
-		foreach ( $tableExportMap as $table => $status ) {
-			if ( !\is_string( $table ) || !\is_array( $status ) ) {
-				continue;
-			}
-			$safeTable = $this->safeContextString( $table );
-			if ( $safeTable !== '' ) {
-				$safe[ $safeTable ] = $this->safeContextArray( $status, 0 );
-			}
-		}
-		return $safe;
-	}
-
-	private function safeContextArray( array $data, int $depth ) :array {
-		if ( $depth > 4 ) {
-			return [];
-		}
-
-		$safe = [];
-		foreach ( $data as $key => $value ) {
-			if ( !\is_int( $key ) && !\is_string( $key ) ) {
-				continue;
-			}
-			$safeKey = \is_int( $key ) ? $key : $this->safeContextString( $key );
-			if ( $safeKey === '' ) {
-				continue;
-			}
-			$safe[ $safeKey ] = \is_array( $value )
-				? $this->safeContextArray( $value, $depth + 1 )
-				: $this->safeContextValue( $value );
-		}
-		return $safe;
-	}
-
-	private function safeContextValue( $value ) {
-		if ( $value === null || \is_bool( $value ) || \is_int( $value ) || \is_float( $value ) ) {
-			return $value;
-		}
-		if ( \is_string( $value ) ) {
-			return $this->safeContextString( $value );
-		}
-		return null;
-	}
-
-	private function safeContextString( string $value ) :string {
-		$value = (string)\preg_replace( '~[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+~', '', $value );
-		return \strlen( $value ) > 256 ? \substr( $value, 0, 256 ) : $value;
 	}
 }

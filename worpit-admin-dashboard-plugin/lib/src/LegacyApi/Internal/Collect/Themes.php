@@ -10,7 +10,7 @@ class Themes extends Base {
 
 	public function process() :ApiResponse {
 		return $this->success( [
-			'wordpress-themes' => $this->loadWP()->getWordpressIsAtLeastVersion( '3.4' ) ? $this->collect() : [],
+			'wordpress-themes' => $this->collect(),
 		] );
 	}
 

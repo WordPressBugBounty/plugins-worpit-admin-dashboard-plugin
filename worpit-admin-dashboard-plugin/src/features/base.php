@@ -177,8 +177,12 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	 */
 	public function getProcessor() {
 		if ( !isset( $this->processor ) ) {
-			include_once( self::con()
-							  ->getPath_SourceFile( sprintf( 'processors%s%s.php', \DIRECTORY_SEPARATOR, $this->getFeatureSlug() ) ) );
+			$path = self::con()
+						->getPath_SourceFile( sprintf( 'processors%s%s.php', \DIRECTORY_SEPARATOR, $this->getFeatureSlug() ) );
+			if ( !\is_file( $path ) ) {
+				return null; // not every feature has a processor
+			}
+			include_once( $path );
 			$class = $this->getProcessorClassName();
 			if ( !\class_exists( $class, false ) ) {
 				return null;
@@ -272,13 +276,6 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return array
-	 */
-	protected function getAdditionalMenuItem() {
-		return [];
-	}
-
-	/**
 	 * @param array $aSummaryData
 	 * @return array
 	 */
@@ -336,15 +333,6 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * Retrieves the full array of options->values
-	 *
-	 * @return array
-	 */
-	public function getOptions() {
-		return $this->buildOptions();
-	}
-
-	/**
 	 * @return string
 	 */
 	public function getVersion() {
@@ -370,14 +358,6 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 		foreach ( $options as $sKey => $mValue ) {
 			$this->setOpt( $sKey, $mValue );
 		}
-	}
-
-	/**
-	 * @param       $success
-	 * @param array $data
-	 */
-	protected function sendAjaxResponse( $success, $data = [] ) {
-		$success ? wp_send_json_success( $data ) : wp_send_json_error( $data );
 	}
 
 	/**
@@ -596,7 +576,7 @@ abstract class ICWP_APP_FeatureHandler_Base extends ICWP_APP_Foundation {
 				elseif ( $optType == 'array' ) { //arrays are textareas, where each is separated by newline
 					$value = array_filter( explode( "\n", $value ), 'trim' );
 				}
-				elseif ( $optType == 'email' && function_exists( 'is_email' ) && !is_email( $value ) ) {
+				elseif ( $optType == 'email' && !is_email( $value ) ) {
 					$value = '';
 				}
 				elseif ( $optType == 'multiple_select' ) {

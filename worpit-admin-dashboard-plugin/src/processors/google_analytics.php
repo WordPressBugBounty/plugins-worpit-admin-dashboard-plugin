@@ -76,22 +76,4 @@ class ICWP_APP_Processor_GoogleAnalytics extends ICWP_APP_Processor_BaseApp {
 		return ( $this->getAnalyticsMode() != 'tagman' && $this->getGaOpts()[ 'in_footer' ] == 'Y' ) ?
 			'wp_print_footer_scripts' : 'wp_head';
 	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	public function printGoogleAnalytics() {
-	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	public function printTagManBody() {
-	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	private function parseAnalyticsSnippet( string $type ) {
-	}
 }

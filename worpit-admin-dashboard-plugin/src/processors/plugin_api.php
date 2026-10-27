@@ -89,7 +89,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			);
 		}
 
-		if ( $reqParams->key != $this->mod->getPluginAuthKey() ) {
+		if ( !$this->mod->isPluginAuthKey( (string)$reqParams->key ) ) {
 			$sErrorMessage = 'InvalidKey';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -104,8 +104,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 				9994
 			);
 		}
-		$sPin = $this->mod->getPluginPin();
-		if ( md5( $reqParams->pin ) != $sPin ) {
+		if ( !$this->mod->isPluginPin( (string)$reqParams->pin ) ) {
 			$sErrorMessage = 'InvalidPin';
 			return $this->setErrorResponse(
 				$sErrorMessage,
@@ -119,9 +118,10 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 	/**
 	 * Attempts to relink/reassign a site upon API failure, with certain pre-conditions
 	 *
-	 * 1) The channel is "retrieve"
-	 * 2) The site CAN Handshake (it will check this)
-	 * 3) The handshake is verified for this package
+	 * 1) The channel is "auth", "internal" or "retrieve"
+	 * 2) A linked site's key matches the request key, so only a drifted PIN can be recovered
+	 * 3) The site CAN Handshake (it will check this)
+	 * 4) The handshake is verified for this package
 	 *
 	 * @return LegacyApi\ApiResponse
 	 */
@@ -132,6 +132,15 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			return $this->setErrorResponse(
 				sprintf( 'Attempting Site Reassign Failed: %s.', 'Site action method is neither "retrieve" nor "internal".' ),
 				9806
+			);
+		}
+
+		// A linked site may only recover a drifted PIN. Its key must still match, so the iControlWP
+		// signing key alone can never re-point a working site to new credentials.
+		if ( $this->mod->getIsSiteLinked() && !$this->mod->isPluginAuthKey( (string)$req->key ) ) {
+			return $this->setErrorResponse(
+				sprintf( 'Attempting Site Reassign Failed: %s.', 'Site is linked and the request key does not match' ),
+				9807
 			);
 		}
 
@@ -202,7 +211,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			$this->publicKeyVerify();
 			return $this->setSuccessResponse();
 		}
-		catch ( \Exception $e ) {
+		catch ( \Throwable $e ) {
 		}
 
 		try {
@@ -210,7 +219,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 				return $this->setSuccessResponse();
 			}
 		}
-		catch ( \Exception $e ) {
+		catch ( \Throwable $e ) {
 		}
 
 		if ( empty( $req->package_name ) || empty( $req->pin ) ) {
@@ -260,7 +269,7 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 
 		$verified = false;
 		$hmac = $req->hmac_hash;
-		if ( !empty( $req->pin ) && !empty( $hmac ) && \hash_equals( $this->mod->getPluginPin(), \hash( 'md5', $req->pin ) ) ) {
+		if ( !empty( $req->pin ) && !empty( $hmac ) && $this->mod->isPluginPin( (string)$req->pin ) ) {
 			$hashEquals = \hash_equals(
 				$hmac,
 				\hash_hmac(
@@ -338,19 +347,13 @@ abstract class ICWP_APP_Processor_Plugin_Api extends \ICWP_APP_Processor_BaseApp
 			$req = $this->getRequestParams();
 			$wpUser = $req->wpadmin_user;
 			if ( empty( $wpUser ) ) {
-
-				if ( version_compare( $this->loadWP()->getWordpressVersion(), '3.1', '>=' ) ) {
-					$aUserRecords = get_users( [
-						'role'    => 'administrator',
-						'number'  => 1,
-						'orderby' => 'ID'
-					] );
-					if ( is_array( $aUserRecords ) && count( $aUserRecords ) ) {
-						$oUser = $aUserRecords[ 0 ];
-					}
-				}
-				else {
-					$oUser = $WPU->getUserById( 1 );
+				$aUserRecords = get_users( [
+					'role'    => 'administrator',
+					'number'  => 1,
+					'orderby' => 'ID'
+				] );
+				if ( is_array( $aUserRecords ) && count( $aUserRecords ) ) {
+					$oUser = $aUserRecords[ 0 ];
 				}
 				$wpUser = ( !empty( $oUser ) && is_a( $oUser, 'WP_User' ) ) ? $oUser->get( 'user_login' ) : 'admin';
 			}

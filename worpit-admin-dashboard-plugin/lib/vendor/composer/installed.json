@@ -2,17 +2,17 @@
     "packages": [
         {
             "name": "fernleafsystems/worpdrive-client",
-            "version": "0.3.0",
-            "version_normalized": "0.3.0.0",
+            "version": "0.5.1",
+            "version_normalized": "0.5.1.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:FernleafSystems/worpdrive-client.git",
-                "reference": "94d5f921827d64cd0dbeb484b6bbc884bee8605e"
+                "reference": "f651bcb67adca9a0d1ec28894e5a42ff1e6a5e9d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FernleafSystems/worpdrive-client/zipball/94d5f921827d64cd0dbeb484b6bbc884bee8605e",
-                "reference": "94d5f921827d64cd0dbeb484b6bbc884bee8605e",
+                "url": "https://api.github.com/repos/FernleafSystems/worpdrive-client/zipball/f651bcb67adca9a0d1ec28894e5a42ff1e6a5e9d",
+                "reference": "f651bcb67adca9a0d1ec28894e5a42ff1e6a5e9d",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -33,9 +33,10 @@
                 "ext-mysqli": "*",
                 "ext-pdo_mysql": "*",
                 "phpunit/phpunit": "^9.6",
+                "symfony/process": "^5.4",
                 "yoast/phpunit-polyfills": "^4.0"
             },
-            "time": "2026-06-02T12:31:36+00:00",
+            "time": "2026-10-26T12:28:44+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -64,6 +65,12 @@
                     "@scan:php-compat",
                     "@phpunit"
                 ],
+                "test:linux": [
+                    "@php bin/test-linux.php all"
+                ],
+                "test:linux:path-zip": [
+                    "@php bin/test-linux.php path-zip"
+                ],
                 "test:mysql": [
                     "phpunit --configuration phpunit.xml.dist tests/Integration/Database"
                 ],
@@ -84,30 +91,30 @@
             ],
             "description": "The WorpDrive Client Library",
             "support": {
-                "source": "https://github.com/FernleafSystems/worpdrive-client/tree/0.3.0",
+                "source": "https://github.com/FernleafSystems/worpdrive-client/tree/0.5.1",
                 "issues": "https://github.com/FernleafSystems/worpdrive-client/issues"
             },
             "install-path": "../fernleafsystems/worpdrive-client"
         },
         {
             "name": "symfony/polyfill-php80",
-            "version": "v1.37.0",
-            "version_normalized": "1.37.0.0",
+            "version": "v1.43.0",
+            "version_normalized": "1.43.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php80.git",
-                "reference": "dfb55726c3a76ea3b6459fcfda1ec2d80a682411"
+                "reference": "9c6a5d6b01ca51d486c813e9a9c0ed55f208bb74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/dfb55726c3a76ea3b6459fcfda1ec2d80a682411",
-                "reference": "dfb55726c3a76ea3b6459fcfda1ec2d80a682411",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/9c6a5d6b01ca51d486c813e9a9c0ed55f208bb74",
+                "reference": "9c6a5d6b01ca51d486c813e9a9c0ed55f208bb74",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.2"
             },
-            "time": "2026-04-10T16:19:22+00:00",
+            "time": "2026-09-25T15:50:05+00:00",
             "type": "library",
             "extra": {
                 "thanks": {
@@ -154,7 +161,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.37.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.43.0"
             },
             "funding": [
                 {

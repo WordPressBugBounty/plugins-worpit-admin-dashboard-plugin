@@ -35,20 +35,22 @@ class DataExportHandler extends \FernleafSystems\WorpdriveClient\Database\BaseDb
 		$errorPayload = null;
 		$errorCodeHint = null;
 		$errorPayloadBuilder = new DatabaseExportErrorPayload();
+		$exporter = null;
 		try {
 			$allowedTables = \array_keys( ( new TableEnum() )->enum() );
 			$errorCodeHint = 'db_export_invalid_map';
 			$map = new ExportMap( $this->tableExportMap, $allowedTables );
 			$errorCodeHint = null;
 			// Allow 2s for ZIP.
-			( new PagedExporter( $this->dumpDir(), $map, $this->stopAtTS - 2 ) )->run();
+			$exporter = new PagedExporter( $this->dumpDir(), $map, $this->stopAtTS - 2 );
+			$exporter->run();
 			$exportSuccess = true;
 		}
 		catch ( TimeLimitReachedException $e ) {
 			$exportSuccess = true;
 		}
 		catch ( \Exception $e ) {
-			$errorPayload = $errorPayloadBuilder->build( $e, $map->status(), $errorCodeHint );
+			$errorPayload = $errorPayloadBuilder->build( $e, $exporter === null ? '' : $exporter->currentTable(), $errorCodeHint );
 		}
 		finally {
 			$this->host()->filesystem()
@@ -61,7 +63,7 @@ class DataExportHandler extends \FernleafSystems\WorpdriveClient\Database\BaseDb
 			}
 			catch ( \Exception $e ) {
 				$exportSuccess = false;
-				$errorPayload = $errorPayloadBuilder->build( $e, $map->status(), 'db_export_zip_failed' );
+				$errorPayload = $errorPayloadBuilder->build( $e, '', 'db_export_zip_failed' );
 				$this->deleteTargetZip();
 			}
 		}

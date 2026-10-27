@@ -50,7 +50,7 @@ class ICWP_APP_Processor_Plugin_Api_Login extends ICWP_APP_Processor_Plugin_Api 
 		$username = $req->getStringParam( 'username' );
 		$user = $WPU->getUserByUsername( $username );
 		if ( empty( $username ) || empty( $user ) ) {
-			$aUserRecords = \version_compare( $WP->getWordpressVersion(), '3.1', '>=' ) ? get_users( 'role=administrator' ) : [];
+			$aUserRecords = get_users( 'role=administrator' );
 			if ( empty( $aUserRecords[ 0 ] ) ) {
 				throw new \Exception( 'Failed to find a valid user.' );
 			}

@@ -18,6 +18,10 @@ class Data extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Intern
 		) )->run();
 	}
 
+	/**
+	 * A failed request's `error_context` is passed on untouched and never used as the map: the failed request made
+	 * no archive, so none of its progress reaches WorpDrive, and WorpDrive resends the map it sent.
+	 */
 	private function normaliseDataStatus( array $status ) :array {
 		if ( !isset( $status[ 'href' ] ) || !\is_string( $status[ 'href' ] ) ) {
 			$status[ 'href' ] = '';
@@ -27,32 +31,7 @@ class Data extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Intern
 			$status[ 'table_export_map' ] = [];
 		}
 
-		if ( empty( $status[ 'table_export_map' ] ) ) {
-			$contextMap = $status[ 'error_context' ][ 'table_export_map' ] ?? null;
-			if ( \is_array( $contextMap ) && $this->isValidTableExportMap( $contextMap ) ) {
-				$status[ 'table_export_map' ] = $contextMap;
-			}
-		}
-
 		return $status;
-	}
-
-	private function isValidTableExportMap( array $map ) :bool {
-		if ( empty( $map ) ) {
-			return false;
-		}
-
-		foreach ( $map as $table => $status ) {
-			if ( !\is_string( $table ) || !\is_array( $status ) ) {
-				return false;
-			}
-			foreach ( [ 'offset', 'page', 'completed_at', 'exported_rows', 'max_page_rows', 'chunk_size' ] as $key ) {
-				if ( !isset( $status[ $key ] ) || !\is_int( $status[ $key ] ) ) {
-					return false;
-				}
-			}
-		}
-		return true;
 	}
 
 	/**

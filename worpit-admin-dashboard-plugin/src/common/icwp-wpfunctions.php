@@ -20,13 +20,6 @@ class ICWP_APP_WpFunctions extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function getIsRunningAutomaticUpdates() {
-		return get_option( 'auto_updater.lock' ) ? true : false;
-	}
-
-	/**
 	 * Clears any WordPress caches
 	 */
 	public function doBustCache() {
@@ -83,58 +76,6 @@ class ICWP_APP_WpFunctions extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return array
-	 */
-	public function getPlugins() {
-		if ( !\function_exists( 'get_plugins' ) ) {
-			require_once( ABSPATH.'wp-admin/includes/plugin.php' );
-		}
-		return \function_exists( 'get_plugins' ) ? get_plugins() : [];
-	}
-
-	/**
-	 * @param string $sPluginFile
-	 * @return stdClass|null
-	 */
-	public function getPluginUpdateInfo( $sPluginFile ) {
-		$aUpdates = $this->getWordpressUpdates();
-		return ( !empty( $aUpdates ) && isset( $aUpdates[ $sPluginFile ] ) ) ? $aUpdates[ $sPluginFile ] : null;
-	}
-
-	/**
-	 * @param string $sPluginFile
-	 * @return string
-	 */
-	public function getPluginUpdateNewVersion( $sPluginFile ) {
-		$oInfo = $this->getPluginUpdateInfo( $sPluginFile );
-		return ( !is_null( $oInfo ) && isset( $oInfo->new_version ) ) ? $oInfo->new_version : '';
-	}
-
-	/**
-	 * @param stdClass|string $mItem
-	 * @param string          $sContext from plugin|theme
-	 * @return string
-	 */
-	public function getFileFromAutomaticUpdateItem( $mItem, $sContext = 'plugin' ) {
-		if ( is_object( $mItem ) && isset( $mItem->{$sContext} ) ) { // WP 3.8.2+
-			$mItem = $mItem->{$sContext};
-		}
-		elseif ( !is_string( $mItem ) ) { // WP pre-3.8.2
-			$mItem = '';
-		}
-		return $mItem;
-	}
-
-	/**
-	 * @param string $sType - plugins, themes
-	 * @return array
-	 */
-	public function getWordpressUpdates( $sType = 'plugins' ) {
-		$oCurrent = $this->getTransient( 'update_'.$sType );
-		return ( is_object( $oCurrent ) && isset( $oCurrent->response ) ) ? $oCurrent->response : [];
-	}
-
-	/**
 	 * @param string $sKey
 	 * @return mixed
 	 */
@@ -142,24 +83,12 @@ class ICWP_APP_WpFunctions extends ICWP_APP_Foundation {
 
 		// TODO: Handle multisite
 
-		if ( version_compare( $this->getWordpressVersion(), '2.7.9', '<=' ) ) {
-			return get_option( $sKey );
-		}
-
-		if ( function_exists( 'get_site_transient' ) ) {
+		$mResult = get_site_transient( $sKey );
+		if ( empty( $mResult ) ) {
+			remove_all_filters( 'pre_site_transient_'.$sKey );
 			$mResult = get_site_transient( $sKey );
-			if ( empty( $mResult ) ) {
-				remove_all_filters( 'pre_site_transient_'.$sKey );
-				$mResult = get_site_transient( $sKey );
-			}
-			return $mResult;
 		}
-
-		if ( version_compare( $this->getWordpressVersion(), '2.9.9', '<=' ) ) {
-			return apply_filters( 'transient_'.$sKey, get_option( '_transient_'.$sKey ) );
-		}
-
-		return apply_filters( 'site_transient_'.$sKey, get_option( '_site_transient_'.$sKey ) );
+		return $mResult;
 	}
 
 	/**
@@ -177,20 +106,7 @@ class ICWP_APP_WpFunctions extends ICWP_APP_Foundation {
 	 * @return bool
 	 */
 	public function deleteTransient( $sKey ) {
-
-		if ( version_compare( $this->getWordpressVersion(), '2.7.9', '<=' ) ) {
-			return delete_option( $sKey );
-		}
-
-		if ( function_exists( 'delete_site_transient' ) ) {
-			return delete_site_transient( $sKey );
-		}
-
-		if ( version_compare( $this->getWordpressVersion(), '2.9.9', '<=' ) ) {
-			return delete_option( '_transient_'.$sKey );
-		}
-
-		return delete_option( '_site_transient_'.$sKey );
+		return delete_site_transient( $sKey );
 	}
 
 	/**
@@ -287,11 +203,11 @@ class ICWP_APP_WpFunctions extends ICWP_APP_Foundation {
 	}
 
 	public function getIsMobile() :bool {
-		return function_exists( 'wp_is_mobile' ) && wp_is_mobile();
+		return wp_is_mobile();
 	}
 
 	public function isMultisite() :bool {
-		return \function_exists( 'is_multisite' ) && is_multisite();
+		return is_multisite();
 	}
 
 	/**

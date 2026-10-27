@@ -130,20 +130,6 @@ class RequestParameters {
 	}
 
 	/**
-	 * @return string
-	 */
-	public function getPin() {
-		return $this->pin;
-	}
-
-	/**
-	 * @return int
-	 */
-	public function getTimeout() {
-		return (int)$this->timeout;
-	}
-
-	/**
 	 * @return int
 	 */
 	public function getApiHookPriority() {
@@ -174,13 +160,5 @@ class RequestParameters {
 	 */
 	public function getParam( $sKey, $mDefault = '' ) {
 		return $this->{$sKey};
-	}
-
-	/**
-	 * @return bool
-	 * @deprecated 4.5
-	 */
-	public function isSilentLogin() {
-		return (bool)$this->silent_login;
 	}
 }

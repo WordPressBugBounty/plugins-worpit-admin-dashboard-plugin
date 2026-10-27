@@ -39,15 +39,14 @@ class IControlWorpdriveCompatibilityChecks extends CompatibilityChecks {
 
 	protected function paths() :array {
 		$host = WorpdriveRuntime::host();
-		$wpContent = \defined( 'WP_CONTENT_DIR' ) ? WP_CONTENT_DIR : '';
 		return [
 			'wp_abspath'      => trailingslashit( ABSPATH ),
 			'script_filename' => $host->wordpress()->scriptFilename(),
-			'dir_content'     => (string)$wpContent,
-			'dir_plugins'     => \defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : null,
-			'dir_includes'    => path_join( $wpContent, \defined( 'WPINC' ) ? WPINC : '' ),
-			'url_content'     => \defined( 'WP_CONTENT_URL' ) ? WP_CONTENT_URL : null,
-			'WPINC'           => \defined( 'WPINC' ) ? WPINC : null,
+			'dir_content'     => (string)WP_CONTENT_DIR,
+			'dir_plugins'     => WP_PLUGIN_DIR,
+			'dir_includes'    => path_join( WP_CONTENT_DIR, WPINC ),
+			'url_content'     => WP_CONTENT_URL,
+			'WPINC'           => WPINC,
 			'icwp_plugin_dir' => $host->rootDir(),
 		];
 	}

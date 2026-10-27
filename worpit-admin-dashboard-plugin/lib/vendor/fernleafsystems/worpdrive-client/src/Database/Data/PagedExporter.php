@@ -13,6 +13,8 @@ class PagedExporter {
 
 	private int $stopAtTS;
 
+	private string $currentTable = '';
+
 	public function __construct( string $dumpFileDir, ExportMap $exportMap, int $stopAtTS ) {
 		if ( !WorpdriveRuntime::host()->filesystem()->canWriteToDir( $dumpFileDir ) ) {
 			throw new \InvalidArgumentException( 'Dump file directory is not writable.' );
@@ -28,6 +30,7 @@ class PagedExporter {
 	 */
 	public function run() :void {
 		foreach ( \array_filter( $this->exportMap->status(), fn( array $s ) => empty( $s[ 'completed_at' ] ) ) as $table => $status ) {
+			$this->currentTable = $table;
 			do {
 				$dumpFile = @\fopen( $this->dumpFileFor( $table, $status[ 'page' ] ), 'w' );
 				if ( !\is_resource( $dumpFile ) ) {
@@ -67,6 +70,14 @@ class PagedExporter {
 				}
 			} while ( empty( $status[ 'completed_at' ] ) );
 		}
+		$this->currentTable = '';
+	}
+
+	/**
+	 * The table being exported when run() stopped early, or '' once every table is exported.
+	 */
+	public function currentTable() :string {
+		return $this->currentTable;
 	}
 
 	private function dumpFileFor( string $table, int $page ) :string {

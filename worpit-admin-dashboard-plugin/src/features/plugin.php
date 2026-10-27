@@ -1,7 +1,5 @@
 <?php
 
-use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi;
-
 class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 
 	public const PAIRING_WINDOW_MINUTES = 15;
@@ -9,11 +7,6 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 	public const API_MESSAGE_BOOTSTRAP_DENIED = 'BootstrapDenied';
 	public const API_MESSAGE_INVALID_BOOTSTRAP_CREDENTIALS = 'InvalidBootstrapCredentials';
 	public const API_CODE_BOOTSTRAP_DENIED = 9811;
-
-	/**
-	 * @var LegacyApi\RequestParameters
-	 */
-	protected $reqParams;
 
 	protected function doPostConstruction() {
 		if ( is_admin() ) {
@@ -260,11 +253,22 @@ class ICWP_APP_FeatureHandler_Plugin extends ICWP_APP_FeatureHandler_Base {
 
 	public function isValidBootstrapRequestKey( string $requestKey ) :bool {
 		$requestKey = \trim( $requestKey );
-		return !empty( $requestKey ) && \hash_equals( $this->getPluginAuthKey(), $requestKey );
+		return !empty( $requestKey ) && $this->isPluginAuthKey( $requestKey );
+	}
+
+	public function isPluginAuthKey( string $key ) :bool {
+		return \hash_equals( $this->getPluginAuthKey(), $key );
 	}
 
 	public function getPluginPin() :string {
 		return (string)$this->getOpt( 'pin' );
+	}
+
+	/**
+	 * @param string $rawPin the PIN as sent, before MD5
+	 */
+	public function isPluginPin( string $rawPin ) :bool {
+		return \hash_equals( $this->getPluginPin(), \md5( $rawPin ) );
 	}
 
 	public function getPermittedApiChannels() :array {

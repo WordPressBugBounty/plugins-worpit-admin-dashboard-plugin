@@ -5,8 +5,7 @@ namespace FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Common;
 trait AutoOrLegacyUpdater {
 
 	protected function isMethodAuto() :bool {
-		return $this->loadWP()->getWordpressIsAtLeastVersion( '3.8.2' )
-			   && $this->getActionParam( 'update_method', 'legacy' ) !== 'legacy';
+		return $this->getActionParam( 'update_method', 'legacy' ) !== 'legacy';
 	}
 
 	/**

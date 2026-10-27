@@ -21,9 +21,7 @@ class ICWP_APP_WpFunctions_Plugins extends ICWP_APP_Foundation {
 	public function update( $sFile ) {
 		$this->loadWpUpgrades();
 
-		$oSkin = $this->loadWP()->getWordpressIsAtLeastVersion( '3.7' ) ?
-			new \Automatic_Upgrader_Skin()
-			: new \ICWP_Upgrader_Skin_Legacy();
+		$oSkin = new \Automatic_Upgrader_Skin();
 		$mResult = ( new Plugin_Upgrader( $oSkin ) )->bulk_upgrade( [ $sFile ] );
 
 		$aErrors = [];
@@ -33,26 +31,15 @@ class ICWP_APP_WpFunctions_Plugins extends ICWP_APP_Foundation {
 			$aErrors[] = 'False - Filesystem Error';
 		}
 		elseif ( is_wp_error( $mDetails ) ) {
-			$mDetails = [];
 			$aErrors = $mDetails->get_error_messages();
+			$mDetails = [];
 		}
 
 		return [
 			'successful' => empty( $aErrors ),
 			'errors'     => $aErrors,
 			'details'    => $mDetails,
-			'feedback'   => method_exists( $oSkin, 'get_upgrade_messages' ) ? $oSkin->get_upgrade_messages() : [],
+			'feedback'   => $oSkin->get_upgrade_messages(),
 		];
-	}
-
-	/**
-	 * @return array[]
-	 * @deprecated 4.5.0
-	 */
-	public function getPlugins() {
-		if ( !function_exists( 'get_plugins' ) ) {
-			require_once( ABSPATH.'wp-admin/includes/plugin.php' );
-		}
-		return \function_exists( 'get_plugins' ) ? get_plugins() : [];
 	}
 }

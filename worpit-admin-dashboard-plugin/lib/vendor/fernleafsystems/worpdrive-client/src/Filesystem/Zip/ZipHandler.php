@@ -30,7 +30,7 @@ class ZipHandler extends \FernleafSystems\WorpdriveClient\Filesystem\BaseFsHandl
 			( new Zipper( $this->dir, $this->paths, $this->targetZip() ) )->create();
 		}
 		catch ( \Exception $e ) {
-			$this->host()->filesystem()->deleteFile( $this->targetZip() );
+			$this->host()->filesystem()->delete( $this->targetZip() );
 			throw $e;
 		}
 		return [

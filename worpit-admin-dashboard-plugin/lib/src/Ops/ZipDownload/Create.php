@@ -25,7 +25,7 @@ class Create extends Base {
 	 */
 	public function theme( string $file ) :array {
 		$theme = Themes::Instance()->getTheme( $file );
-		if ( empty( $theme ) ) {
+		if ( !$theme->exists() ) {
 			throw new \Exception( sprintf( 'Theme for stylesheet is not installed: %s', esc_html( $file ) ) );
 		}
 		return $this->createFrom( $theme->get_stylesheet_directory() );

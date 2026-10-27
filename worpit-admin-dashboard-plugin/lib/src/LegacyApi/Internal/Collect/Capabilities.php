@@ -18,7 +18,7 @@ class Capabilities extends Base {
 			'php_version'           => $DP->getPhpVersion(),
 			//TODO DELETE
 			'version_php'           => $DP->getPhpVersion(),
-			'is_force_ssl_admin'    => ( function_exists( 'force_ssl_admin' ) && force_ssl_admin() ) ? 1 : 0,
+			'is_force_ssl_admin'    => force_ssl_admin() ? 1 : 0,
 			'can_handshake'         => $this->isHandshakeEnabled() ? 1 : 0,
 			'can_handshake_openssl' => $this->loadEncryptProcessor()->getSupportsOpenSslSign() ? 1 : 0,
 			'can_wordpress_write'   => $this->checkCanWordpressWrite() ? 1 : 0,

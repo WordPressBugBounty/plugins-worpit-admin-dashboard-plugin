@@ -6,8 +6,12 @@ use FernleafSystems\WorpdriveClient\Host\WorpdriveDatabase;
 
 class IControlWorpdriveDatabase implements WorpdriveDatabase {
 
+	/**
+	 * The network's base prefix by default, as Shield reports, so a multisite's database backup holds every site's
+	 * tables even when the request is answered on a subsite, whose own prefix (`wp_2_`) would cover only its tables.
+	 */
 	public function getPrefix( bool $siteBase = true ) :string {
-		return $this->db()->getPrefix();
+		return $siteBase ? (string)$this->db()->loadWpdb()->base_prefix : $this->db()->getPrefix();
 	}
 
 	public function loadWpdb() {

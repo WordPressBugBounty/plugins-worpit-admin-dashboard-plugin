@@ -10,20 +10,39 @@ class MapProgressTracker {
 
 	private int $totalFilesComplete;
 
+	private int $scannedEntries;
+
 	private ?string $mostRecentFileInDir;
 
-	private array $dirsThisRound = [];
+	/**
+	 * Name of the last entry each unfinished directory has handled, keyed by directory.
+	 * @var array<string,string>
+	 */
+	private array $activeEntryCursors = [];
 
+	/**
+	 * @param array $activeEntryCursors base64-encoded entry names keyed by directory, as toProgressArray() saves them
+	 */
 	public function __construct(
 		array $completedDirs = [],
 		?string $mostRecentFile = null,
 		int $totalDirsComplete = 0,
-		int $totalFilesComplete = 0
+		int $totalFilesComplete = 0,
+		array $activeEntryCursors = [],
+		int $scannedEntries = 0
 	) {
 		$this->completedDirs = $completedDirs;
 		$this->mostRecentFileInDir = $mostRecentFile;
 		$this->totalDirsComplete = $totalDirsComplete;
 		$this->totalFilesComplete = $totalFilesComplete;
+		$this->scannedEntries = $scannedEntries;
+		foreach ( $activeEntryCursors as $dir => $encodedName ) {
+			// A cursor that cannot be decoded rescans its directory from the start, which can only list files twice.
+			$name = \is_string( $encodedName ) ? \base64_decode( $encodedName, true ) : false;
+			if ( \is_string( $name ) ) {
+				$this->activeEntryCursors[ $this->normaliseDir( (string)$dir ) ] = $name;
+			}
+		}
 	}
 
 	public function completed() :array {
@@ -36,6 +55,10 @@ class MapProgressTracker {
 
 	public function totalFilesComplete() :int {
 		return $this->totalFilesComplete;
+	}
+
+	public function scannedEntries() :int {
+		return $this->scannedEntries;
 	}
 
 	public function isDirCompleted( string $dir ) :bool {
@@ -52,12 +75,8 @@ class MapProgressTracker {
 		return $completed;
 	}
 
-	public function isFileCompleted( string $file ) :bool {
-		return !empty( $this->mostRecentFileInDir ) && \strnatcmp( $this->mostRecentFileInDir, $file ) >= 0;
-	}
-
-	public function getDirsThisRound() :array {
-		return $this->dirsThisRound;
+	public function activeEntryCursorFor( string $dir ) :?string {
+		return $this->activeEntryCursors[ $this->normaliseDir( $dir ) ] ?? null;
 	}
 
 	public function getMostRecentFile() :?string {
@@ -69,6 +88,11 @@ class MapProgressTracker {
 		$this->totalFilesComplete++;
 	}
 
+	public function advanceEntryScan( string $dir, string $handledName ) :void {
+		$this->activeEntryCursors[ $this->normaliseDir( $dir ) ] = $handledName;
+		$this->scannedEntries++;
+	}
+
 	public function markDirCompleted( string $dir ) :void {
 		$dir = trailingslashit( $dir );
 
@@ -78,10 +102,36 @@ class MapProgressTracker {
 			}
 		}
 
-		$this->dirsThisRound[] = $dir;
 		$this->completedDirs = \array_filter( $this->completedDirs );
 		$this->completedDirs[ $dir ] = true;
 		$this->totalDirsComplete++;
 		$this->mostRecentFileInDir = null;
+		unset( $this->activeEntryCursors[ $dir ] );
+	}
+
+	/**
+	 * @return array{
+	 *   completed_dirs:array<string,bool>,
+	 *   most_recent_file:?string,
+	 *   total_completed_dirs:int,
+	 *   total_completed_files:int,
+	 *   active_entry_cursors:array<string,string>,
+	 *   scanned_entries:int
+	 * }
+	 */
+	public function toProgressArray() :array {
+		return [
+			'completed_dirs'        => $this->completed(),
+			'most_recent_file'      => $this->getMostRecentFile(),
+			'total_completed_dirs'  => $this->totalDirsComplete(),
+			'total_completed_files' => $this->totalFilesComplete(),
+			// Names are base64-encoded because JSON encoding would rewrite names that are not valid UTF-8.
+			'active_entry_cursors'  => \array_map( 'base64_encode', $this->activeEntryCursors ),
+			'scanned_entries'       => $this->scannedEntries(),
+		];
+	}
+
+	private function normaliseDir( string $dir ) :string {
+		return trailingslashit( $dir );
 	}
 }

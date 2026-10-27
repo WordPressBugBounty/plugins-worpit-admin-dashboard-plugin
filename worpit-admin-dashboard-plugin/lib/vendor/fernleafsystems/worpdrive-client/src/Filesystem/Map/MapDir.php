@@ -4,7 +4,10 @@ namespace FernleafSystems\WorpdriveClient\Filesystem\Map;
 
 use FernleafSystems\WorpdriveClient\Exc\TimeLimitReachedException;
 use FernleafSystems\WorpdriveClient\Filesystem\Map\Listing\AbstractFileListing;
-use FernleafSystems\WorpdriveClient\Host\WorpdriveRuntime;
+use FernleafSystems\WorpdriveClient\Host\{
+	WorpdriveFilesystem,
+	WorpdriveRuntime
+};
 
 class MapDir {
 
@@ -14,7 +17,11 @@ class MapDir {
 
 	private FileFilter $filter;
 
+	private WorpdriveFilesystem $filesystem;
+
 	private MapPathNormalizer $pathNormalizer;
+
+	private MapFileCandidateReader $candidateReader;
 
 	private string $dir;
 
@@ -36,9 +43,11 @@ class MapDir {
 		$this->map = $map;
 		$this->tracker = $tracker;
 		$this->filter = $filter;
+		$this->filesystem = WorpdriveRuntime::host()->filesystem();
 		$this->pathNormalizer = new MapPathNormalizer();
-		$this->dir = wp_normalize_path( $dirToMap );
-		$this->rootDir = wp_normalize_path( $rootDir ?? $dirToMap );
+		$this->dir = $this->pathNormalizer->normalisePathSeparators( $dirToMap );
+		$this->rootDir = $this->pathNormalizer->normalisePathSeparators( $rootDir ?? $dirToMap );
+		$this->candidateReader = new MapFileCandidateReader( $this->filter, $this->pathNormalizer, $this->rootDir );
 		$this->hashAlgo = $hashAlgo;
 		$this->stopAtTS = $stopAtTS;
 	}
@@ -48,94 +57,111 @@ class MapDir {
 	 * @throws Exc\MapDirCannotBeOpenedException
 	 */
 	public function run() :void {
-		foreach ( $this->enumDirs() as $dir ) {
-			try {
-				( new MapDir( $this->map, $this->tracker, $this->filter, $dir, $this->hashAlgo, $this->stopAtTS, $this->rootDir ) )->run();
-			}
-			catch ( Exc\MapDirCannotBeOpenedException $e ) {
-//				error_log( $e->getMessage() );
-			}
-		}
+		$this->mapEntries();
 
-		$FS = WorpdriveRuntime::host()->filesystem();
-		foreach ( $this->enumFiles() as $attr ) {
-			$normal = $this->normalisePath( $attr[ 'p' ] );
-			if ( $FS->isReadable( $attr[ 'p' ] ) ) {
-				$hash = empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $attr[ 'p' ] );
-				if ( \is_string( $hash ) ) {
-					$this->map->addRaw( $normal, '', $hash, $attr[ 'm' ], $attr[ 's' ] );
-				}
+		// No time check after this: the parent checks once its cursor has moved past this directory.
+		$this->tracker->markDirCompleted( $this->normalisePath( $this->dir ) );
+	}
+
+	/**
+	 * Entries are handled in byte order of their names, and each directory on the active path saves the name of the
+	 * last entry it handled. A resumed request skips names up to that cursor, so files added or deleted between
+	 * requests can't move it, and a child directory still in progress sorts after its parent's cursor and is entered
+	 * again. Each directory on the active path holds its sorted names while it's mapped: about 12 MB per 100,000 entries.
+	 *
+	 * @throws Exc\MapDirCannotBeOpenedException
+	 * @throws TimeLimitReachedException
+	 */
+	private function mapEntries() :void {
+		$normalDir = $this->normalisePath( $this->dir );
+		$cursor = $this->tracker->activeEntryCursorFor( $normalDir );
+
+		foreach ( $this->entryNames() as $name ) {
+			if ( $cursor !== null && \strcmp( $name, $cursor ) <= 0 ) {
+				continue;
 			}
-			$this->tracker->markFileCompleted( $normal );
+			$this->mapEntry( new \SplFileInfo( \rtrim( $this->dir, '/' ).'/'.$name ) );
+			$this->tracker->advanceEntryScan( $normalDir, $name );
 			if ( \time() >= $this->stopAtTS ) {
 				throw new TimeLimitReachedException();
 			}
 		}
-
-		$this->tracker->markDirCompleted( $this->normalisePath( $this->dir ) );
-
-		if ( \time() >= $this->stopAtTS ) {
-			throw new TimeLimitReachedException();
-		}
 	}
 
 	/**
+	 * @return string[] entry names in byte order
 	 * @throws Exc\MapDirCannotBeOpenedException
 	 */
-	private function enumDirs() :array {
-		$dirs = [];
+	private function entryNames() :array {
+		$names = [];
 		try {
-			$it = new \FilesystemIterator( $this->dir );
+			foreach ( new \FilesystemIterator( $this->dir, \FilesystemIterator::SKIP_DOTS ) as $item ) {
+				/** @var \SplFileInfo $item */
+				$names[] = $item->getFilename();
+			}
 		}
 		catch ( \Exception $e ) {
 			throw new Exc\MapDirCannotBeOpenedException( $e->getMessage() );
 		}
-		foreach ( $it as $item ) {
-			/** @var \SplFileInfo $item */
-			if ( $item->isDir() && !$item->isLink() ) {
-				$normalisedPath = $this->normalisePath( $item->getPathname() );
-				if ( !$this->tracker->isDirCompleted( $normalisedPath ) && !$this->filter->isExcluded( $normalisedPath ) ) {
-					$dirs[] = $item->getPathname();
-				}
-			}
-		}
-		\natsort( $dirs );
-		return $dirs;
+		\sort( $names, \SORT_STRING );
+		return $names;
 	}
 
 	/**
-	 * @throws Exc\MapDirCannotBeOpenedException
+	 * @throws TimeLimitReachedException
 	 */
-	private function enumFiles() :array {
-		$files = [];
+	private function mapEntry( \SplFileInfo $item ) :void {
 		try {
-			$it = new \FilesystemIterator( $this->dir );
+			$isDir = $item->isDir();
+			$isLink = $item->isLink();
 		}
 		catch ( \Exception $e ) {
-			throw new Exc\MapDirCannotBeOpenedException( $e->getMessage() );
+			// Some hosts expose unreadable entries; skip them and keep mapping.
+			return;
 		}
 
-		foreach ( $it as $item ) {
-			/** @var \SplFileInfo $item */
-			if ( $item->isFile() && !$item->isLink() && !empty( $item->getSize() ) ) {
-				$normalisedPath = $this->normalisePath( $item->getPathname() );
-				if ( !$this->tracker->isFileCompleted( $normalisedPath )
-					 && $this->filter->isFileWithinTimeRange( (int)$item->getMTime() )
-					 && $this->filter->isFileSizeAllowed( $item->getSize() )
-					 && !$this->filter->isExcluded( $normalisedPath )
-				) {
-					$files[ $normalisedPath ] = [
-						'p' => $item->getPathname(),
-						'm' => (int)$item->getMTime(),
-						's' => $item->getSize(),
-					];
+		if ( $isDir && !$isLink ) {
+			try {
+				$path = $item->getPathname();
+				$normalisedPath = $this->normalisePath( $path );
+			}
+			catch ( \Exception $e ) {
+				// Some hosts expose unreadable entries; skip them and keep mapping.
+				return;
+			}
+			if ( !$this->tracker->isDirCompleted( $normalisedPath ) && !$this->filter->isExcluded( $normalisedPath ) ) {
+				try {
+					( new MapDir( $this->map, $this->tracker, $this->filter, $path, $this->hashAlgo, $this->stopAtTS, $this->rootDir ) )->run();
+				}
+				catch ( Exc\MapDirCannotBeOpenedException $e ) {
+					// Keep mapping best-effort when a child directory cannot be opened.
 				}
 			}
+			return;
 		}
 
-		// Natural sort is required as we use this to pick-up our previous position in the file map.
-		\ksort( $files, \SORT_NATURAL );
-		return \array_values( $files );
+		$this->mapFile( $item );
+	}
+
+	private function mapFile( \SplFileInfo $item ) :void {
+		$candidate = $this->candidateReader->read( $item );
+		if ( $candidate === null ) {
+			return;
+		}
+
+		if ( $this->filesystem->isReadable( $candidate->sourcePath() ) ) {
+			$hash = empty( $this->hashAlgo ) ? '' : \hash_file( $this->hashAlgo, $candidate->sourcePath() );
+			if ( \is_string( $hash ) ) {
+				$this->map->addRaw(
+					$candidate->normalisedPath(),
+					'',
+					$hash,
+					$candidate->mtime(),
+					$candidate->size()
+				);
+			}
+		}
+		$this->tracker->markFileCompleted( $candidate->normalisedPath() );
 	}
 
 	private function normalisePath( string $path ) :string {

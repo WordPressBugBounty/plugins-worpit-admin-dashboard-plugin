@@ -860,16 +860,4 @@ class Controller extends \ICWP_APP_Foundation {
 			'whitelabel'       => \ICWP_APP_FeatureHandler_Whitelabel::class,
 		];
 	}
-
-	/**
-	 * This is a filter method designed to say whether WordPress plugin upgrades should be permitted,
-	 * based on the plugin settings.
-	 * @param bool          $doUpdate
-	 * @param string|object $mItem
-	 * @return bool
-	 * @deprecated 4.5 - will push autoupdates from App
-	 */
-	public function onWpAutoUpdate( $doUpdate, $mItem ) {
-		return $doUpdate;
-	}
 }

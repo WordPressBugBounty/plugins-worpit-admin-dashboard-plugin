@@ -42,20 +42,10 @@ class Themes {
 	}
 
 	/**
-	 * @return ?\WP_Theme
-	 */
-	public function getCurrent() {
-		return $this->getTheme( get_stylesheet() );
-	}
-
-	/**
-	 * @return null|\WP_Theme
+	 * @return \WP_Theme
 	 */
 	public function getTheme( string $stylesheet ) {
-		if ( !\function_exists( 'wp_get_theme' ) ) {
-			require_once( ABSPATH.'wp-admin/includes/theme.php' );
-		}
-		return \function_exists( 'wp_get_theme' ) ? wp_get_theme( $stylesheet ) : null;
+		return wp_get_theme( $stylesheet );
 	}
 
 	/**

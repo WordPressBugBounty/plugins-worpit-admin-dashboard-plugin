@@ -27,11 +27,4 @@ class WorldTimeApi {
 		}
 		return (int)$dec[ 'current' ][ 'seconds' ];
 	}
-
-	/**
-	 * @throws \Exception
-	 */
-	public function diffServerWithReal() :int {
-		return (int)\abs( \time() - $this->current() );
-	}
 }

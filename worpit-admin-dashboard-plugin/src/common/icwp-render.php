@@ -69,27 +69,6 @@ class ICWP_APP_Render extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @param string $sTemplate
-	 * @return string
-	 */
-	public function getTemplateExists( $sTemplate = '' ) {
-		$sFullPath = $this->getTemplateFullPath( $sTemplate );
-		return $this->loadFS()->exists( $sFullPath );
-	}
-
-	/**
-	 * @param string $template
-	 * @return string
-	 */
-	public function getTemplateFullPath( $template = '' ) {
-		if ( empty( $template ) ) {
-			$template = $this->getTemplate();
-		}
-		$template = $this->loadDP()->addExtensionToFilePath( $template, $this->getEngineStub() );
-		return path_join( $this->getTemplateRoot(), $template );
-	}
-
-	/**
 	 * @return string
 	 */
 	public function getTemplateRoot() {

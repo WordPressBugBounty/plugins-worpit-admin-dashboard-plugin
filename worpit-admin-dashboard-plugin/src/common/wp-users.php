@@ -22,7 +22,7 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	public function createUser( array $newData, bool $sendUserNotification = false ) {
 		//set defaults for unset vars
 		$new = wp_parse_args( $newData, [
-			'user_registered' => strftime( '%F %T', time() ),
+			'user_registered' => date( 'Y-m-d H:i:s' ),
 			'display_name'    => false,
 			'user_url'        => '',
 			'description'     => ''
@@ -117,8 +117,7 @@ class ICWP_APP_WpUsers extends ICWP_APP_Foundation {
 	 * @return WP_User|null
 	 */
 	public function getUserById( $nId ) {
-		if ( version_compare( $this->loadWP()
-								   ->getWordpressVersion(), '2.8.0', '<' ) || !function_exists( 'get_user_by' ) ) {
+		if ( !function_exists( 'get_user_by' ) ) {
 			return null;
 		}
 		return get_user_by( 'id', $nId );

@@ -3,11 +3,11 @@ Contributors: paultgoodchild
 Donate link: https://www.icontrolwp.com/
 License: GPLv2 or later
 Tags: manage, backup, security, umbrella, dashboard
-Requires at least: 4.9
+Requires at least: 5.5
 Requires PHP: 7.4
 Recommended PHP: 7.4
-Tested up to: 7.0
-Stable tag: 5.6.0
+Tested up to: 7.2
+Stable tag: 5.7.2
 
 Manage all your WordPress sites in one place - updates, uptime, backups & security.
 
@@ -116,6 +116,16 @@ No. WorpDrive is available for a small monthly fee.
 4. Get a view of all your plugins and how each one is distributed across each site.
 
 == Changelog ==
+
+= 5.7.1 =
+*Released: 26th October 2026*
+
+* **CHANGED**:	WordPress 5.5 is the minimum supported version.
+* **IMPROVED**:	A WorpDrive backup now stops with a clear error when the site can't export its database, instead of retrying without end.
+* **IMPROVED**:	WorpDrive file listing and archiving are more reliable, and a file that disappears during a backup is now named.
+* **IMPROVED**:	Tightened how a linked site accepts re-link requests from iControlWP.
+* **IMPROVED**:	Packages are now only downloaded from iControlWP.
+* **IMPROVED**:	Site key and PIN checks are now stricter.
 
 = 5.6.0 =
 *Released: 3rd June 2026*

@@ -7,9 +7,6 @@ use FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\ApiResponse;
 class Enumerate extends \FernleafSystems\Wordpress\Plugin\iControlWP\LegacyApi\Internal\Base {
 
 	public function process() :ApiResponse {
-		if ( !\function_exists( 'get_users' ) ) {
-			include( ABSPATH.'wp-includes/user.php' );
-		}
 		return $this->success( [
 			'wpusers'  => $this->enumUsers(),
 			'wp_roles' => $this->enumRoles(),

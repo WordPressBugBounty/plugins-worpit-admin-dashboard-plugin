@@ -7,8 +7,6 @@ class ICWP_APP_WpAdminNotices extends ICWP_APP_Foundation {
 	 */
 	protected static $I = null;
 
-	protected $notices = [];
-
 	/**
 	 * @var string
 	 */
@@ -76,12 +74,5 @@ class ICWP_APP_WpAdminNotices extends ICWP_APP_Foundation {
 			$this->flash = sanitize_text_field( $this->flash );
 		}
 		$this->loadDP()->setDeleteCookie( $cook );
-	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	protected function getNotices() :array {
-		return [];
 	}
 }

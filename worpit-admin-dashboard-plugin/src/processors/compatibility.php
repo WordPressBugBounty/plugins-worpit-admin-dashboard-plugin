@@ -143,10 +143,7 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 	 * These should only run when it's an iControlWP request.
 	 */
 	protected function unhookSecurityPlugins() {
-		$this->removeSecureWpHooks();
 		$this->removeWpSpamShield();
-		$this->removeAiowpsHooks(); //wp-security-core.php line 25
-		$this->removeBetterWpSecurityHooks();
 		$this->removeWordfence();
 		$this->removeSucuri();
 	}
@@ -173,35 +170,6 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 
 	/**
 	 * Note: This only ever gets run during an iCWP request.
-	 *
-	 * Remove actions setup by All In One WP Security plugin that interferes with iControlWP packages.
-	 * @return void
-	 */
-	protected function removeAiowpsHooks() {
-		if ( class_exists( 'AIO_WP_Security' ) && isset( $GLOBALS[ 'aio_wp_security' ] ) && is_object( $GLOBALS[ 'aio_wp_security' ] ) ) {
-			remove_action( 'init', [ $GLOBALS[ 'aio_wp_security' ], 'wp_security_plugin_init' ], 0 );
-		}
-	}
-
-	/**
-	 * Note: This only ever gets run during an iCWP request.
-	 *
-	 * Remove actions setup by Secure WP plugin that interfere with Worpit synchronizing packages.
-	 * @return void
-	 */
-	protected function removeSecureWpHooks() {
-		global $SecureWP;
-		if ( class_exists( 'SecureWP' ) && isset( $SecureWP ) && is_object( $SecureWP ) ) {
-			remove_action( 'init', [ $SecureWP, 'replace_wp_version' ], 1 );
-			remove_action( 'init', [ $SecureWP, 'remove_core_update' ], 1 );
-			remove_action( 'init', [ $SecureWP, 'remove_plugin_update' ], 1 );
-			remove_action( 'init', [ $SecureWP, 'remove_theme_update' ], 1 );
-			remove_action( 'init', [ $SecureWP, 'remove_wp_version_on_admin' ], 1 );
-		}
-	}
-
-	/**
-	 * Note: This only ever gets run during an iCWP request.
 	 * @return void
 	 */
 	protected function removeWpSpamShield() {
@@ -209,35 +177,5 @@ class ICWP_APP_Processor_Compatibility extends ICWP_APP_Processor_BaseApp {
 		/* if ( function_exists( 'rs_wpss_misc_form_spam_check' ) ) {
 			remove_action( 'init', 'rs_wpss_misc_form_spam_check', 2 );
 		}*/
-	}
-
-	/**
-	 * Note: This only ever gets run during an iCWP request.
-	 *
-	 * Remove actions setup by Better WP Security plugin that interfere with iControlWP synchronizing packages.
-	 * Check secure.php for changes to these hooks.
-	 * @return void
-	 */
-	protected function removeBetterWpSecurityHooks() {
-		global $bwps, $bwpsoptions;
-
-		if ( class_exists( 'bwps_secure' ) && isset( $bwps ) && is_object( $bwps ) ) {
-			remove_action( 'plugins_loaded', [ $bwps, 'randomVersion' ] );
-			remove_action( 'plugins_loaded', [ $bwps, 'pluginupdates' ] );
-			remove_action( 'plugins_loaded', [ $bwps, 'themeupdates' ] );
-			remove_action( 'plugins_loaded', [ $bwps, 'coreupdates' ] );
-			remove_action( 'plugins_loaded', [ $bwps, 'siteinit' ] );
-		}
-
-		// Adds our IP addresses to the BWPS whitelist
-		if ( \is_array( $bwpsoptions ) ) {
-			$sServiceIps = \implode( "\n", $this->getServiceIps( 4 ) );
-			if ( !isset( $bwpsoptions[ 'id_whitelist' ] ) || strlen( $bwpsoptions[ 'id_whitelist' ] ) == 0 ) {
-				$bwpsoptions[ 'id_whitelist' ] = $sServiceIps;
-			}
-			elseif ( strpos( $bwpsoptions[ 'id_whitelist' ], $sServiceIps ) === false ) {
-				$bwpsoptions[ 'id_whitelist' ] .= "\n".$sServiceIps;
-			}
-		}
 	}
 }

@@ -21,23 +21,18 @@ class ICWP_APP_FeatureHandler_Autoupdates extends ICWP_APP_FeatureHandler_BaseAp
 		}
 
 		// handover storage to WordPress itself
-		if ( $WP->getWordpressIsAtLeastVersion( '5.5' ) ) {
-			$wpItems = $this->loadWP()->getOption( 'auto_update_'.$context, [] );
-			if ( !\is_array( $wpItems ) ) {
-				$wpItems = [];
-			}
-			$aAutoUpdateItems = \array_unique( \array_merge( $items, $wpItems ) );
+		$wpItems = $this->loadWP()->getOption( 'auto_update_'.$context, [] );
+		if ( !\is_array( $wpItems ) ) {
+			$wpItems = [];
+		}
+		$aAutoUpdateItems = \array_unique( \array_merge( $items, $wpItems ) );
 
-			if ( \count( $aAutoUpdateItems ) != \count( $items )
-				 || \count( \array_diff( $aAutoUpdateItems, $items ) ) > 0
-				 || \count( \array_diff( $items, $aAutoUpdateItems ) ) > 0 ) {
-				$WP->updateOption( 'auto_update_'.$context, $aAutoUpdateItems );
-			}
-			$this->setOpt( 'auto_update_'.$context, [] );
+		if ( \count( $aAutoUpdateItems ) != \count( $items )
+			 || \count( \array_diff( $aAutoUpdateItems, $items ) ) > 0
+			 || \count( \array_diff( $items, $aAutoUpdateItems ) ) > 0 ) {
+			$WP->updateOption( 'auto_update_'.$context, $aAutoUpdateItems );
 		}
-		else {
-			$aAutoUpdateItems = $items;
-		}
+		$this->setOpt( 'auto_update_'.$context, [] );
 
 		return $aAutoUpdateItems;
 	}
@@ -48,15 +43,8 @@ class ICWP_APP_FeatureHandler_Autoupdates extends ICWP_APP_FeatureHandler_BaseAp
 	 * @return $this
 	 */
 	private function storeAutoUpdates( $items, $context = 'plugins' ) {
-		$WP = $this->loadWP();
-
 		if ( is_array( $items ) ) {
-			if ( $WP->getWordpressIsAtLeastVersion( '5.5' ) ) {
-				$WP->updateOption( 'auto_update_'.$context, array_unique( $items ) );
-			}
-			else {
-				$this->setOpt( 'auto_update_'.$context, array_unique( $items ) );
-			}
+			$this->loadWP()->updateOption( 'auto_update_'.$context, array_unique( $items ) );
 		}
 		return $this;
 	}

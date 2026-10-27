@@ -78,20 +78,6 @@ class Plugins {
 		uninstall_plugin( $file );
 	}
 
-	/**
-	 * @return bool|null
-	 */
-	protected function checkForUpdates() {
-		if ( class_exists( '\WPRC_Installer' ) && \method_exists( '\WPRC_Installer', 'wprc_update_plugins' ) ) {
-			\WPRC_Installer::wprc_update_plugins();
-			return true;
-		}
-		elseif ( function_exists( 'wp_update_plugins' ) ) {
-			return ( wp_update_plugins() !== false );
-		}
-		return null;
-	}
-
 	public function isActive( string $file ) :bool {
 		return $this->isInstalled( $file ) && is_plugin_active( $file );
 	}

@@ -21,13 +21,14 @@ class Zipper {
 	/**
 	 * @throws \Exception
 	 */
-	public function create() {
+	public function create() :void {
 		$this->validateFilePaths();
+		$sources = $this->sourceFilesByArchivePath();
 		try {
 			if ( !\class_exists( '\ZipArchive' ) ) {
 				throw new \Exception( 'ZipArchive not supported, falling back to PclZip' );
 			}
-			$this->zipArchive();
+			$this->zipArchive( $sources );
 		}
 		catch ( \Exception $e ) {
 			$lib = path_join( ABSPATH, 'wp-admin/includes/class-pclzip.php' );
@@ -37,47 +38,40 @@ class Zipper {
 			if ( !\class_exists( '\PclZip' ) ) {
 				throw new \Exception( sprintf( '"%s" is not available after previous \ZipArchive error "%s".', '\ZipArchive', $e->getMessage() ) );
 			}
-			$this->pclZip();
+			$this->pclZip( $sources );
 		}
 	}
 
 	/**
 	 * @throws \Exception
 	 */
-	private function pclZip() :void {
+	private function pclZip( array $sources ) :void {
 		$this->preCreate();
 
 		$pclZip = new \PclZip( $this->targetZip );
-
-		$actualWpCfg = null;
-		if ( !empty( \dirname( $this->baseDir ) ) ) {
-			foreach ( $this->filePaths as $idx => $file ) {
-				if ( $file === 'wp-config.php' && !\file_exists( path_join( $this->baseDir, $file ) ) ) {
-					if ( \file_exists( path_join( \dirname( $this->baseDir ), 'wp-config.php' ) ) ) {
-						$actualWpCfg = path_join( \dirname( $this->baseDir ), 'wp-config.php' );
-						unset( $this->filePaths[ $idx ] );
-						break;
-					}
-				}
-			}
+		$files = [];
+		foreach ( $sources as $archivePath => $sourcePath ) {
+			$files[] = [
+				PCLZIP_ATT_FILE_NAME          => $sourcePath,
+				PCLZIP_ATT_FILE_NEW_FULL_NAME => (string)$archivePath,
+			];
 		}
 
-		$full = \array_filter( \array_map( fn( $path ) => path_join( $this->baseDir, $path ), $this->filePaths ), '\is_file' );
-
-		if ( empty( $pclZip->create( $full, PCLZIP_OPT_REMOVE_PATH, trailingslashit( $this->baseDir ) ) ) ) {
+		$result = $pclZip->create( $files );
+		if ( empty( $result ) ) {
 			throw new \Exception( 'Failed to create new Zip file with PclZip: '.$pclZip->errorInfo( true ) );
 		}
-
-		if ( !empty( $actualWpCfg ) ) {
-			$pclZip = new \PclZip( $this->targetZip );
-			$pclZip->add( [ $actualWpCfg ], '', \dirname( $actualWpCfg ) );
+		$entries = $pclZip->listContent();
+		if ( !\is_array( $entries ) ) {
+			throw new \Exception( 'Failed to list PclZip archive contents: '.$pclZip->errorInfo( true ) );
 		}
+		$this->assertPclZipEntriesCreated( \array_keys( $sources ), $entries );
 	}
 
 	/**
 	 * @throws \Exception
 	 */
-	private function zipArchive() :void {
+	private function zipArchive( array $sources ) :void {
 		$this->preCreate();
 
 		$zip = new \ZipArchive();
@@ -85,21 +79,16 @@ class Zipper {
 		if ( $openResult !== true ) {
 			throw new \Exception( sprintf( 'Failed to create new Zip file: %s', \is_int( $openResult ) ? (string)$openResult : 'unknown error' ) );
 		}
-		foreach ( $this->filePaths as $path ) {
-			$full = path_join( $this->baseDir, $path );
-			if ( \is_file( $full ) ) {
-				$zip->addFile( $full, \ltrim( $path, '/' ) );
-			}
-			elseif ( $path === 'wp-config.php' && !empty( \dirname( $this->baseDir ) ) ) {
-				$maybeWpCfg = path_join( \dirname( $this->baseDir ), 'wp-config.php' );
-				if ( \file_exists( $maybeWpCfg ) ) {
-					$zip->addFile( $maybeWpCfg, 'wp-config.php' );
-				}
+		foreach ( $sources as $archivePath => $sourcePath ) {
+			if ( !$zip->addFile( $sourcePath, (string)$archivePath ) ) {
+				$zip->close();
+				throw new \Exception( sprintf( 'Failed to add requested file to ZIP: %s', $archivePath ) );
 			}
 		}
 		if ( !$zip->close() ) {
 			throw new \Exception( sprintf( 'Failed to write the new ZIP file: %s', $zip->getStatusString() ) );
 		}
+		$this->assertZipArchiveEntriesCreated( \array_keys( $sources ) );
 	}
 
 	private function preCreate() :void {
@@ -113,5 +102,84 @@ class Zipper {
 		foreach ( $this->filePaths as $path ) {
 			$guard->assertValid( $path );
 		}
+	}
+
+	private function sourceFilesByArchivePath() :array {
+		$sources = [];
+		$missing = [];
+		foreach ( $this->filePaths as $path ) {
+			$archivePath = \ltrim( $path, '/' );
+			$sourcePath = path_join( $this->baseDir, $path );
+			if ( \is_file( $sourcePath ) ) {
+				$sources[ $archivePath ] = $sourcePath;
+			}
+			elseif ( $path === 'wp-config.php' && !empty( \dirname( $this->baseDir ) ) ) {
+				$maybeWpCfg = path_join( \dirname( $this->baseDir ), 'wp-config.php' );
+				if ( \is_file( $maybeWpCfg ) ) {
+					$sources[ 'wp-config.php' ] = $maybeWpCfg;
+				}
+				else {
+					$missing[] = $path;
+				}
+			}
+			else {
+				$missing[] = $path;
+			}
+		}
+
+		if ( !empty( $missing ) ) {
+			throw new \Exception( sprintf( 'Requested files missing for ZIP: "%s"', \implode( '", "', $missing ) ) );
+		}
+		if ( empty( $sources ) ) {
+			throw new \Exception( 'No requested files available for ZIP.' );
+		}
+		return $sources;
+	}
+
+	private function assertZipArchiveEntriesCreated( array $expectedEntries ) :void {
+		$zip = new \ZipArchive();
+		if ( $zip->open( $this->targetZip ) !== true ) {
+			throw new \Exception( sprintf( 'Failed to reopen ZIP for verification: %s', $this->targetZip ) );
+		}
+
+		$entries = [];
+		for ( $i = 0 ; $i < $zip->numFiles ; $i++ ) {
+			$name = $zip->getNameIndex( $i );
+			if ( \is_string( $name ) ) {
+				$entries[] = $this->normaliseArchivePath( $name );
+			}
+		}
+		$zip->close();
+
+		$this->assertExpectedEntriesWereCreated( $expectedEntries, $entries );
+	}
+
+	private function assertPclZipEntriesCreated( array $expectedEntries, array $createdEntries ) :void {
+		$entries = [];
+		foreach ( $createdEntries as $createdEntry ) {
+			if ( !\is_array( $createdEntry ) || ( isset( $createdEntry[ 'status' ] ) && $createdEntry[ 'status' ] !== 'ok' ) ) {
+				continue;
+			}
+			$name = $createdEntry[ 'stored_filename' ] ?? $createdEntry[ 'filename' ] ?? null;
+			if ( \is_string( $name ) ) {
+				$entries[] = $this->normaliseArchivePath( $name );
+			}
+		}
+
+		$this->assertExpectedEntriesWereCreated( $expectedEntries, $entries );
+	}
+
+	private function assertExpectedEntriesWereCreated( array $expectedEntries, array $actualEntries ) :void {
+		$missing = \array_diff(
+			\array_map( fn( string $path ) :string => $this->normaliseArchivePath( $path ), $expectedEntries ),
+			$actualEntries
+		);
+		if ( !empty( $missing ) ) {
+			throw new \Exception( sprintf( 'Requested files missing from ZIP: "%s"', \implode( '", "', $missing ) ) );
+		}
+	}
+
+	private function normaliseArchivePath( string $path ) :string {
+		return \rtrim( \ltrim( $path, '/' ), '/' );
 	}
 }

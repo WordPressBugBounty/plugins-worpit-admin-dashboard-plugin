@@ -15,10 +15,8 @@ class Sync extends Base {
 	}
 
 	public function process() :ApiResponse {
-		if ( \class_exists( 'DirectoryIterator', false ) ) {
-			$this->cleanRollbackData();
-			$this->cleanRollbackDir();
-		}
+		$this->cleanRollbackData();
+		$this->cleanRollbackDir();
 		return $this->success( $this->collect() );
 	}
 

@@ -14,11 +14,6 @@ class ICWP_APP_WpFilesystem {
 	 */
 	protected $wpfs = null;
 
-	/**
-	 * @var string
-	 */
-	protected $sWpConfigPath = null;
-
 	public static function GetInstance() :self {
 		return self::$I ??= new self();
 	}
@@ -33,13 +28,6 @@ class ICWP_APP_WpFilesystem {
 			return true;
 		}
 		return function_exists( 'file_exists' ) ? file_exists( $sFilePath ) : null;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getWpConfigPath() {
-		return $this->sWpConfigPath;
 	}
 
 	/**
@@ -123,23 +111,6 @@ class ICWP_APP_WpFilesystem {
 	}
 
 	/**
-	 * @param string $sFilePath
-	 * @return string|null
-	 */
-	public function getFileContent( $sFilePath ) {
-		$contents = null;
-		$fs = $this->getWpfs();
-		if ( $fs ) {
-			$contents = $fs->get_contents( $sFilePath );
-		}
-
-		if ( empty( $contents ) && \function_exists( 'file_get_contents' ) ) {
-			$contents = \file_get_contents( $sFilePath );
-		}
-		return $contents;
-	}
-
-	/**
 	 * @param $sFilePath
 	 * @return bool
 	 */
@@ -149,23 +120,6 @@ class ICWP_APP_WpFilesystem {
 			return $fs->size( $sFilePath );
 		}
 		return @\filesize( $sFilePath );
-	}
-
-	/**
-	 * @param string $path
-	 * @param string $contents
-	 * @return bool
-	 */
-	public function putFileContent( $path, $contents ) {
-		$fs = $this->getWpfs();
-		if ( $fs && $fs->put_contents( $path, $contents, FS_CHMOD_FILE ) ) {
-			return true;
-		}
-
-		if ( \function_exists( 'file_put_contents' ) ) {
-			return \file_put_contents( $path, $contents ) !== false;
-		}
-		return false;
 	}
 
 	/**
@@ -197,18 +151,6 @@ class ICWP_APP_WpFilesystem {
 	 */
 	public function move( $source, $target ) {
 		return FileSystem::Instance()->move( (string)$source, (string)$target );
-	}
-
-	/**
-	 * @param string $path
-	 * @return bool|null
-	 */
-	public function isDir( $path ) {
-		$fs = $this->getWpfs();
-		if ( $fs && $fs->is_dir( $path ) ) {
-			return true;
-		}
-		return \function_exists( 'is_dir' ) ? @\is_dir( $path ) : null;
 	}
 
 	/**

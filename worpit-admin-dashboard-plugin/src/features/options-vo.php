@@ -10,11 +10,6 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	/**
 	 * @var array
 	 */
-	protected $aChangedOptionsTracker;
-
-	/**
-	 * @var array
-	 */
 	protected $aRawOptionsConfigData;
 
 	/**
@@ -115,14 +110,6 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	public function getFeatureRequirement( $sReq ) {
 		$aReqs = $this->getRawData_Requirements();
 		return ( is_array( $aReqs ) && isset( $aReqs[ $sReq ] ) ) ? $aReqs[ $sReq ] : null;
-	}
-
-	/**
-	 * @deprecated 4.5
-	 */
-	public function getAdminNotices() {
-		$raw = $this->getRawData_FullFeatureConfig();
-		return ( isset( $raw[ 'admin_notices' ] ) && is_array( $raw[ 'admin_notices' ] ) ) ? $raw[ 'admin_notices' ] : [];
 	}
 
 	/**
@@ -267,17 +254,6 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @param         $sKey
-	 * @param mixed   $mValueToTest
-	 * @param bool    $bStrict
-	 * @return bool
-	 */
-	public function getOptIs( $sKey, $mValueToTest, $bStrict = false ) {
-		$mOptionValue = $this->getOpt( $sKey );
-		return $bStrict ? $mOptionValue === $mValueToTest : $mOptionValue == $mValueToTest;
-	}
-
-	/**
 	 * @return string
 	 */
 	public function getOptionsKeys() {
@@ -367,13 +343,6 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function getRebuildFromFile() {
-		return $this->bRebuildFromFile;
-	}
-
-	/**
 	 * @param string $sOptionKey
 	 * @return bool
 	 */
@@ -417,19 +386,6 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 	}
 
 	/**
-	 * @param array $aOptions
-	 * @return $this
-	 */
-	public function setMultipleOptions( $aOptions ) {
-		if ( is_array( $aOptions ) ) {
-			foreach ( $aOptions as $sKey => $mValue ) {
-				$this->setOpt( $sKey, $mValue );
-			}
-		}
-		return $this;
-	}
-
-	/**
 	 * @param string $sOptionKey
 	 * @param mixed  $mValue
 	 * @param bool   $bForce
@@ -447,45 +403,8 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 					return $this->resetOptToDefault( $sOptionKey );
 				}
 			}
-			$this->trackOption( $sOptionKey );
 			$this->aOptionsValues[ $sOptionKey ] = $mValue;
 		}
-		return true;
-	}
-
-	/**
-	 * Will return an option value to the original value if it was changed in this page load.
-	 * @param string $sKey
-	 * @return bool
-	 */
-	public function revertChangedOption( $sKey ) {
-		if ( !empty( $this->aChangedOptionsTracker ) && is_array( $this->aChangedOptionsTracker ) && isset( $this->aChangedOptionsTracker[ $sKey ] ) ) {
-			return $this->setOpt( $sKey, $this->aChangedOptionsTracker[ $sKey ] );
-		}
-		return false;
-	}
-
-	/**
-	 * @param string $sKey
-	 */
-	private function trackOption( $sKey ) {
-		if ( !isset( $this->aChangedOptionsTracker ) ) {
-			$this->aChangedOptionsTracker = [];
-		}
-		// Meaning we only track once, and we don't overwrite if an option is set multiple times.
-		if ( !isset( $this->aChangedOptionsTracker[ $sKey ] ) && isset( $this->aOptionsValues[ $sKey ] ) ) {
-			$this->aChangedOptionsTracker[ $sKey ] = $this->aOptionsValues[ $sKey ];
-		}
-	}
-
-	/**
-	 * @param string $sOptionKey
-	 * @return mixed
-	 */
-	public function unsetOpt( $sOptionKey ) {
-
-		unset( $this->aOptionsValues[ $sOptionKey ] );
-		$this->setNeedSave( true );
 		return true;
 	}
 
@@ -536,7 +455,7 @@ class ICWP_APP_OptionsVO extends ICWP_APP_Foundation {
 
 		$cfg = $WP->getOption( $this->getConfigStorageKey() );
 
-		$rebuild = true;//$this->getRebuildFromFile() || empty( $cfg );
+		$rebuild = true;
 		if ( !$rebuild && !empty( $cfg ) && is_array( $cfg ) ) {
 
 			if ( !isset( $cfg[ 'meta_modts' ] ) ) {

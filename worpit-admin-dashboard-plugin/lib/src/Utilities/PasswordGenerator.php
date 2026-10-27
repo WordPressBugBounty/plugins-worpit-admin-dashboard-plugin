@@ -31,14 +31,6 @@ class PasswordGenerator {
 		return $password;
 	}
 
-	public static function Alpha( int $length = 6 ) :string {
-		return self::Gen( $length, false, true, false );
-	}
-
-	public static function Num( int $length = 6 ) :string {
-		return self::Gen( $length, true, false, false );
-	}
-
 	public static function Uniqid( int $length = 12 ) :string {
 		return self::Gen( $length, true, true, false );
 	}

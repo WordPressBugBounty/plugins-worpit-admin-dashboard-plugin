@@ -1,8 +1,8 @@
 {
   "properties":   {
-    "version":                 "5.6.0",
-    "release_timestamp":       1780480000,
-    "build":                   "202606.0301",
+    "version":                 "5.7.2",
+    "release_timestamp":       1793100000,
+    "build":                   "202610.2701",
     "slug_parent":             "icwp",
     "slug_plugin":             "app",
     "text_domain":             "worpit-admin-dashboard-plugin",
@@ -14,7 +14,7 @@
   },
   "requirements": {
     "php":       "7.4",
-    "wordpress": "4.9"
+    "wordpress": "5.5"
   },
   "paths":        {
     "source":        "src",
